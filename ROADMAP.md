@@ -158,6 +158,14 @@ items must not be hardened against one answer.
 - [ ] Source-routing: agent decides which store to query; reconcile overlapping results.
 - [ ] Subagent fan-out for parallel per-store retrieval.
 
+  > **Research watch — vector-store compression.** `# research(2026-06):` Google's
+  > [TurboQuant](https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/)
+  > (PolarQuant + QJL; ICLR/AISTATS 2026) does near-lossless vector quantization
+  > with *zero-overhead* quantization constants — claims strong recall at low bit
+  > rates for similarity search. Evaluate when choosing the embedding/vector index
+  > for this connector. **Caveat:** research papers only, no released library as of
+  > 2026-06 — treat as directional, not a dependency.
+
 ### Phase 3 — Multimodal fusion
 - [ ] Image / video / OCR / NLP extraction tools.
 - [ ] Cross-modal evidence fusion into the analytic product.
@@ -173,6 +181,13 @@ items must not be hardened against one answer.
 
 ### Phase 5 — Deployment hardening
 - [ ] Resolve the cloud-vs-air-gapped fork per component; document the swap points.
+
+  > **Research watch — on-prem serving efficiency.** `# research(2026-06):`
+  > [TurboQuant](https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/)
+  > also compresses the **LLM KV cache** (~6× smaller, 3-bit, ~8× faster attention
+  > on H100) with no fine-tuning — relevant only to the **self-hosted / open-weight**
+  > branch where we serve models ourselves (not the cloud frontier-model path).
+  > Consider when sizing on-prem inference. Same caveat: unreleased research.
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
