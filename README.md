@@ -65,14 +65,30 @@ unifying demonstration layer for the SCADS portfolio.
 
 ## Quickstart
 
-Requires [`uv`](https://docs.astral.sh/uv/). `make help` lists every target.
+Phase 1 works up a target entity against a graph store and returns a cited analytic note.
+
+```bash
+# 1. start a local Neo4j and seed the synthetic org graph
+docker compose -f infra/neo4j/docker-compose.yml up -d
+# (load infra/neo4j/seed.cypher into it — see that file)
+
+# 2. the live agent loop needs an API key
+export ANTHROPIC_API_KEY=sk-...
+
+# 3. run a workup (writes ./workups/<entity>/note.md, provenance.jsonl, citations.json)
+uv run ariadne workup Halberd
+```
+
+Every fact in the note carries a `[cite:gN]` id that resolves to a recorded graph
+query in `provenance.jsonl`; the run fails if any citation is unverified.
+
+**Dev gates** (requires [`uv`](https://docs.astral.sh/uv/)):
 
 ```bash
 make setup        # install dependencies (uv sync)
 make lint         # ruff format --check + ruff check + ty
 make test-unit    # fast hermetic tests
 make validate     # lint + unit tests (pre-push gate)
-uv run ariadne    # run the (scaffold) CLI
 ```
 
 Archived, auditable runs (reconciled by `/techne:audit`):
@@ -105,10 +121,10 @@ make docs        # uv run --with zensical zensical serve
 
 ## Status
 
-Scaffold + research phase. The June-2026 best-practice research has landed
-([`docs/research/best-practice-architecture.md`](./docs/research/best-practice-architecture.md))
-and the docs site is up. See [`IMPL.md`](./IMPL.md) for what's in flight and
-[`ROADMAP.md`](./ROADMAP.md) for the phased build order.
+Phase 1 shipped. The Neo4j MCP connector, `entity-workup` skill, provenance hook,
+and `ariadne workup` CLI are all committed and gated. See [`IMPL.md`](./IMPL.md)
+for what's in flight (Phase 2) and [`ROADMAP.md`](./ROADMAP.md) for the phased
+build order.
 
 ## License
 

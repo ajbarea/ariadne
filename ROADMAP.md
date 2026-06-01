@@ -4,11 +4,9 @@ A living plan for the sensemaking harness. Items are **planned** (full detail)
 or **shipped** (one-liner with date). Whatever's *in flight right now* lives in
 [IMPL.md](./IMPL.md).
 
-Last reviewed: 2026-06-01 (repo scaffolded; June-2026 architecture research
-**landed** — a deep-research synthesis plus a captured Claude Agent SDK reference
-under [docs/research/](./docs/research/); Zensical docs site stood up; project
-charter distilled from the SCADS onboarding brief into **Mission & charter**
-below).
+Last reviewed: 2026-06-01 (Phase 1 vertical slice landed — Neo4j MCP connector,
+entity-workup skill, provenance hook + citation validator, and `ariadne workup`
+CLI; Phase 0 fully complete).
 
 Stance: **ground every architectural choice in current best practice.**
 Web-search the specific target's primary docs at the planning step; prefer an
@@ -145,13 +143,13 @@ items must not be hardened against one answer.
 - [x] Capture Claude Agent SDK primitives reference → `docs/research/claude-agent-sdk-reference.md`.
 - [x] Land deep-research report → `docs/research/best-practice-architecture.md`; resolve the questions above.
 - [x] Stand up the Zensical docs site (`zensical.toml`, `docs/`, GitHub Pages workflow).
-- [ ] Turn resolved decisions into frozen Phase-1 scope in [IMPL.md](./IMPL.md).
+- [x] Turn resolved decisions into frozen Phase-1 scope in [IMPL.md](./IMPL.md).
 
 ### Phase 1 — Single-store vertical slice
-- [ ] One connector (likely graph DB) as a callable tool/MCP server.
-- [ ] An `entity-workup` skill that runs a minimal retrieve → reason → synthesize loop.
-- [ ] A `PostToolUse` provenance hook recording which tool sourced each fact.
-- [ ] CLI takes a target **entity or organizational node**, returns a cited analytic note. End-to-end on one store.
+- [x] One connector (likely graph DB) as a callable tool/MCP server.
+- [x] An `entity-workup` skill that runs a minimal retrieve → reason → synthesize loop.
+- [x] A `PostToolUse` provenance hook recording which tool sourced each fact.
+- [x] CLI takes a target **entity or organizational node**, returns a cited analytic note. End-to-end on one store.
 
 ### Phase 2 — Heterogeneous retrieval
 - [ ] Add relational/SQL and vector/unstructured connectors.
@@ -197,6 +195,10 @@ items must not be hardened against one answer.
 
 ## Shipped
 
+- **2026-06-01** — Phase 1 vertical slice: read-only Neo4j MCP connector,
+  entity-workup skill, PostToolUse provenance hook + citation-coverage validator,
+  and `ariadne workup <entity>` CLI running the live agent loop to produce a cited
+  analytic note (note.md + provenance.jsonl + citations.json) over a seeded Neo4j.
 - **2026-06-01** — Repo scaffolded; Claude Agent SDK reference captured;
   June-2026 best-practice research synthesized; Zensical docs site stood up.
 - **2026-06-01** — Project charter distilled from the SCADS onboarding brief into

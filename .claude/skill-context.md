@@ -10,9 +10,13 @@ into each skill at invocation. Update on toolchain / path / tooling changes.
 - package_root: `src/ariadne/` (src-layout, single package)
 - language: Python (>=3.12,<3.15)
 - toolchain: uv (canonical); ruff (format + lint), ty (types), pytest
-- cli_entrypoint: `uv run ariadne` (scaffold)
+- cli_entrypoint: `uv run ariadne workup <entity>` (Phase 1 — graph-backed cited-note pipeline)
 - runner: `./scripts/dev-runner.sh <make-target>` → writes `logs/dev-<UTC>-<target>.log` + `logs/dev-latest.log`
-- has: no Docker yet, no frontend, no Rust. Architecture pending research (see docs/research/).
+- has: Docker (Neo4j via `infra/neo4j/docker-compose.yml`), no frontend, no Rust.
+  Runtime deps: claude-agent-sdk, neo4j, mcp-neo4j-cypher.
+  Architecture: Phase 1 — read-only Neo4j MCP connector (`src/ariadne/graph/neo4j_server.py`),
+  entity-workup skill (`.claude/skills/entity-workup/`), PostToolUse provenance hook
+  (`src/ariadne/provenance/hook.py`), cited-note CLI (`src/ariadne/cli.py`).
 
 ## audit
 
