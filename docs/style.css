@@ -74,9 +74,9 @@ body.hero-page .md-content__inner {
        leaves the right half of the image (thread + nodes) fully visible. */
     linear-gradient(to right,
       var(--ari-obsidian) 0%,
-      color-mix(in srgb, var(--ari-obsidian) 78%, transparent) 22%,
-      color-mix(in srgb, var(--ari-obsidian) 28%, transparent) 40%,
-      transparent 52%),
+      color-mix(in srgb, var(--ari-obsidian) 80%, transparent) 20%,
+      color-mix(in srgb, var(--ari-obsidian) 24%, transparent) 38%,
+      transparent 48%),
     /* Gentle bottom fade so the hero blends into the page below. */
     linear-gradient(to bottom,
       transparent 60%,
@@ -107,7 +107,7 @@ body.hero-page .md-content__inner {
   /* Keep the whole text column in the left ~42% on wide screens so it clears
      the art (thread + nodes) on the right. Reset to full width when the layout
      centers on narrow screens (see the 960px media query). */
-  max-width: min(38rem, 42%);
+  max-width: min(33rem, 35%);
 }
 
 .md-typeset .hero h1 {
@@ -131,7 +131,7 @@ body.hero-page .md-content__inner {
   letter-spacing: 0.01em;
   opacity: 0.9;
   margin-bottom: 2rem;
-  max-width: 38ch;
+  max-width: 32ch;
   color: #ece6f5;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
 }
