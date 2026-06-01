@@ -68,9 +68,10 @@ unifying demonstration layer for the SCADS portfolio.
 Phase 1 works up a target entity against a graph store and returns a cited analytic note.
 
 ```bash
-# 1. start a local Neo4j and seed the synthetic org graph
+# 1a. start a local Neo4j
 docker compose -f infra/neo4j/docker-compose.yml up -d
-# (load infra/neo4j/seed.cypher into it — see that file)
+# 1b. seed the synthetic org graph
+docker exec -i ariadne-neo4j cypher-shell -u neo4j -p password < infra/neo4j/seed.cypher
 
 # 2. the live agent loop needs an API key
 export ANTHROPIC_API_KEY=sk-...

@@ -52,7 +52,7 @@ def build_options(*, ledger: ProvenanceLedger, env: dict[str, str]) -> ClaudeAge
         allowed_tools=list(GRAPH_TOOLS),
         system_prompt=_SYSTEM_PROMPT,
         permission_mode="default",
-        setting_sources=["project"],  # discover .claude/skills/entity-workup
+        skills=["entity-workup"],  # SDK auto-allows Skill tool and sets setting_sources
         hooks={"PostToolUse": [HookMatcher(matcher="mcp__neo4j__.*", hooks=[hook])]},
     )
 

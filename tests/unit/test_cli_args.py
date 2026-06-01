@@ -35,6 +35,7 @@ def test_build_options_wires_graph_server_and_hook() -> None:
     assert server["env"]["NEO4J_READ_ONLY"] == "true"
     assert set(GRAPH_TOOLS).issubset(set(opts.allowed_tools or []))
     assert "PostToolUse" in opts.hooks
+    assert opts.skills == ["entity-workup"]
 
 
 def test_main_without_api_key_exits_nonzero(monkeypatch, capsys) -> None:
