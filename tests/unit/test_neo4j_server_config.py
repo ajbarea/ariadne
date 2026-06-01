@@ -24,7 +24,7 @@ def test_config_reads_connection_from_env() -> None:
     )
     assert cfg["env"]["NEO4J_URI"] == "bolt://db:7687"
     assert cfg["env"]["NEO4J_USERNAME"] == "reader"
-    assert cfg["env"]["NEO4J_PASSWORD"] == "secret"  # noqa: S105
+    assert cfg["env"]["NEO4J_PASSWORD"] == "secret"
     assert cfg["env"]["NEO4J_DATABASE"] == "intel"
 
 
