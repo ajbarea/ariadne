@@ -15,11 +15,18 @@ keywords = [
     "model-context-protocol",
     "intelligence-analysis",
 ]
-# Runtime dependencies are intentionally empty until the June-2026 architecture
-# research lands. The orchestration layer is the Claude Agent SDK; connectors
-# (graph / SQL / vector) and multimodal processors get pinned per the research
-# in docs/research/ and recorded in ROADMAP.md before they're added here.
-dependencies = []
+dependencies = [
+    # research(2026-06): Claude Agent SDK is the harness (orchestrator–worker loop,
+    # tools/skills/hooks/MCP). See docs/research/claude-agent-sdk-reference.md.
+    "claude-agent-sdk>=0.1",
+    # research(2026-06): official Neo4j Python driver — used to seed/health-check the
+    # graph and by integration tests. Neo4j is the production graph standard (D1/D4).
+    "neo4j>=5.28",
+    # research(2026-06): official Neo4j MCP server is the read-only graph connector;
+    # gives schema introspection, query timeouts, token-aware truncation, injection-safe
+    # parameterization for free (D1). Launched via uvx in cli; pinned here for clarity.
+    "mcp-neo4j-cypher>=0.6,<0.7",
+]
 
 [project.scripts]
 ariadne = "ariadne.__main__:main"
@@ -37,6 +44,7 @@ dev = [
     "ruff>=0.15",
     "ty>=0.0.39,<0.1",
     "zensical>=0.0.24",
+    "testcontainers[neo4j]>=4.9",
 ]
 
 [build-system]
