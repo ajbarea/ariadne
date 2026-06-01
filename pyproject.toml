@@ -1,0 +1,130 @@
+[project]
+name = "ariadne"
+version = "0.1.0"
+description = "Sensemaking harness for nonatomic entities — an agentic analytic interface over heterogeneous, multimodal data (SCADS Project #1)"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = { text = "MIT" }
+authors = [{ name = "AJ Barea", email = "ajb6289@rit.edu" }]
+keywords = [
+    "agentic-ai",
+    "sensemaking",
+    "entity-resolution",
+    "graphrag",
+    "claude-agent-sdk",
+    "model-context-protocol",
+    "intelligence-analysis",
+]
+# Runtime dependencies are intentionally empty until the June-2026 architecture
+# research lands. The orchestration layer is the Claude Agent SDK; connectors
+# (graph / SQL / vector) and multimodal processors get pinned per the research
+# in docs/research/ and recorded in ROADMAP.md before they're added here.
+dependencies = []
+
+[project.scripts]
+ariadne = "ariadne.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/ajbarea/ariadne"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "pytest-xdist>=3.6",
+    "hypothesis>=6.140",
+    "ruff>=0.15",
+    "ty>=0.0.39,<0.1",
+    "zensical>=0.0.24",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ariadne"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+exclude = [
+    ".venv*",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".hypothesis",
+    "node_modules",
+]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "I", "UP", "B", "SIM", "W", "C4", "S", "ASYNC", "T20",
+    "PERF",  # Performance anti-patterns
+    "RUF",   # Ruff-specific rules
+    "PTH",   # pathlib over os.path
+    "N",     # PEP 8 naming conventions
+    "PIE",   # Misc lints (flake8-pie)
+    "FURB",  # Modernization (refurb)
+    "LOG",   # Logging conventions (flake8-logging)
+    "TCH",   # TYPE_CHECKING imports (runtime perf)
+    "FLY",   # f-string conversion (flynt)
+]
+fixable = ["ALL"]
+unfixable = ["T20"]  # Don't auto-remove print statements
+ignore = [
+    "E501",    # Handled by formatter
+    "B008",    # Function calls in defaults (FastAPI/Click patterns)
+    "SIM102",  # Nested if statements
+    "SIM108",  # Use ternary operator
+    "N806",    # Uppercase variables in functions — convention for constants-in-scope
+    "N818",    # Exception name suffix — too noisy
+    "RUF001",  # Ambiguous unicode in strings (em-dashes, arrows)
+    "RUF002",  # Ambiguous unicode in docstrings
+    "RUF003",  # Ambiguous unicode in comments
+    "RUF012",  # Mutable class variables — conflicts with dataclass patterns
+    "PERF203", # try-except in loop — sometimes unavoidable
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "E402", "S603", "S607", "ASYNC221", "S108"]
+"scripts/*.py" = ["T201", "S607"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ariadne"]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.coverage.run]
+source = ["src/ariadne"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_also = [
+    "def main\\(\\):",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+log_level = "INFO"
+log_cli = true
+log_cli_level = "WARNING"
+markers = [
+    "integration: requires real external boundaries (containers/network/live MCP servers)",
+    "slow: slow / heavyweight (multimodal inference, large graph traversals)",
+]
+
+[tool.uv]
+package = true

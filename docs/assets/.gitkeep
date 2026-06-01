@@ -1,0 +1,3 @@
+Drop brand assets here. Notably:
+  hero.png  — optional hero background (composites on the right of the homepage
+              hero, fading into the obsidian background; site builds fine without it).

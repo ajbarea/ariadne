@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv*/
+venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.hypothesis/
+.ruff_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent config
+# Claude Code — only the per-repo skill-context.md is team-shared
+# (injected into skills at runtime); everything else under .claude/ is local.
+.claude/*
+!.claude/skill-context.md
+.gemini/
+.worktrees/
+
+# Logs (dev-runner archives are reproducible; never commit)
+logs/
+*.log
+
+# Zensical build output
+site/
+.zensical_cache/
+
+# Local data / model caches (never commit source intelligence data)
+data/
+*.duckdb
+*.sqlite
+models/

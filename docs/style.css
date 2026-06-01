@@ -1,0 +1,323 @@
+/* Ariadne — documentation theme.
+   Motif: a golden thread traced through a deep-indigo Labyrinth.
+   Self-contained (no external hero image): the hero is pure CSS so the site
+   builds cleanly before any brand assets exist. */
+
+:root > * {
+  /* Thread (Ariadne's clew) */
+  --ari-thread: #e8b964;
+  --ari-thread-light: #f6dca0;
+  --ari-thread-deep: #b8863b;
+  --ari-thread-glow: rgba(232, 185, 100, 0.35);
+
+  /* Scarlet highlight — the end of the thread */
+  --ari-scarlet: #d2563f;
+
+  /* Labyrinth (deep indigo / obsidian) */
+  --ari-indigo: #161228;
+  --ari-indigo-light: #211a3a;
+  --ari-obsidian: #0a0814;
+  --ari-mist: rgba(232, 185, 100, 0.08);
+
+  /* Optional hero art — drop a file at docs/assets/hero.png and it composites
+     in on the right, fading into the obsidian on the left so text stays
+     readable. Until the file exists the pure-CSS gradient hero stands alone. */
+  --hero-bg-image: url('assets/hero.png');
+
+  /* Material overrides */
+  --md-primary-fg-color: var(--ari-thread);
+  --md-primary-fg-color--light: var(--ari-thread-light);
+  --md-primary-fg-color--dark: var(--ari-thread-deep);
+  --md-accent-fg-color: var(--ari-thread-light);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 250;
+  --md-default-bg-color: var(--ari-obsidian);
+  --md-default-bg-color--light: var(--ari-indigo);
+  --md-typeset-a-color: var(--ari-thread-light);
+}
+
+/* ---- Hero ---------------------------------------------------------------- */
+
+body.hero-page .md-footer {
+  display: none !important;
+}
+
+html.hero-page,
+body.hero-page {
+  overflow-x: hidden !important;
+}
+
+body.hero-page .md-main__inner,
+body.hero-page .md-content__inner {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.md-typeset .hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  padding: 6rem 8vw 5rem;
+  margin: -1.2rem -0.8rem 0;
+  overflow: hidden;
+  background-color: var(--ari-obsidian);
+  background:
+    radial-gradient(ellipse 70% 80% at 80% 30%,
+      color-mix(in srgb, var(--ari-thread) 10%, transparent) 0%,
+      transparent 55%),
+    radial-gradient(ellipse 60% 70% at 15% 80%,
+      color-mix(in srgb, var(--ari-scarlet) 9%, transparent) 0%,
+      transparent 50%),
+    /* Left-to-right fade keeps hero text legible over any art on the right. */
+    linear-gradient(to right,
+      var(--ari-obsidian) 0%,
+      color-mix(in srgb, var(--ari-obsidian) 88%, transparent) 34%,
+      color-mix(in srgb, var(--ari-obsidian) 45%, transparent) 62%,
+      transparent 100%),
+    var(--hero-bg-image, none) right center / cover no-repeat,
+    linear-gradient(160deg, var(--ari-indigo) 0%, var(--ari-obsidian) 70%);
+}
+
+/* A faint woven-thread grid evoking the Labyrinth, behind the hero text. */
+.md-typeset .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--ari-mist) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ari-mist) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 70% 40%, #000 0%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.md-typeset .hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.md-typeset .hero h1 {
+  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  font-weight: 800;
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  max-width: 20ch;
+  background: linear-gradient(135deg, #fff7e6 0%, var(--ari-thread-light) 45%, var(--ari-thread) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 2px 18px var(--ari-thread-glow));
+}
+
+.md-typeset .hero .hero-subtitle {
+  font-size: clamp(0.95rem, 1.6vw, 1.25rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  max-width: 54ch;
+  color: #ece6f5;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
+}
+
+.md-typeset .hero .hero-buttons {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
+}
+
+.md-typeset .hero .hero-buttons > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.85rem;
+  margin: 0;
+}
+
+.hero-buttons .md-button {
+  min-width: 180px;
+  padding: 0.8rem 1.9rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 3rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+/* research(2026-06): primary CTA visually heavier than secondary, per UX
+   hierarchy convention — mirrors the velocity-fl / kourai-khryseai sisters. */
+.hero-buttons .md-button--primary {
+  background: var(--ari-thread) !important;
+  border: 1px solid color-mix(in srgb, var(--ari-thread-light) 50%, transparent) !important;
+  color: #1a1206 !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 22px var(--ari-thread-glow) !important;
+}
+
+.hero-buttons .md-button--primary:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--ari-thread) 60%, transparent) !important;
+}
+
+.hero-buttons .md-button:not(.md-button--primary) {
+  border: 1px solid color-mix(in srgb, var(--ari-thread-light) 35%, transparent) !important;
+  color: var(--ari-thread-light) !important;
+  background: color-mix(in srgb, var(--ari-obsidian) 55%, transparent) !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  padding: 0.6rem 1.35rem !important;
+  backdrop-filter: blur(6px);
+}
+
+.hero-buttons .md-button:not(.md-button--primary):hover {
+  border-color: var(--ari-thread-light) !important;
+  color: #fff !important;
+  background: color-mix(in srgb, var(--ari-indigo-light) 55%, transparent) !important;
+}
+
+.hero-modes {
+  font-size: clamp(0.72rem, 1.1vw, 0.85rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  color: var(--ari-thread-light);
+  margin: 0;
+}
+
+.hero-modes a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ari-thread-light) 45%, transparent);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-modes a:hover {
+  color: #fff7e6;
+  border-bottom-color: var(--ari-thread);
+}
+
+/* ---- Landing sections (scroll-revealed by reveal.js) --------------------- */
+
+.landing-section {
+  padding: 4.5rem 8vw;
+  opacity: 1;
+}
+
+html.js-ready .landing-section {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+html.js-ready .landing-section.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.landing-section .section-inner {
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+.landing-section--alt {
+  background: linear-gradient(180deg, transparent, var(--ari-mist), transparent);
+}
+
+.section-title {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.8rem;
+  color: var(--ari-thread-light);
+}
+
+.section-lead {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.7;
+  opacity: 0.9;
+}
+
+/* Feature grid for the landing page. */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.4rem;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  border: 1px solid var(--glass-border, color-mix(in srgb, var(--ari-thread) 18%, transparent));
+  border-radius: 0.9rem;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--ari-indigo-light) 35%, transparent);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.feature-card:hover {
+  border-color: color-mix(in srgb, var(--ari-thread) 45%, transparent);
+  transform: translateY(-2px);
+}
+
+.feature-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  color: var(--ari-thread-light);
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+/* ---- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .md-typeset .hero {
+    align-items: center;
+    text-align: center;
+    padding: 4rem 6vw;
+  }
+
+  .md-typeset .hero .hero-buttons,
+  .md-typeset .hero .hero-buttons > p {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .md-typeset .hero h1 {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    max-width: 16ch;
+  }
+
+  .md-typeset .hero .hero-buttons > p {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+  }
+
+  .hero-buttons .md-button {
+    width: 85%;
+    max-width: 280px;
+  }
+
+  .landing-section {
+    padding: 3rem 1.4rem;
+  }
+}
