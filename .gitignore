@@ -35,10 +35,11 @@ htmlcov/
 Thumbs.db
 
 # Agent config
-# Claude Code — only the per-repo skill-context.md is team-shared
-# (injected into skills at runtime); everything else under .claude/ is local.
+# Claude Code — the per-repo skill-context.md and the project skills (the harness
+# itself) are team-shared; everything else under .claude/ is local.
 .claude/*
 !.claude/skill-context.md
+!.claude/skills/
 .gemini/
 .worktrees/
 
