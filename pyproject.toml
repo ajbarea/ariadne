@@ -113,8 +113,6 @@ indent-style = "space"
 [tool.ty.environment]
 python-version = "3.12"
 
-[tool.ty.src]
-include = ["src/"]
 
 [tool.coverage.run]
 source = ["src/ariadne"]

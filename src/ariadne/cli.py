@@ -42,7 +42,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     wk.add_argument("entity", help="Target entity or organizational node")
     wk.add_argument("--graph", default="neo4j", choices=["neo4j"], help="Graph backend")
     wk.add_argument("--out", default="./workups", help="Output directory root")
-    wk.add_argument("--format", default="md", choices=["md", "json"], help="Console format")
     return parser.parse_args(argv)
 
 
@@ -65,6 +64,7 @@ async def run_workup(entity: str, out_root: str, env: dict[str, str]) -> int:
 
     note_parts: list[str] = []
     result_text: str | None = None
+    had_error: bool = False
     async for message in query(prompt=prompt, options=options):
         if isinstance(message, AssistantMessage):
             note_parts.extend(
@@ -72,6 +72,7 @@ async def run_workup(entity: str, out_root: str, env: dict[str, str]) -> int:
             )
         elif isinstance(message, ResultMessage):
             result_text = message.result
+            had_error = bool(getattr(message, "is_error", False))
 
     note = (result_text or "\n".join(note_parts)).strip()
     report = validate_citations(note, ledger)
@@ -79,6 +80,9 @@ async def run_workup(entity: str, out_root: str, env: dict[str, str]) -> int:
     write_outputs(out_dir, entity=entity, note=note, ledger=ledger, report=report)
 
     print(f"Wrote {out_dir}/note.md ({len(ledger.entries)} graph calls cited).")
+    if had_error:
+        print("agent run reported an error", file=sys.stderr)
+        return 1
     if not report.ok:
         print(f"Citation check FAILED — dangling: {report.dangling}", file=sys.stderr)
         return 1
@@ -91,9 +95,6 @@ def _slug(entity: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    if args.command != "workup":
-        print("unknown command", file=sys.stderr)
-        return 2
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

@@ -9,7 +9,7 @@ transport-agnostic — this works against the external stdio Neo4j MCP server.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from claude_agent_sdk.types import (
     AsyncHookJSONOutput,
@@ -27,7 +27,8 @@ from claude_agent_sdk.types import (
     UserPromptSubmitHookInput,
 )
 
-from ariadne.provenance.ledger import ProvenanceLedger  # noqa: TC001
+if TYPE_CHECKING:
+    from ariadne.provenance.ledger import ProvenanceLedger
 
 GRAPH_TOOL_PREFIX = "mcp__neo4j__"
 
@@ -62,7 +63,7 @@ def make_provenance_hook(ledger: ProvenanceLedger) -> Hook:
         tool: str = data.get("tool_name", "")
         if not tool.startswith(GRAPH_TOOL_PREFIX):
             return cast("SyncHookJSONOutput", {})
-        response = data.get("tool_response", data.get("tool_output", ""))
+        response = data.get("tool_response", "")
         cite_id = ledger.record(tool, data.get("tool_input", {}), response)
         return cast(
             "SyncHookJSONOutput",
