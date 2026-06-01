@@ -69,23 +69,25 @@ body.hero-page .md-content__inner {
   overflow: hidden;
   background-color: var(--ari-obsidian);
   background:
-    radial-gradient(ellipse 70% 80% at 80% 30%,
-      color-mix(in srgb, var(--ari-thread) 10%, transparent) 0%,
-      transparent 55%),
-    radial-gradient(ellipse 60% 70% at 15% 80%,
-      color-mix(in srgb, var(--ari-scarlet) 9%, transparent) 0%,
-      transparent 50%),
-    /* Left-to-right fade keeps hero text legible over any art on the right. */
+    /* Light scrim only on the far left for headline legibility. The art already
+       carries its own dark-left negative space, so this fades out by ~52% and
+       leaves the right half of the image (thread + nodes) fully visible. */
     linear-gradient(to right,
       var(--ari-obsidian) 0%,
-      color-mix(in srgb, var(--ari-obsidian) 88%, transparent) 34%,
-      color-mix(in srgb, var(--ari-obsidian) 45%, transparent) 62%,
-      transparent 100%),
+      color-mix(in srgb, var(--ari-obsidian) 78%, transparent) 22%,
+      color-mix(in srgb, var(--ari-obsidian) 28%, transparent) 40%,
+      transparent 52%),
+    /* Gentle bottom fade so the hero blends into the page below. */
+    linear-gradient(to bottom,
+      transparent 60%,
+      color-mix(in srgb, var(--ari-obsidian) 55%, transparent) 88%,
+      var(--ari-obsidian) 100%),
     var(--hero-bg-image, none) right center / cover no-repeat,
     linear-gradient(160deg, var(--ari-indigo) 0%, var(--ari-obsidian) 70%);
 }
 
-/* A faint woven-thread grid evoking the Labyrinth, behind the hero text. */
+/* A faint woven-thread grid evoking the Labyrinth, biased to the LEFT (text)
+   side so it decorates the dark negative space without muddying the art. */
 .md-typeset .hero::before {
   content: "";
   position: absolute;
@@ -94,7 +96,7 @@ body.hero-page .md-content__inner {
     linear-gradient(var(--ari-mist) 1px, transparent 1px),
     linear-gradient(90deg, var(--ari-mist) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 80% at 70% 40%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 95% at 8% 50%, #000 0%, transparent 65%);
   pointer-events: none;
   z-index: 0;
 }

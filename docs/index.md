@@ -54,32 +54,23 @@ The decisive link between two facts may exist only through an *implicit*
 organizational relationship, buried in a different store and a different
 modality. Ariadne is built to follow that thread.
 
-<div class="feature-grid" markdown>
-
-<div class="feature-card" markdown>
-### Traverse hierarchies
-Multi-hop reasoning over organizational graphs (GraphRAG) to follow relationships
-conventional tooling can't connect.
-</div>
-
-<div class="feature-card" markdown>
-### Reconcile modalities
-Fuse evidence from metadata, free text, imagery, and video into a single
-analytic picture.
-</div>
-
-<div class="feature-card" markdown>
-### Reduce pivot burden
-One harness orchestrates the sources, so the analyst keeps momentum instead of
-context-switching across systems.
-</div>
-
-<div class="feature-card" markdown>
-### Surface the non-obvious
-Coordinated tool sequences expose connections that would be impractical to find
-by hand.
-</div>
-
+<div class="feature-grid">
+  <div class="feature-card">
+    <h3>Traverse hierarchies</h3>
+    <p>Multi-hop reasoning over organizational graphs (GraphRAG) to follow relationships conventional tooling can't connect.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Reconcile modalities</h3>
+    <p>Fuse evidence from metadata, free text, imagery, and video into a single analytic picture.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Reduce pivot burden</h3>
+    <p>One harness orchestrates the sources, so the analyst keeps momentum instead of context-switching across systems.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Surface the non-obvious</h3>
+    <p>Coordinated tool sequences expose connections that would be impractical to find by hand.</p>
+  </div>
 </div>
 
   </div>
