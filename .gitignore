@@ -16,6 +16,9 @@ venv/
 .env.local
 .env.*.local
 
+# Workup run artifacts (CLI default --out ./workups; analytic notes + provenance)
+/workups/
+
 # IDE
 .vscode/
 .idea/
