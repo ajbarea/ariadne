@@ -32,6 +32,7 @@ dependencies = [
     { name = "claude-agent-sdk" },
     { name = "mcp-neo4j-cypher" },
     { name = "neo4j" },
+    { name = "python-dotenv" },
 ]
 
 [package.dev-dependencies]
@@ -52,6 +53,7 @@ requires-dist = [
     { name = "claude-agent-sdk", specifier = ">=0.1" },
     { name = "mcp-neo4j-cypher", specifier = ">=0.6,<0.7" },
     { name = "neo4j", specifier = ">=5.28" },
+    { name = "python-dotenv", specifier = ">=1.0" },
 ]
 
 [package.metadata.requires-dev]

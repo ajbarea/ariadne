@@ -26,6 +26,8 @@ dependencies = [
     # gives schema introspection, query timeouts, token-aware truncation, injection-safe
     # parameterization for free (D1). Launched via uvx in cli; pinned here for clarity.
     "mcp-neo4j-cypher>=0.6,<0.7",
+    # Convenience: auto-load a local .env (API key + Neo4j conn) at CLI startup.
+    "python-dotenv>=1.0",
 ]
 
 [project.scripts]

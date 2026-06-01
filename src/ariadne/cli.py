@@ -21,6 +21,7 @@ from claude_agent_sdk import (
     TextBlock,
     query,
 )
+from dotenv import find_dotenv, load_dotenv
 
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
 from ariadne.provenance.citations import validate_citations
@@ -94,6 +95,10 @@ def _slug(entity: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Load a local .env (cp .env.example .env) from the working dir, without
+    # clobbering already-exported vars. usecwd=True searches up from where the
+    # user runs the command (not from this installed module's location).
+    load_dotenv(find_dotenv(usecwd=True), override=False)
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
