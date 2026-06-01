@@ -6,12 +6,84 @@ or **shipped** (one-liner with date). Whatever's *in flight right now* lives in
 
 Last reviewed: 2026-06-01 (repo scaffolded; June-2026 architecture research
 **landed** — a deep-research synthesis plus a captured Claude Agent SDK reference
-under [docs/research/](./docs/research/); Zensical docs site stood up).
+under [docs/research/](./docs/research/); Zensical docs site stood up; project
+charter distilled from the SCADS onboarding brief into **Mission & charter**
+below).
 
 Stance: **ground every architectural choice in current best practice.**
 Web-search the specific target's primary docs at the planning step; prefer an
 architectural fix over an expedient patch. Each committed design decision in
 this file should carry a `# research(YYYY-MM):` provenance note.
+
+---
+
+## Mission & charter
+
+> Distilled from the SCADS onboarding brief — **Project 1: "Sensemaking for
+> Nonatomic Entities using AI Coding Agents"** — and archived here 2026-06-01.
+> The brief is not retained; this section is now its system of record.
+
+**Problem.** Modern SIGINT-style collection produces intelligence about entities
+embedded in large, complex *organizational hierarchies*, scattered across highly
+heterogeneous systems — graph databases, relational stores, unstructured
+repositories — with content spanning metadata, free text, imagery, and video. No
+single interface spans that range, so analysts pivot manually between systems and
+lose context and momentum at every transition. The hard part is not data
+*access*; it is **coherent multi-hop reasoning across heterogeneous
+representations**, where decisive evidence is often linked only through implicit
+organizational relationships buried across modalities.
+
+**Why now.** Today's analytic workflows are shaped by out-of-date technical and
+organizational expectations. The bet: reimagine the workflow as a **conversation
+between an analyst and an AI agent**, delivering **composable, shareable, and
+manageable** agentic workflows.
+
+**Approach.** Use an agentic coding harness as a unifying *orchestration layer*
+over existing infrastructure rather than a replacement — it dispatches
+specialized tools and skills to retrieve, interpret, and synthesize across graph,
+structured, and unstructured sources. Analytic services and databases are exposed
+via API; the agent builds visualizations and interactive interfaces on demand to
+glue services together and present results to humans. (The brief names Claude
+Code / Cowork or OpenClaw as example harnesses; Ariadne builds on the Claude
+Agent SDK.)
+
+**Central research question.** *Given such a harness and its UI, what specific
+tools, skills, and hooks are necessary to support a rigorous end-to-end analytic
+workflow targeting entities within an organizational hierarchy?* The work is to
+identify and prototype the **minimum viable toolset** — database connectors,
+modality-specific processors (image/video analyzers, NLP extractors), and
+hierarchical reasoning hooks.
+
+**Deliverables.**
+- *Primary* — a working prototype demonstrating an end-to-end analytic workflow:
+  input a target **entity or organizational node**; through a coordinated tool
+  sequence, surface evidence across all data structures and modalities; synthesize
+  it into a coherent, cited analytic product.
+- *Secondary* — **documented, reusable workflow patterns** that transfer to future
+  SCADS analytic use cases.
+
+**Success criteria.** The harness's ability to (1) **traverse** organizational
+relationships, (2) **reconcile** information across modalities, (3) **reduce the
+analyst's manual pivot burden**, and (4) surface **non-obvious connections** that
+are impractical to find with conventional tooling.
+
+**Design constraints** (brief, "Workflow Implementation"). Core challenges are
+**specification and validation** — *"how do you know what works?"* Composable
+primitives are the SDK set: **models, agents, tools, skills, hooks**. Governance
+must be uniform across **quality, security, and data integrity**.
+
+**Stretch goals.** Multi-player shared sessions; raising analysts' domain
+knowledge and analytic capacity through the tool.
+
+**Program context.** SCADS (Government + Academia + Industry) spans five areas —
+*AI Evaluation*, *AI Implementation*, *AI Agent Development*, *Sensemaking for
+Large Entities*, and *Data Set Creation & Augmentation* — with Data Set Creation
+as the shared foundation and AI Evaluation as the overarching validation
+framework. Ariadne is the **Sensemaking** effort under **AI Agent Development**,
+and an explicit **umbrella project**: it defines integration interfaces so sibling
+contributions (graph-extraction pipelines, entity-resolution models, multimodal
+indexing) surface as callable tools — both a standalone contribution and the
+portfolio's unifying demonstration layer.
 
 ---
 
@@ -46,7 +118,10 @@ items must not be hardened against one answer.
    DeepMEL) and reason over it, rather than a shared embedding space.
 5. **Analytic rigor & eval** — provenance/citation tracking, grounding,
    confidence handling, success metrics, structured-analytic-technique framing.
-   **Open** — no verified claims this pass; top target for the next research pass.
+   The brief frames this as the core challenge: **specification & validation**
+   (*"how do you know what works?"*) plus **governance** — uniform quality,
+   security, and data integrity. **Open** — no verified claims this pass; top
+   target for the next research pass.
 6. **Cloud vs. air-gapped fork** — forks at the **MCP connector** and **model**
    layers (managed cloud MCP + frontier Claude vs. self-hosted/open-weight).
    Concrete air-gapped substitutions remain **open**. (Constraint: **hybrid**.)
@@ -76,7 +151,7 @@ items must not be hardened against one answer.
 - [ ] One connector (likely graph DB) as a callable tool/MCP server.
 - [ ] An `entity-workup` skill that runs a minimal retrieve → reason → synthesize loop.
 - [ ] A `PostToolUse` provenance hook recording which tool sourced each fact.
-- [ ] CLI takes a target entity, returns a cited analytic note. End-to-end on one store.
+- [ ] CLI takes a target **entity or organizational node**, returns a cited analytic note. End-to-end on one store.
 
 ### Phase 2 — Heterogeneous retrieval
 - [ ] Add relational/SQL and vector/unstructured connectors.
@@ -90,11 +165,18 @@ items must not be hardened against one answer.
 ### Phase 4 — Rigor, eval & integration
 - [ ] Provenance/citation surface in the analytic product; confidence handling.
 - [ ] Evaluation harness for the four success criteria (traversal, reconciliation,
-      pivot-burden reduction, non-obvious connections).
+      pivot-burden reduction, non-obvious connections); add a spec/validation pass
+      ("how do you know it works?") and governance checks (quality, security,
+      data integrity).
 - [ ] SCADS integration interfaces: document how sibling tools plug in as callable tools.
+- [ ] Capture **reusable workflow patterns** (a brief deliverable) for future SCADS use cases.
 
 ### Phase 5 — Deployment hardening
 - [ ] Resolve the cloud-vs-air-gapped fork per component; document the swap points.
+
+### Stretch (post-MVP — from the brief)
+- [ ] Multi-player shared sessions (collaborative analyst workflows).
+- [ ] Tooling that raises analysts' domain knowledge / analytic capacity.
 
 ---
 
@@ -102,3 +184,6 @@ items must not be hardened against one answer.
 
 - **2026-06-01** — Repo scaffolded; Claude Agent SDK reference captured;
   June-2026 best-practice research synthesized; Zensical docs site stood up.
+- **2026-06-01** — Project charter distilled from the SCADS onboarding brief into
+  **Mission & charter** (problem, central research question, deliverables, success
+  criteria, design constraints, program context); source PDF removed.
