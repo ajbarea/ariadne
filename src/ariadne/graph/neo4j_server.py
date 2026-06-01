@@ -7,7 +7,10 @@ guardrails the brief requires — so we never hand-roll Cypher execution.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from claude_agent_sdk.types import McpStdioServerConfig
 
 # Server pinned in pyproject; launched on demand via uvx for a clean subprocess.
 _SERVER_SPEC = "mcp-neo4j-cypher@0.6.0"
@@ -19,7 +22,7 @@ GRAPH_TOOLS = [
 ]
 
 
-def neo4j_stdio_config(env: dict[str, str]) -> dict[str, Any]:
+def neo4j_stdio_config(env: dict[str, str]) -> McpStdioServerConfig:
     """Return an McpStdioServerConfig dict for the read-only Neo4j MCP server.
 
     ``env`` is typically ``os.environ``. Connection settings fall back to the

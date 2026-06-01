@@ -100,6 +100,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "E402", "S603", "S607", "ASYNC221", "S108", "S105", "S106"]
 "scripts/*.py" = ["T201", "S607"]
+"src/ariadne/cli.py" = ["T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["ariadne"]
@@ -111,6 +112,9 @@ indent-style = "space"
 
 [tool.ty.environment]
 python-version = "3.12"
+
+[tool.ty.src]
+include = ["src/"]
 
 [tool.coverage.run]
 source = ["src/ariadne"]
