@@ -104,15 +104,19 @@ body.hero-page .md-content__inner {
 .md-typeset .hero > * {
   position: relative;
   z-index: 1;
+  /* Keep the whole text column in the left ~42% on wide screens so it clears
+     the art (thread + nodes) on the right. Reset to full width when the layout
+     centers on narrow screens (see the 960px media query). */
+  max-width: min(38rem, 42%);
 }
 
 .md-typeset .hero h1 {
-  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  font-size: clamp(2.3rem, 5vw, 3.4rem);
   font-weight: 800;
   margin-bottom: 0.6rem;
   letter-spacing: -0.035em;
-  line-height: 1.02;
-  max-width: 20ch;
+  line-height: 1.04;
+  max-width: 15ch;
   background: linear-gradient(135deg, #fff7e6 0%, var(--ari-thread-light) 45%, var(--ari-thread) 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -127,7 +131,7 @@ body.hero-page .md-content__inner {
   letter-spacing: 0.01em;
   opacity: 0.9;
   margin-bottom: 2rem;
-  max-width: 54ch;
+  max-width: 38ch;
   color: #ece6f5;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
 }
@@ -294,6 +298,16 @@ html.js-ready .landing-section.visible {
     align-items: center;
     text-align: center;
     padding: 4rem 6vw;
+  }
+
+  /* Centered layout — let the text use the full width again. */
+  .md-typeset .hero > * {
+    max-width: 100%;
+  }
+
+  .md-typeset .hero .hero-subtitle {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .md-typeset .hero .hero-buttons,
