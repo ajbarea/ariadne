@@ -1,6 +1,7 @@
 # Overview
 
-Ariadne is a **sensemaking harness for nonatomic entities** — SCADS Project #1.
+Ariadne is a **sensemaking harness for nonatomic entities**, built within the
+SCADS program.
 
 ## The problem
 

@@ -1,6 +1,6 @@
 # Ariadne
 
-**Sensemaking for nonatomic entities using AI coding agents.** SCADS Project #1.
+**Sensemaking for nonatomic entities using AI coding agents.** Part of the SCADS program.
 
 📖 **Docs:** <https://ajbarea.github.io/ariadne/>
 
@@ -10,11 +10,10 @@
 > back into a coherent analytic picture.
 
 > [!NOTE]
-> `ariadne` is a working codename, easy to rename. The architecture is being
-> defined from June-2026 best-practice research, now captured in
-> [`docs/research/`](./docs/research/) — runtime dependencies and the concrete
-> toolset stay intentionally unset until each is grounded in that research with a
-> `# research(YYYY-MM):` note. See [`ROADMAP.md`](./ROADMAP.md).
+> Every architectural decision is grounded in current best-practice research,
+> captured in [`docs/research/`](./docs/research/): new runtime dependencies and
+> tools aren't adopted until grounded there with a `# research(YYYY-MM):` note.
+> See [`ROADMAP.md`](./ROADMAP.md).
 
 ## The problem
 

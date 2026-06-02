@@ -17,9 +17,8 @@ this file should carry a `# research(YYYY-MM):` provenance note.
 
 ## Mission & charter
 
-> Distilled from the SCADS onboarding brief — **Project 1: "Sensemaking for
-> Nonatomic Entities using AI Coding Agents"** — and archived here 2026-06-01.
-> The brief is not retained; this section is now its system of record.
+> Distilled from the SCADS onboarding brief and archived here 2026-06-01. The
+> brief is not retained; this section is now its system of record.
 
 **Problem.** Modern SIGINT-style collection produces intelligence about entities
 embedded in large, complex *organizational hierarchies*, scattered across highly

@@ -1,6 +1,6 @@
 [project]
 site_name = "Ariadne"
-site_description = "A sensemaking harness for nonatomic entities — an agentic analytic interface over heterogeneous, multimodal data. SCADS Project #1."
+site_description = "A sensemaking harness for nonatomic entities — an agentic analytic interface over heterogeneous, multimodal data. Part of the SCADS program."
 site_author = "AJ Barea"
 site_url = "https://ajbarea.github.io/ariadne/"
 repo_url = "https://github.com/ajbarea/ariadne"

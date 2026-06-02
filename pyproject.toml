@@ -1,7 +1,7 @@
 [project]
 name = "ariadne"
 version = "0.1.0"
-description = "Sensemaking harness for nonatomic entities — an agentic analytic interface over heterogeneous, multimodal data (SCADS Project #1)"
+description = "Sensemaking harness for nonatomic entities — an agentic analytic interface over heterogeneous, multimodal data (SCADS)"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = { text = "MIT" }
