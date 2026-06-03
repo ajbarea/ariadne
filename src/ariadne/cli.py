@@ -72,6 +72,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="halberd",
         help="Needle fixture: 'halberd' (single-store graph) or 'wren-tie' (cross-store)",
     )
+    ix = sub.add_parser("index", help="Load a dataset's records into the live stores")
+    ix.add_argument(
+        "--dataset",
+        choices=sorted(DATASETS),
+        default="synthetic",
+        help="Dataset to index (default: synthetic).",
+    )
     return parser.parse_args(argv)
 
 
@@ -90,6 +97,32 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd") -> int:
         )
     print(line)
     return 0 if report.grounded else 1
+
+
+def _run_index(dataset: str, env: dict[str, str]) -> int:
+    """Load a dataset's canonical records into the live stores (graph + documents)."""
+    import psycopg
+    from neo4j import GraphDatabase
+
+    from ariadne.datasets.base import get_adapter
+    from ariadne.datasets.load import load_documents, load_graph
+
+    records = list(get_adapter(dataset).load())
+    driver = GraphDatabase.driver(
+        env.get("NEO4J_URI", "bolt://localhost:7687"),
+        auth=(env.get("NEO4J_USERNAME", "neo4j"), env.get("NEO4J_PASSWORD", "password")),
+    )
+    n_graph = load_graph(records, driver)
+    driver.close()
+    with psycopg.connect(
+        env.get("DATABASE_URI", "postgresql://ariadne:ariadne@localhost:5432/intel"),
+        autocommit=True,
+    ) as conn:
+        n_docs, n_attrs = load_documents(records, conn)
+    print(
+        f"Indexed {dataset}: {n_graph} graph statements, {n_docs} documents, {n_attrs} attributes."
+    )
+    return 0
 
 
 def build_options(
@@ -180,6 +213,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.command == "eval":
         return _run_eval(args.workup_dir, args.fixture)
+    if args.command == "index":
+        return _run_index(args.dataset, dict(os.environ))
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",
