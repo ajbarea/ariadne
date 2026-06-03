@@ -11,11 +11,10 @@ from typing import TYPE_CHECKING, Literal
 
 from ariadne.datasets.base import register
 from ariadne.datasets.canonical import Canonical, Document, Entity, Relationship
+from ariadne.evaluation.needle import FIXTURES, NeedleFixture, SupportingFact
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
-
-    from ariadne.evaluation.needle import NeedleFixture
 
 
 def _norm(addr: str) -> str:
@@ -88,6 +87,20 @@ _DATASET = "corbt/enron-emails"
 _DEFAULT_MAILBOX = "kaminski-v"
 _DEFAULT_LIMIT = 3000
 
+# The non-obvious cross-account tie: Kaminski forwards work mail to a personal
+# AOL address — the same person under a second identity, surfaced only by the
+# communication pattern. Real-data analog of the synthetic Halberd↔Wren needle.
+KAMINSKI_AOL_FIXTURE = NeedleFixture(
+    entity="vince.kaminski@enron.com",
+    answer_markers=("vkaminski@aol.com",),
+    traversal_markers=("EMAILED",),
+    min_hops=1,
+    supporting_facts=(
+        SupportingFact(note_markers=("vkaminski@aol.com",), ledger_markers=("EMAILED",)),
+    ),
+)
+FIXTURES["kaminski-aol"] = KAMINSKI_AOL_FIXTURE
+
 
 class EnronAdapter:
     """Streams `corbt/enron-emails`, optionally bounded to one mailbox, to canonical.
@@ -127,7 +140,7 @@ class EnronAdapter:
         return map_messages(self._rows())
 
     def eval_fixtures(self) -> list[NeedleFixture]:
-        return []  # the kaminski-aol fixture is wired in Task 3
+        return [KAMINSKI_AOL_FIXTURE]
 
 
 register(EnronAdapter())
