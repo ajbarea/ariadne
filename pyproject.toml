@@ -33,6 +33,12 @@ dependencies = [
 [project.optional-dependencies]
 data = ["datasets>=3"]
 
+# research(2026-06): Semantic retrieval leg (ADR-0007) — sentence-transformers
+# provides the real embedding backend; default model is bge-small-en-v1.5
+# (384-dim, Apache-2.0, ungated). Heavy + optional — the core path uses
+# FakeEmbedder and stays hermetic without this extra.
+embed = ["sentence-transformers>=3"]
+
 # research(2026-06): Stage-2 citation entailment (precision) via Vectara
 # HHEM-2.1-Open. Heavy + optional — the core validation path runs without it.
 # See docs/research/analytic-rigor-eval.md and src/ariadne/provenance/entailment.py.
