@@ -24,6 +24,8 @@ from claude_agent_sdk import (
 )
 from dotenv import find_dotenv, load_dotenv
 
+import ariadne.datasets.synthetic  # noqa: F401  (registers the synthetic adapter)
+from ariadne.datasets.base import DATASETS
 from ariadne.evaluation.needle import FIXTURES, score_workup_dir
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
 from ariadne.provenance.citations import validate_citations
@@ -55,6 +57,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--sql",
         action="store_true",
         help="Also query the relational store (heterogeneous retrieval; needs Postgres)",
+    )
+    wk.add_argument(
+        "--dataset",
+        choices=sorted(DATASETS),
+        default="synthetic",
+        help="Which dataset to work up (default: synthetic).",
     )
     ev = sub.add_parser("eval", help="Score a workup dir against the planted-needle fixture")
     ev.add_argument("workup_dir", help="Workup output dir (note.md + provenance.jsonl)")
@@ -106,8 +114,16 @@ def build_options(
 
 
 async def run_workup(
-    entity: str, out_root: str, env: dict[str, str], *, with_sql: bool = False
+    entity: str,
+    out_root: str,
+    env: dict[str, str],
+    *,
+    with_sql: bool = False,
+    dataset: str = "synthetic",
 ) -> int:
+    from ariadne.datasets.base import get_adapter
+
+    get_adapter(dataset)  # raises KeyError on unknown; synthetic uses the seeded graph
     ledger = ProvenanceLedger()
     options = build_options(ledger=ledger, env=env, with_sql=with_sql)
     prompt = f"Run entity workup on: {entity}"
@@ -170,4 +186,6 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    return asyncio.run(run_workup(args.entity, args.out, dict(os.environ), with_sql=args.sql))
+    return asyncio.run(
+        run_workup(args.entity, args.out, dict(os.environ), with_sql=args.sql, dataset=args.dataset)
+    )
