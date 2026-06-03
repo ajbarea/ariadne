@@ -108,12 +108,11 @@ def _run_index(dataset: str, env: dict[str, str]) -> int:
     from ariadne.datasets.load import load_documents, load_graph
 
     records = list(get_adapter(dataset).load())
-    driver = GraphDatabase.driver(
+    with GraphDatabase.driver(
         env.get("NEO4J_URI", "bolt://localhost:7687"),
         auth=(env.get("NEO4J_USERNAME", "neo4j"), env.get("NEO4J_PASSWORD", "password")),
-    )
-    n_graph = load_graph(records, driver)
-    driver.close()
+    ) as driver:
+        n_graph = load_graph(records, driver)
     with psycopg.connect(
         env.get("DATABASE_URI", "postgresql://ariadne:ariadne@localhost:5432/intel"),
         autocommit=True,
