@@ -108,3 +108,40 @@ def upsert_attributes(conn, records: Iterable[Canonical]) -> int:  # type: ignor
     for row in rows:
         conn.execute(_UPSERT_ATTR.encode(), row)
     return len(rows)
+
+
+# ---------------------------------------------------------------------------
+# Vector (pgvector) leg — B3.1
+# ---------------------------------------------------------------------------
+
+
+def vector_ddl(dim: int) -> tuple[str, ...]:
+    """DDL to add the pgvector column + HNSW cosine index (idempotent)."""
+    return (
+        "CREATE EXTENSION IF NOT EXISTS vector",
+        f"ALTER TABLE documents ADD COLUMN IF NOT EXISTS embedding vector({dim})",
+        "CREATE INDEX IF NOT EXISTS documents_embedding_hnsw "
+        "ON documents USING hnsw (embedding vector_cosine_ops) "
+        "WITH (m = 16, ef_construction = 64)",
+    )
+
+
+def store_embedding_sql() -> str:
+    """Parameterised: write one document's embedding (%(embedding)s = '[...]' vector literal)."""
+    return "UPDATE documents SET embedding = %(embedding)s::vector WHERE id = %(id)s"
+
+
+def _vector_literal(vec: list[float]) -> str:
+    return "[" + ",".join(repr(float(x)) for x in vec) + "]"
+
+
+def ensure_vector_schema(conn, dim: int) -> None:  # type: ignore[type-arg]
+    for stmt in vector_ddl(dim):
+        conn.execute(stmt.encode())
+
+
+def store_embeddings(conn, id_to_vec: dict[str, list[float]]) -> int:  # type: ignore[type-arg]
+    sql = store_embedding_sql().encode()
+    for doc_id, vec in id_to_vec.items():
+        conn.execute(sql, {"id": doc_id, "embedding": _vector_literal(vec)})
+    return len(id_to_vec)
