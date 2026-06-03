@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from ariadne.provenance.ledger import ProvenanceLedger
 
 # Evidence-store tool families whose calls are recorded for citation.
-EVIDENCE_TOOL_PREFIXES = ("mcp__neo4j__", "mcp__postgres__")
+EVIDENCE_TOOL_PREFIXES = ("mcp__neo4j__", "mcp__postgres__", "mcp__ariadne__")
 
 
 def _source_label(tool: str) -> str:
@@ -41,6 +41,8 @@ def _source_label(tool: str) -> str:
         return "graph"
     if tool.startswith("mcp__postgres__"):
         return "relational"
+    if tool.startswith("mcp__ariadne__"):
+        return "text"
     return "evidence"
 
 

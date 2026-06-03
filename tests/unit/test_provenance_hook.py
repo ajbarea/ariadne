@@ -57,6 +57,27 @@ async def test_hook_records_relational_calls_too() -> None:
 
 
 @pytest.mark.asyncio
+async def test_hook_records_ariadne_search_calls() -> None:
+    # In-process semantic-search tool is cited the same way as graph/relational evidence.
+    led = ProvenanceLedger()
+    hook = make_provenance_hook(led)
+    out = await hook(
+        cast(
+            "PostToolUseHookInput",
+            {
+                "tool_name": "mcp__ariadne__hybrid_search",
+                "tool_input": {"query": "protein folding pathways"},
+                "tool_response": "results...",
+            },
+        ),
+        "tool-use-ariadne",
+        _CTX,
+    )
+    assert led.has("g1")
+    assert "g1" in str(out) and "cite" in str(out).lower()
+
+
+@pytest.mark.asyncio
 async def test_hook_ignores_non_evidence_tools() -> None:
     led = ProvenanceLedger()
     hook = make_provenance_hook(led)
