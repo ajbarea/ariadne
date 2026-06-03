@@ -91,6 +91,15 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   into the live agent loop is B3.2. Full plan:
   [docs/superpowers/plans/2026-06-03-phase-b3-1-semantic-leg.md](./docs/superpowers/plans/2026-06-03-phase-b3-1-semantic-leg.md).
 
+- **Phase B3.2 — Semantic agent tool shipped (2026-06-03).** In-process
+  `mcp__ariadne__hybrid_search` SDK tool embeds the query, RRF-fuses full-text +
+  pgvector, and returns ranked email passages; `--semantic` CLI flag wires it into
+  `workup`; provenance hook records `mcp__ariadne__` calls so results get
+  `[cite:gN]` ids; `entity-workup` skill routes to it for email-body evidence.
+  ADR-0007's hybrid retrieval is now realized in the live agent loop — the live
+  Kaminski demo exercises graph + full-text + semantic together. Full plan:
+  [docs/superpowers/plans/2026-06-03-phase-b3-2-semantic-agent-tool.md](./docs/superpowers/plans/2026-06-03-phase-b3-2-semantic-agent-tool.md).
+
 - **Phase B2 — Enron adapter shipped (2026-06-03).** `EnronAdapter` streams
   `corbt/enron-emails` bounded to Vince Kaminski's `kaminski-v` mailbox (HF
   `datasets` behind the optional `data` extra; lazy + streaming); maps headers

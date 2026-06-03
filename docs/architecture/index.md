@@ -47,7 +47,9 @@ dataset-agnostic indexer fans the records into the stores. The agent,
 dataset. Unstructured/free-text evidence is now retrieved via **hybrid retrieval** —
 Postgres full-text (`tsvector` GIN, `websearch_to_tsquery`) fused with pgvector
 semantic search via Reciprocal Rank Fusion — per
-[ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md). A second adapter (the Enron email corpus, via HF streaming)
+[ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md). The agent reaches
+this hybrid retrieval via the in-process `mcp__ariadne__hybrid_search` tool
+(opt-in `--semantic`), per ADR-0007. A second adapter (the Enron email corpus, via HF streaming)
 plugs in through the same canonical schema with no change to the agent,
 connectors, or eval harness — demonstrating generalization beyond the synthetic
 graph. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md)

@@ -179,10 +179,12 @@ items must not be hardened against one answer.
       default `bge-small-en-v1.5`), pgvector `embedding vector(N)` column + HNSW
       cosine index on `documents`, `hybrid_search` RRF-fuses full-text + vector
       legs (`1/(k+rank)`, k=60). Decision: [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
-- [ ] **Phase B3.2 — Wire hybrid search into the live agent loop:** expose
-      `hybrid_search` as an in-process agent tool in `workup`, add its prefix to
-      the provenance hook, update `entity-workup` skill — realizing ADR-0007's
-      hybrid retrieval end-to-end.
+- [x] **Phase B3.2 — Hybrid search wired into the live agent loop (2026-06-03):**
+      in-process `mcp__ariadne__hybrid_search` SDK tool + `--semantic` flag +
+      provenance hook records `mcp__ariadne__` calls for `[cite:gN]`; skill routes
+      email-body queries to it. ADR-0007 hybrid retrieval is now complete
+      end-to-end: full-text + semantic + RRF in the live loop. The live Kaminski
+      demo exercises graph + full-text + semantic together.
 - [ ] **Phase C — Avocado adapter:** local PST/export → canonical; `access="restricted"`,
       access-gated behind `ARIADNE_ALLOW_RESTRICTED=1`; malware caveat (loveletter,
       ~27 msgs) — ingest text/headers only. Built now, populated when licensed data
