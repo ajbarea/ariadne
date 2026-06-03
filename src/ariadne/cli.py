@@ -65,6 +65,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="synthetic",
         help="Which dataset to work up (default: synthetic).",
     )
+    wk.add_argument(
+        "--semantic",
+        action="store_true",
+        help="Enable hybrid full-text+semantic search over email bodies "
+        "(needs the 'embed' extra + Postgres).",
+    )
     ev = sub.add_parser("eval", help="Score a workup dir against the planted-needle fixture")
     ev.add_argument("workup_dir", help="Workup output dir (note.md + provenance.jsonl)")
     ev.add_argument(
@@ -126,7 +132,11 @@ def _run_index(dataset: str, env: dict[str, str]) -> int:
 
 
 def build_options(
-    *, ledger: ProvenanceLedger, env: dict[str, str], with_sql: bool = False
+    *,
+    ledger: ProvenanceLedger,
+    env: dict[str, str],
+    with_sql: bool = False,
+    with_semantic: bool = False,
 ) -> ClaudeAgentOptions:
     hook = make_provenance_hook(ledger)
     mcp_servers: dict[str, McpServerConfig] = {"neo4j": neo4j_stdio_config(env)}
@@ -136,6 +146,14 @@ def build_options(
         mcp_servers["postgres"] = postgres_stdio_config(env)
         allowed_tools += list(RELATIONAL_TOOLS)
         matchers.append(HookMatcher(matcher="mcp__postgres__.*", hooks=[hook]))
+    if with_semantic:
+        from ariadne.unstructured.embed import SentenceTransformerEmbedder
+        from ariadne.unstructured.search_tool import ARIADNE_TOOLS, make_ariadne_server
+
+        embedder = SentenceTransformerEmbedder()
+        mcp_servers["ariadne"] = make_ariadne_server(env, embedder)
+        allowed_tools += list(ARIADNE_TOOLS)
+        matchers.append(HookMatcher(matcher="mcp__ariadne__.*", hooks=[hook]))
     return ClaudeAgentOptions(
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,
@@ -152,13 +170,14 @@ async def run_workup(
     env: dict[str, str],
     *,
     with_sql: bool = False,
+    with_semantic: bool = False,
     dataset: str = "synthetic",
 ) -> int:
     from ariadne.datasets.base import get_adapter
 
     get_adapter(dataset)  # raises KeyError on unknown; synthetic uses the seeded graph
     ledger = ProvenanceLedger()
-    options = build_options(ledger=ledger, env=env, with_sql=with_sql)
+    options = build_options(ledger=ledger, env=env, with_sql=with_sql, with_semantic=with_semantic)
     prompt = f"Run entity workup on: {entity}"
 
     note_parts: list[str] = []
@@ -222,5 +241,12 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     return asyncio.run(
-        run_workup(args.entity, args.out, dict(os.environ), with_sql=args.sql, dataset=args.dataset)
+        run_workup(
+            args.entity,
+            args.out,
+            dict(os.environ),
+            with_sql=args.sql,
+            with_semantic=args.semantic,
+            dataset=args.dataset,
+        )
     )

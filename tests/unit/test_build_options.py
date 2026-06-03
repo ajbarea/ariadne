@@ -23,3 +23,16 @@ def test_with_sql_adds_postgres_store_tools_and_hook() -> None:
     for tool in (*GRAPH_TOOLS, *RELATIONAL_TOOLS):
         assert tool in (cfg.allowed_tools or [])
     assert {m.matcher for m in hooks["PostToolUse"]} == {"mcp__neo4j__.*", "mcp__postgres__.*"}
+
+
+def test_with_semantic_adds_the_ariadne_tool_and_server() -> None:
+    from ariadne.cli import build_options
+    from ariadne.provenance.ledger import ProvenanceLedger
+
+    opts = build_options(
+        ledger=ProvenanceLedger(), env={"DATABASE_URI": "postgresql://x"}, with_semantic=True
+    )
+    servers = opts.mcp_servers
+    assert isinstance(servers, dict)
+    assert "mcp__ariadne__hybrid_search" in opts.allowed_tools
+    assert "ariadne" in set(servers)
