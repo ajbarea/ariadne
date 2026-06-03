@@ -39,7 +39,18 @@ def load_graph(records: list[Canonical], driver) -> int:
     return len(stmts)
 
 
-def load_documents(records: Iterable[Canonical], conn) -> tuple[int, int]:
+def load_documents(records: Iterable[Canonical], conn, embedder=None) -> tuple[int, int]:
     records = list(records)
     ensure_schema(conn)
-    return upsert_documents(conn, records), upsert_attributes(conn, records)
+    n_docs = upsert_documents(conn, records)
+    n_attrs = upsert_attributes(conn, records)
+    if embedder is not None:
+        from ariadne.datasets.canonical import Document
+        from ariadne.unstructured.document_store import ensure_vector_schema, store_embeddings
+
+        docs = [r for r in records if isinstance(r, Document)]
+        if docs:
+            ensure_vector_schema(conn, embedder.dim)
+            vecs = embedder.embed([d.text for d in docs])
+            store_embeddings(conn, {d.id: v for d, v in zip(docs, vecs, strict=True)})
+    return n_docs, n_attrs

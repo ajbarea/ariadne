@@ -86,6 +86,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="synthetic",
         help="Dataset to index (default: synthetic).",
     )
+    ix.add_argument(
+        "--semantic",
+        action="store_true",
+        help="Also compute + store document embeddings (semantic leg; needs the 'embed' extra + pgvector).",
+    )
     return parser.parse_args(argv)
 
 
@@ -106,7 +111,7 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd") -> int:
     return 0 if report.grounded else 1
 
 
-def _run_index(dataset: str, env: dict[str, str]) -> int:
+def _run_index(dataset: str, env: dict[str, str], semantic: bool = False) -> int:
     """Load a dataset's canonical records into the live stores (graph + documents)."""
     import psycopg
     from neo4j import GraphDatabase
@@ -120,11 +125,16 @@ def _run_index(dataset: str, env: dict[str, str]) -> int:
         auth=(env.get("NEO4J_USERNAME", "neo4j"), env.get("NEO4J_PASSWORD", "password")),
     ) as driver:
         n_graph = load_graph(records, driver)
+    embedder = None
+    if semantic:
+        from ariadne.unstructured.embed import SentenceTransformerEmbedder
+
+        embedder = SentenceTransformerEmbedder()
     with psycopg.connect(
         env.get("DATABASE_URI", "postgresql://ariadne:ariadne@localhost:5432/intel"),
         autocommit=True,
     ) as conn:
-        n_docs, n_attrs = load_documents(records, conn)
+        n_docs, n_attrs = load_documents(records, conn, embedder=embedder)
     print(
         f"Indexed {dataset}: {n_graph} graph statements, {n_docs} documents, {n_attrs} attributes."
     )
@@ -233,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "eval":
         return _run_eval(args.workup_dir, args.fixture)
     if args.command == "index":
-        return _run_index(args.dataset, dict(os.environ))
+        return _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",
