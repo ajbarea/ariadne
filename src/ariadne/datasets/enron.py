@@ -7,12 +7,15 @@ class streams the real corpus in Task 2.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
+from ariadne.datasets.base import register
 from ariadne.datasets.canonical import Canonical, Document, Entity, Relationship
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+    from ariadne.evaluation.needle import NeedleFixture
 
 
 def _norm(addr: str) -> str:
@@ -79,3 +82,52 @@ def map_messages(rows: Iterable[dict]) -> Iterator[Canonical]:
     for (src, dst), attrs in edges.items():
         yield Relationship(src=src, dst=dst, type="EMAILED", attributes=attrs)
     yield from documents
+
+
+_DATASET = "corbt/enron-emails"
+_DEFAULT_MAILBOX = "kaminski-v"
+_DEFAULT_LIMIT = 3000
+
+
+class EnronAdapter:
+    """Streams `corbt/enron-emails`, optionally bounded to one mailbox, to canonical.
+
+    ``mailbox`` filters by the `file_name` prefix (the demo default is
+    ``kaminski-v`` — Vince Kaminski's mailbox); ``mailbox=None`` takes the first
+    ``limit`` rows unfiltered (used by the fast integration test). Streaming
+    avoids downloading all ~517K rows.
+    """
+
+    name: str = "enron"
+    entity_type: str = "person"
+    access: Literal["public", "restricted"] = "public"
+
+    def __init__(self, mailbox: str | None = _DEFAULT_MAILBOX, limit: int = _DEFAULT_LIMIT) -> None:
+        self.mailbox = mailbox
+        self.limit = limit
+
+    def _stream(self):
+        # Lazy import: `datasets` is the optional `data` extra.
+        from datasets import load_dataset  # ty: ignore[unresolved-import]
+
+        return load_dataset(_DATASET, split="train", streaming=True)
+
+    def _rows(self):
+        prefix = f"{self.mailbox}/" if self.mailbox else None
+        taken = 0
+        for row in self._stream():
+            if prefix and not str(row.get("file_name") or "").startswith(prefix):
+                continue
+            yield row
+            taken += 1
+            if taken >= self.limit:
+                break
+
+    def load(self):
+        return map_messages(self._rows())
+
+    def eval_fixtures(self) -> list[NeedleFixture]:
+        return []  # the kaminski-aol fixture is wired in Task 3
+
+
+register(EnronAdapter())
