@@ -29,6 +29,7 @@ nav = [
           { "0005 · Defer subagent fan-out" = "architecture/decisions/0005-defer-subagent-fan-out.md" },
           { "0006 · Dataset-agnostic pipeline" = "architecture/decisions/0006-dataset-agnostic-pipeline.md" },
           { "0007 · Hybrid retrieval (full-text first)" = "architecture/decisions/0007-hybrid-retrieval-fulltext-first.md" },
+          { "0008 · Multimodal: agentic-to-text" = "architecture/decisions/0008-multimodal-agentic-to-text-not-native-embeddings.md" },
       ]},
   ]},
   { "Research" = [

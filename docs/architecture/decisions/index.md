@@ -34,6 +34,7 @@ ADR is where the *comparison* lives.
 | [0005](0005-defer-subagent-fan-out.md) | Defer subagent fan-out pending a design pass | Deferred |
 | [0006](0006-dataset-agnostic-pipeline.md) | Dataset-agnostic pipeline (canonical schema + adapters) | Accepted |
 | [0007](0007-hybrid-retrieval-fulltext-first.md) | Hybrid retrieval, full-text first (in-Postgres) | Accepted |
+| [0008](0008-multimodal-agentic-to-text-not-native-embeddings.md) | Multimodal via agentic-to-text, not native multimodal embeddings | Accepted |
 
 ## Template
 

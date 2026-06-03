@@ -643,5 +643,5 @@ git commit -m "docs(datasets): ADR-0006 dataset abstraction; concision pass"
 ## Next plans (after A lands, against real interfaces)
 
 - **Phase B:** Enron HF adapter + the hybrid (full-text + pgvector) retrieval connector + indexer `Document`/`Attribute` store-loading → ADR-0007.
-- **Phase C:** Avocado `restricted` adapter + access-control governance → ADR-0008.
+- **Phase C:** Avocado `restricted` adapter + access-control governance → ADR-0009.
 ```
