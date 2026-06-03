@@ -20,11 +20,11 @@ for the full doc-cited mechanics.
 
 ## Decisions
 
-Significant, contestable choices — *which store, which connector, what we
-deferred and why* — live in the [Decision log](decisions/index.md) as ADRs. When
-someone asks "why this instead of that?", that is the place to point. The
-Postgres-over-Redis comparison is
-[ADR-0004](decisions/0004-postgres-over-redis-for-relational-store.md).
+Significant, contestable choices — *which store, which connector, what was
+deferred and why* — live in the [Decision log](decisions/index.md) as ADRs: the
+single place to point when asked "why this instead of that?" Notable examples:
+the Postgres-over-Redis comparison ([ADR-0004](decisions/0004-postgres-over-redis-for-relational-store.md))
+and the dataset-abstraction approach ([ADR-0006](decisions/0006-dataset-agnostic-pipeline.md)).
 
 ## Emerging shape (from the research)
 
@@ -37,9 +37,21 @@ capability for traversing organizational hierarchies; multimodal evidence is
 fused **agentically** by converting imagery/video to structured text before
 reasoning over it.
 
+## Datasets
+
+A future developer adds a corpus by writing one **adapter** that maps raw data to
+the canonical schema (`Entity` / `Relationship` / `Document` / `Attribute`); a
+dataset-agnostic indexer fans the records into the stores. The agent,
+`entity-workup` skill, connectors, and eval harness never change. Governance
+(access-control, PII gating) attaches at the canonical layer once, not per
+dataset. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md) for the
+decision record and
+[`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)
+for the full design.
+
 ## To be written
 
 Once the MVP boundary is set: the end-to-end analytic workflow (entity in →
-coordinated tool sequence → cited analytic product), the source-routing /
-reconciliation strategy, the entity-resolution approach, the provenance model,
-and the cloud-vs-air-gapped component map.
+coordinated tool sequence → cited analytic product), source-routing /
+reconciliation strategy, entity-resolution approach, provenance model, and
+cloud-vs-air-gapped component map.

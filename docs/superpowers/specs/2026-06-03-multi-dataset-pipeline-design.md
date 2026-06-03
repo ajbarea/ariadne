@@ -43,7 +43,7 @@ vectors"; Enron ≈500K emails sits an order of magnitude inside that. Both legs
 live in the **one access-controlled Postgres store** already built. Escape hatch
 when scale grows: pgvectorscale (StreamingDiskANN) or a dedicated store (Qdrant).
 Reconciles with Anthropic's "default to agentic search, add semantic only when
-needed." → **ADR-0006**.
+needed." → **ADR-0007**.
 Sources: [hybrid BM25+vector (2026)](https://techbytes.app/posts/hybrid-rag-search-bm25-embeddings-deep-dive-2026/),
 [full-text for RAG](https://redis.io/blog/full-text-search-for-rag-the-precision-layer/),
 [vector DB benchmarks 2026](https://callsphere.ai/blog/vector-database-benchmarks-2026-pgvector-qdrant-weaviate-milvus-lancedb).
@@ -63,7 +63,7 @@ An adapter declares `access ∈ {public, restricted}`. A `restricted` adapter
 gated behind an explicit authorized-access flag. Whether PII content may reach a
 cloud model is flagged for the cloud-vs-air-gap fork, not solved here. Putting
 governance at the canonical choke point means every new dataset inherits it.
-→ **ADR-0007**.
+→ **ADR-0008**.
 
 ## Canonical schema (the contract — keep minimal)
 
@@ -169,4 +169,4 @@ PII fork; subagent fan-out (deferred, ADR-0005).
    authorized flag (no data required to test the gate).
 4. Adding a dataset touches only a new adapter file + its eval fixtures.
 5. `make lint` + `make test-unit` green; integration green with a key.
-6. ADR-0006 (hybrid retrieval) and ADR-0007 (dataset governance) written.
+6. ADR-0007 (hybrid retrieval) and ADR-0008 (dataset governance) written.

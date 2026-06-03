@@ -65,6 +65,14 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   co-location), flagging a graph/relational conflict on Talon's site, and
   attributing facts by source. Scores `grounded=True` on the eval harness.
 
+- **Phase A — Dataset abstraction shipped (2026-06-03).** Canonical schema
+  (`Entity` / `Relationship` / `Document` / `Attribute`) + `DatasetAdapter`
+  protocol + `DATASETS` registry + dataset-agnostic indexer + synthetic adapter
+  (wraps the existing seed graph, proves the seam) + `--dataset` flag wired into
+  the CLI. Full plan:
+  [docs/superpowers/plans/2026-06-03-phase-a-dataset-abstraction.md](./docs/superpowers/plans/2026-06-03-phase-a-dataset-abstraction.md).
+  Decision: [ADR-0006](./docs/architecture/decisions/0006-dataset-agnostic-pipeline.md).
+
 ## In flight — rigor (Phase 4) + Phase 2 retrieval
 
 Rigor next (grounded; see the research doc):

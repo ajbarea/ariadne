@@ -160,6 +160,18 @@ items must not be hardened against one answer.
       reconciles. A live two-store run surfaced the Halberd↔Wren cross-modality
       tie, flagged a graph/relational conflict, and scored `grounded=True`
       (2026-06-02). `# research(2026-06): ER-RAG shared-key routing + MADAM-RAG conflict-flagging.`
+- [x] **Phase A — Dataset abstraction** (2026-06-03): canonical schema +
+      `DatasetAdapter` protocol + `DATASETS` registry + dataset-agnostic indexer +
+      synthetic adapter + `--dataset` flag. Decision: [ADR-0006](./docs/architecture/decisions/0006-dataset-agnostic-pipeline.md).
+      Full design: [`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](./docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md).
+      `# research(2026-06): canonical-data-model pattern (datadriven.io + enterpriseintegrationpatterns.com).`
+- [ ] **Phase B — Enron adapter:** HF `corbt/enron-emails` → canonical (headers→graph,
+      body→Document); hybrid retrieval connector (full-text first, then pgvector).
+      Generalization + tri-modal sensemaking on real public data.
+- [ ] **Phase C — Avocado adapter:** local PST/export → canonical; `access="restricted"`,
+      access-gated behind `ARIADNE_ALLOW_RESTRICTED=1`; malware caveat (loveletter,
+      ~27 msgs) — ingest text/headers only. Built now, populated when licensed data
+      is provided.
 - [ ] Add the vector/unstructured connector.
 - [ ] Subagent fan-out for parallel per-store retrieval — **deferred pending a
       design pass** (not blocked on research). Naive fan-out conflicts with the

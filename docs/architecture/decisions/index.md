@@ -32,6 +32,7 @@ ADR is where the *comparison* lives.
 | [0003](0003-postgres-mcp-restricted-mode.md) | Expose Postgres via `postgres-mcp` Restricted Mode | Accepted |
 | [0004](0004-postgres-over-redis-for-relational-store.md) | Keep Postgres (not Redis) for the relational store | Accepted |
 | [0005](0005-defer-subagent-fan-out.md) | Defer subagent fan-out pending a design pass | Deferred |
+| [0006](0006-dataset-agnostic-pipeline.md) | Dataset-agnostic pipeline (canonical schema + adapters) | Accepted |
 
 ## Template
 

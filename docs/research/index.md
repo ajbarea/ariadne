@@ -19,8 +19,7 @@ note in the [Roadmap](../roadmap.md).
 
 ## How this research was produced
 
-The findings were gathered by fanning out parallel web searches across six
-angles, fetching and de-duplicating sources, extracting falsifiable claims, and
-**adversarially verifying** each one (3-vote, majority-refute kills the claim)
-before synthesis. Confidence levels and open questions are carried through to the
-report so unsettled areas stay visible rather than being smoothed over.
+Parallel web searches across six angles, source de-duplication, falsifiable-claim
+extraction, and **adversarial verification** (3-vote, majority-refute kills the
+claim). Confidence levels and open questions are carried through so unsettled
+areas stay visible.

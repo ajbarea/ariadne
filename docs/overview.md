@@ -15,22 +15,20 @@ relationship may be distributed across:
 - **unstructured repositories** — free text, documents, transcripts
 
 …while the associated content spans **multiple modalities**: metadata records,
-free text, imagery, and video. No single query interface or analytic tool
-addresses this full spectrum. Analysts are forced to pivot manually across
-disparate systems, losing context and analytic momentum at every transition.
-
-The challenge is not merely data access — it is **coherent, multi-hop reasoning
-across heterogeneous representations**, where critical evidence may be linked
-only through implicit organizational relationships buried across modalities.
+free text, imagery, and video. No single query interface addresses this full
+spectrum, so analysts pivot manually across disparate systems, losing context
+and momentum at every transition. The hard part is not data access — it is
+**coherent, multi-hop reasoning across heterogeneous representations**, where
+critical evidence may be linked only through implicit organizational
+relationships buried across modalities.
 
 ## The approach
 
-Ariadne leverages an agentic AI harness — the **Claude Agent SDK** — as a
-*unifying analytic interface* over these diverse data environments. Rather than
-replacing existing data infrastructure, the harness serves as an **orchestration
-layer**: it dispatches specialized tools and skills to retrieve, interpret, and
-synthesize information across graph, structured, and unstructured sources in a
-coordinated workflow.
+Ariadne uses the **Claude Agent SDK** as a *unifying analytic interface* over
+these diverse data environments: an **orchestration layer** that dispatches
+specialized tools and skills to retrieve, interpret, and synthesize information
+across graph, structured, and unstructured sources — without replacing existing
+data infrastructure.
 
 **Central research question:** given such a harness and its user interface, what
 specific **tools, skills, and hooks** are necessary to support a rigorous
