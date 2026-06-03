@@ -111,6 +111,13 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   generalizes to a second, real corpus. Full plan:
   [docs/superpowers/plans/2026-06-03-phase-b2-enron-adapter.md](./docs/superpowers/plans/2026-06-03-phase-b2-enron-adapter.md).
 
+- **Distribution shipped (2026-06-03).** `ariadne` MCP server
+  (`workup` + `hybrid_search` tools, `ariadne-mcp` console script) + Claude Code
+  plugin bundle (`.claude-plugin/marketplace.json` at root +
+  `plugins/ariadne/` with `plugin.json`, `.mcp.json`, and the `analyst-workup`
+  skill). ADR-0009. Full plan:
+  [docs/superpowers/plans/2026-06-03-distribution-mcp-server-and-plugin.md](./docs/superpowers/plans/2026-06-03-distribution-mcp-server-and-plugin.md).
+
 ## In flight — rigor (Phase 4) + Phase 2 retrieval
 
 Rigor next (grounded; see the research doc):

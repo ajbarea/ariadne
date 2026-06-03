@@ -57,6 +57,13 @@ for the dataset-abstraction decision record and
 [`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)
 for the full design.
 
+## Distribution
+
+Ariadne is consumable as an MCP server (the `workup` tool runs the full harness
+and returns a cited analytic note) from any MCP client, with a Claude Code
+plugin wrapper for one-click install and slash-command UX, per
+[ADR-0009](decisions/0009-distribute-as-mcp-server-and-plugin.md).
+
 ## To be written
 
 Once the MVP boundary is set: the end-to-end analytic workflow (entity in →

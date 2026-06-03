@@ -305,6 +305,13 @@ items must not be hardened against one answer.
 
 ## Shipped
 
+- **2026-06-03** — Distribution: `ariadne` MCP server (`workup` + `hybrid_search`
+  tools, `ariadne-mcp` script) + Claude Code plugin bundle (`marketplace.json` +
+  `plugins/ariadne/` with `.mcp.json` + analyst-workup skill). Ariadne is now
+  callable from any MCP-speaking CLI and one-click installable in Claude Code.
+  ADR-0009. Remaining release step: publish to PyPI so `uvx ariadne-mcp` works
+  without a local checkout.
+
 - **2026-06-01** — Phase 1 vertical slice: read-only Neo4j MCP connector,
   entity-workup skill, PostToolUse provenance hook + citation-coverage validator,
   and `ariadne workup <entity>` CLI running the live agent loop to produce a cited

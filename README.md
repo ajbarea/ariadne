@@ -62,6 +62,48 @@ resolution models, multimodal indexing schemes — can be surfaced as callable
 tools within the harness. It is both a standalone research contribution and a
 unifying demonstration layer for the SCADS portfolio.
 
+## Use from any AI CLI
+
+The `ariadne` MCP server exposes the `workup` tool to any MCP client — Claude
+Code, Copilot, Gemini CLI, Cursor, Windsurf, and others. Two install paths:
+
+**Claude Code (one-click):** add this repo's marketplace, then install the
+plugin:
+
+```bash
+/plugin marketplace add ajbarea/ariadne
+# then: /plugin install ariadne
+```
+
+This bundles the MCP server (`ariadne-mcp`) + the `analyst-workup` skill into
+Claude Code in a single step. A workup is then available via the `ariadne`
+server tool.
+
+**Any other MCP client:** add the server directly to the client's MCP config.
+From a local checkout (works now):
+
+```json
+{
+  "mcpServers": {
+    "ariadne": { "command": "python", "args": ["-m", "ariadne.mcp_server"] }
+  }
+}
+```
+
+Once Ariadne is published to PyPI, the `uvx` form will also work:
+
+```json
+{
+  "mcpServers": {
+    "ariadne": { "command": "uvx", "args": ["--from", "ariadne", "ariadne-mcp"] }
+  }
+}
+```
+
+Config caveat: the tool is portable; the data is not. Point the server at your
+stores (`NEO4J_*` / `DATABASE_URI`) and set `ANTHROPIC_API_KEY` per install.
+See [ADR-0009](./docs/architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md).
+
 ## Quickstart
 
 Phase 1 works up a target entity against a graph store and returns a cited analytic note.
