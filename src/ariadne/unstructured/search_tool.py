@@ -46,7 +46,7 @@ def make_ariadne_server(env: dict[str, str], embedder):
         "hybrid_search",
         "Hybrid (full-text + semantic) search over email-body documents. "
         "Returns ranked passages with their ids; cite facts you use as [cite:gN].",
-        {"query": str, "limit": int},
+        {"query": str},
     )
     async def hybrid_search_tool(args: dict) -> dict[str, Any]:
         import psycopg

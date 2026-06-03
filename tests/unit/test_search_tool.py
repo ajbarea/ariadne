@@ -22,3 +22,29 @@ def test_tool_name_constant() -> None:
 def test_make_ariadne_server_builds_an_sdk_server() -> None:
     server = make_ariadne_server({"DATABASE_URI": "postgresql://x"}, FakeEmbedder(dim=8))
     assert server is not None  # constructed without touching the DB
+
+
+def test_search_documents_preserves_rrf_rank_order(monkeypatch) -> None:
+    from ariadne.unstructured import search_tool
+
+    # hybrid_search returns RRF order [b, a]; the DB returns rows in a DIFFERENT order.
+    monkeypatch.setattr(search_tool, "hybrid_search", lambda conn, q, e, *, limit: ["b", "a"])
+
+    class _Cur:
+        def fetchall(self):
+            return [("a", "alpha text"), ("b", "beta text")]  # DB order a,b
+
+    class _Conn:
+        def execute(self, sql, params):
+            return _Cur()
+
+    results = search_tool.search_documents(_Conn(), "q", object(), limit=5)
+    assert [r["id"] for r in results] == ["b", "a"]  # RRF order, not DB order
+    assert results[0]["text"] == "beta text"
+
+
+def test_search_documents_empty_when_no_ids(monkeypatch) -> None:
+    from ariadne.unstructured import search_tool
+
+    monkeypatch.setattr(search_tool, "hybrid_search", lambda conn, q, e, *, limit: [])
+    assert search_tool.search_documents(object(), "q", object()) == []
