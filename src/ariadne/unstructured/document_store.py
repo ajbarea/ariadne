@@ -166,6 +166,7 @@ def hybrid_search_sql(candidates: int = 20) -> str:
         "  SELECT id, row_number() OVER ("
         "    ORDER BY ts_rank(content_tsv, websearch_to_tsquery('english', %(q)s)) DESC) AS rank"
         "  FROM documents WHERE content_tsv @@ websearch_to_tsquery('english', %(q)s)"
+        "  ORDER BY ts_rank(content_tsv, websearch_to_tsquery('english', %(q)s)) DESC"
         "  LIMIT " + cand + "), "
     )
     vec = (
@@ -175,7 +176,7 @@ def hybrid_search_sql(candidates: int = 20) -> str:
         "  ORDER BY embedding <=> %(qvec)s::vector LIMIT " + cand + ") "
     )
     tail = (
-        "SELECT COALESCE(fts.id, vec.id) AS id, "
+        "SELECT id, "
         "  COALESCE(1.0 / (%(k)s + fts.rank), 0) + COALESCE(1.0 / (%(k)s + vec.rank), 0) AS rrf "
         "FROM fts FULL OUTER JOIN vec USING (id) "
         "ORDER BY rrf DESC LIMIT %(limit)s"
