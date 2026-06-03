@@ -63,7 +63,7 @@ An adapter declares `access ∈ {public, restricted}`. A `restricted` adapter
 gated behind an explicit authorized-access flag. Whether PII content may reach a
 cloud model is flagged for the cloud-vs-air-gap fork, not solved here. Putting
 governance at the canonical choke point means every new dataset inherits it.
-→ **ADR-0009** (ADR-0008 is the multimodal-fusion decision).
+→ **a future governance ADR** (Phase C; number assigned when written).
 
 ## Canonical schema (the contract — keep minimal)
 
@@ -169,4 +169,4 @@ PII fork; subagent fan-out (deferred, ADR-0005).
    authorized flag (no data required to test the gate).
 4. Adding a dataset touches only a new adapter file + its eval fixtures.
 5. `make lint` + `make test-unit` green; integration green with a key.
-6. ADR-0007 (hybrid retrieval) and ADR-0009 (dataset governance) written.
+6. ADR-0007 (hybrid retrieval) written; dataset-governance ADR follows in Phase C.
