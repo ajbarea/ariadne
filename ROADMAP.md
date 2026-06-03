@@ -169,9 +169,11 @@ items must not be hardened against one answer.
       `document_store.py` `tsvector` GIN index + `websearch_to_tsquery`;
       `load_graph` / `load_documents` idempotent loaders; `ariadne index --dataset <name>` CLI.
       Decision: [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
-- [ ] **Phase B2 — Enron HF adapter:** `corbt/enron-emails` → canonical
-      (headers→graph, body→Document); `ariadne index --dataset enron` proves
-      the pipeline on real public data.
+- [x] **Phase B2 — Enron HF adapter** (2026-06-03): `EnronAdapter` streams
+      `corbt/enron-emails` (Kaminski `kaminski-v` mailbox), maps headers→graph
+      and body→Document deterministically; registered in `DATASETS`; `kaminski-aol`
+      eval needle scores the non-obvious cross-account tie. Proves the canonical
+      seam generalizes to a second, real corpus.
 - [ ] **Phase B3 — Semantic pgvector leg + RRF fusion:** adds the vector connector
       and reciprocal-rank fusion with the full-text leg — completes the hybrid
       retrieval design in [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).

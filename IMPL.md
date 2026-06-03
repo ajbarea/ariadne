@@ -82,6 +82,17 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   Full plan:
   [docs/superpowers/plans/2026-06-03-phase-b1-live-indexing-fulltext.md](./docs/superpowers/plans/2026-06-03-phase-b1-live-indexing-fulltext.md).
 
+- **Phase B2 — Enron adapter shipped (2026-06-03).** `EnronAdapter` streams
+  `corbt/enron-emails` bounded to Vince Kaminski's `kaminski-v` mailbox (HF
+  `datasets` behind the optional `data` extra; lazy + streaming); maps headers
+  deterministically to graph (`Entity` / `Relationship`) and body to `Document`
+  — no LLM in the path. Registered so `ariadne index --dataset enron` /
+  `ariadne workup … --dataset enron` resolve it. Eval needle:
+  `kaminski-aol` scores the non-obvious cross-account tie
+  (Kaminski → personal `vkaminski@aol.com`). Proves the canonical seam
+  generalizes to a second, real corpus. Full plan:
+  [docs/superpowers/plans/2026-06-03-phase-b2-enron-adapter.md](./docs/superpowers/plans/2026-06-03-phase-b2-enron-adapter.md).
+
 ## In flight — rigor (Phase 4) + Phase 2 retrieval
 
 Rigor next (grounded; see the research doc):

@@ -47,7 +47,10 @@ dataset-agnostic indexer fans the records into the stores. The agent,
 dataset. Unstructured/free-text evidence is retrieved full-text-first via a
 Postgres `tsvector` GIN index (`websearch_to_tsquery`), per
 [ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md), with the semantic pgvector
-leg as a follow-on. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md)
+leg as a follow-on. A second adapter (the Enron email corpus, via HF streaming)
+plugs in through the same canonical schema with no change to the agent,
+connectors, or eval harness — demonstrating generalization beyond the synthetic
+graph. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md)
 for the dataset-abstraction decision record and
 [`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)
 for the full design.
