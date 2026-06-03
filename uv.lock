@@ -160,6 +160,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "claude-agent-sdk" },
+    { name = "mcp" },
     { name = "mcp-neo4j-cypher" },
     { name = "neo4j" },
     { name = "python-dotenv" },
@@ -195,6 +196,7 @@ dev = [
 requires-dist = [
     { name = "claude-agent-sdk", specifier = ">=0.1" },
     { name = "datasets", marker = "extra == 'data'", specifier = ">=3" },
+    { name = "mcp", specifier = ">=1.2" },
     { name = "mcp-neo4j-cypher", specifier = ">=0.6,<0.7" },
     { name = "neo4j", specifier = ">=5.28" },
     { name = "python-dotenv", specifier = ">=1.0" },

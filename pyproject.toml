@@ -28,6 +28,9 @@ dependencies = [
     "mcp-neo4j-cypher>=0.6,<0.7",
     # Convenience: auto-load a local .env (API key + Neo4j conn) at CLI startup.
     "python-dotenv>=1.0",
+    # research(2026-06): pin mcp as a direct dep (transitively via claude-agent-sdk);
+    # required by ariadne.mcp_server (ADR-0009) and ariadne-mcp entry point.
+    "mcp>=1.2",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +54,7 @@ eval = [
 
 [project.scripts]
 ariadne = "ariadne.__main__:main"
+ariadne-mcp = "ariadne.mcp_server:main"
 
 [project.urls]
 Repository = "https://github.com/ajbarea/ariadne"
