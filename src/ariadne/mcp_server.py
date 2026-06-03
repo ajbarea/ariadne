@@ -13,6 +13,7 @@ stores (NEO4J_*/DATABASE_URI) + ANTHROPIC_API_KEY per install.
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 from collections.abc import Awaitable, Callable
 from pathlib import Path
@@ -50,13 +51,20 @@ async def run_workup_tool(
 
         runner = run_workup
     base_env = dict(os.environ) if env is None else dict(env)
+    created_tmp = out_root is None
     out_root = out_root or tempfile.mkdtemp(prefix="ariadne-mcp-")
     slug = slug or _slug(entity)
-    await runner(entity, out_root, base_env, with_sql=sql, dataset=dataset, with_semantic=semantic)
-    note = Path(out_root) / slug / "note.md"
-    if note.exists():
-        return note.read_text(encoding="utf-8")
-    return f"Workup for {entity!r} produced no analytic note (check stores / API key)."
+    try:
+        await runner(
+            entity, out_root, base_env, with_sql=sql, dataset=dataset, with_semantic=semantic
+        )
+        note = Path(out_root) / slug / "note.md"
+        if note.exists():
+            return note.read_text(encoding="utf-8")
+        return f"Workup for {entity!r} produced no analytic note (check stores / API key)."
+    finally:
+        if created_tmp:
+            shutil.rmtree(out_root, ignore_errors=True)
 
 
 @mcp.tool()
