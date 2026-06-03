@@ -14,7 +14,7 @@ from ariadne.datasets.canonical import Canonical, Entity
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-from ariadne.datasets.indexer import _label, index_graph
+from ariadne.datasets.indexer import index_graph, label
 from ariadne.unstructured.document_store import (
     ensure_schema,
     upsert_attributes,
@@ -24,7 +24,7 @@ from ariadne.unstructured.document_store import (
 
 def graph_statements(records: list[Canonical]) -> list[str]:
     """Constraints (one per distinct entity label) first, then MERGE statements."""
-    labels = sorted({_label(r.type) for r in records if isinstance(r, Entity)})
+    labels = sorted({label(r.type) for r in records if isinstance(r, Entity)})
     constraints = [
         f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{lbl}) REQUIRE n.id IS UNIQUE" for lbl in labels
     ]

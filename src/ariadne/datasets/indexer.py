@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-def _label(entity_type: str) -> str:
+def label(entity_type: str) -> str:
     # "person" -> "Person"; matches the existing seed's typed labels.
     return entity_type[:1].upper() + entity_type[1:]
 
@@ -30,7 +30,7 @@ def index_graph(records: Iterable[Canonical]) -> list[str]:
     out: list[str] = []
     for rec in records:
         if isinstance(rec, Entity):
-            stmt = f"MERGE (n:{_label(rec.type)} {{id: {rec.id!r}}}) SET n.name = {rec.name!r}"
+            stmt = f"MERGE (n:{label(rec.type)} {{id: {rec.id!r}}}) SET n.name = {rec.name!r}"
             if rec.attributes:
                 stmt += ", " + _props(rec.attributes, "n")
             out.append(stmt)
