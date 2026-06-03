@@ -44,10 +44,10 @@ the canonical schema (`Entity` / `Relationship` / `Document` / `Attribute`); a
 dataset-agnostic indexer fans the records into the stores. The agent,
 `entity-workup` skill, connectors, and eval harness never change. Governance
 (access-control, PII gating) attaches at the canonical layer once, not per
-dataset. Unstructured/free-text evidence is retrieved full-text-first via a
-Postgres `tsvector` GIN index (`websearch_to_tsquery`), per
-[ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md), with the semantic pgvector
-leg as a follow-on. A second adapter (the Enron email corpus, via HF streaming)
+dataset. Unstructured/free-text evidence is now retrieved via **hybrid retrieval** —
+Postgres full-text (`tsvector` GIN, `websearch_to_tsquery`) fused with pgvector
+semantic search via Reciprocal Rank Fusion — per
+[ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md). A second adapter (the Enron email corpus, via HF streaming)
 plugs in through the same canonical schema with no change to the agent,
 connectors, or eval harness — demonstrating generalization beyond the synthetic
 graph. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md)

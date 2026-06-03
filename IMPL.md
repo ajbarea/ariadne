@@ -82,6 +82,15 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   Full plan:
   [docs/superpowers/plans/2026-06-03-phase-b1-live-indexing-fulltext.md](./docs/superpowers/plans/2026-06-03-phase-b1-live-indexing-fulltext.md).
 
+- **Phase B3.1 — Semantic retrieval leg shipped (2026-06-03).** Injectable
+  `Embedder` protocol — `FakeEmbedder` (hermetic) + `SentenceTransformerEmbedder`
+  default `bge-small-en-v1.5` (384-dim, Apache-2.0, ungated), behind the optional
+  `embed` extra (lazy `importlib`). `documents` gains a nullable
+  `embedding vector(N)` column + HNSW cosine index; `hybrid_search` RRF-fuses
+  the full-text and vector legs (`1/(k+rank)`, k=60). Data layer only — wiring
+  into the live agent loop is B3.2. Full plan:
+  [docs/superpowers/plans/2026-06-03-phase-b3-1-semantic-leg.md](./docs/superpowers/plans/2026-06-03-phase-b3-1-semantic-leg.md).
+
 - **Phase B2 — Enron adapter shipped (2026-06-03).** `EnronAdapter` streams
   `corbt/enron-emails` bounded to Vince Kaminski's `kaminski-v` mailbox (HF
   `datasets` behind the optional `data` extra; lazy + streaming); maps headers

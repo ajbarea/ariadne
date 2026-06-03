@@ -174,9 +174,15 @@ items must not be hardened against one answer.
       and body→Document deterministically; registered in `DATASETS`; `kaminski-aol`
       eval needle scores the non-obvious cross-account tie. Proves the canonical
       seam generalizes to a second, real corpus.
-- [ ] **Phase B3 — Semantic pgvector leg + RRF fusion:** adds the vector connector
-      and reciprocal-rank fusion with the full-text leg — completes the hybrid
-      retrieval design in [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
+- [x] **Phase B3.1 — Semantic leg, data layer** (2026-06-03): injectable
+      `Embedder` protocol (`FakeEmbedder` hermetic + `SentenceTransformerEmbedder`
+      default `bge-small-en-v1.5`), pgvector `embedding vector(N)` column + HNSW
+      cosine index on `documents`, `hybrid_search` RRF-fuses full-text + vector
+      legs (`1/(k+rank)`, k=60). Decision: [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
+- [ ] **Phase B3.2 — Wire hybrid search into the live agent loop:** expose
+      `hybrid_search` as an in-process agent tool in `workup`, add its prefix to
+      the provenance hook, update `entity-workup` skill — realizing ADR-0007's
+      hybrid retrieval end-to-end.
 - [ ] **Phase C — Avocado adapter:** local PST/export → canonical; `access="restricted"`,
       access-gated behind `ARIADNE_ALLOW_RESTRICTED=1`; malware caveat (loveletter,
       ~27 msgs) — ingest text/headers only. Built now, populated when licensed data

@@ -82,6 +82,11 @@ tool. Named upgrade paths:
   populate it with a local model, and join the two ranked lists via RRF.
 - All retrieval — both legs — stays inside Postgres and is queryable through
   the same `execute_sql` interface, preserving the single-store audit trail.
+- The embedding model is injectable via an `Embedder` protocol; the default is
+  the ungated `bge-small-en-v1.5` (384-dim, Apache-2.0) — chosen over
+  EmbeddingGemma-300m as the default because Gemma is license-gated (HF token
+  friction for dev/CI); EmbeddingGemma-300m (768-dim) remains the documented
+  higher-quality swap.
 
 ## Sources
 
