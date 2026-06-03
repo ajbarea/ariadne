@@ -81,3 +81,44 @@ def test_empty_addresses_are_skipped() -> None:
     recs = list(map_messages(rows))
     assert not any(isinstance(r, Entity) for r in recs)
     assert not any(isinstance(r, Relationship) for r in recs)
+
+
+def test_edge_dates_aggregate_and_survive_a_null_first_date() -> None:
+    rows = [
+        {
+            "message_id": "a",
+            "from": "x@e.com",
+            "to": ["y@e.com"],
+            "cc": [],
+            "subject": "",
+            "date": "",
+            "body": "b",
+            "file_name": "f",
+        },
+        {
+            "message_id": "b",
+            "from": "x@e.com",
+            "to": ["y@e.com"],
+            "cc": [],
+            "subject": "",
+            "date": "2001-03-02",
+            "body": "b",
+            "file_name": "f",
+        },
+        {
+            "message_id": "c",
+            "from": "x@e.com",
+            "to": ["y@e.com"],
+            "cc": [],
+            "subject": "",
+            "date": "2001-03-05",
+            "body": "b",
+            "file_name": "f",
+        },
+    ]
+    edge = next(
+        r for r in map_messages(rows) if isinstance(r, Relationship) and r.type == "EMAILED"
+    )
+    assert edge.attributes["count"] == "3"
+    assert edge.attributes["first_seen"] == "2001-03-02"  # null first date didn't poison it
+    assert edge.attributes["last_seen"] == "2001-03-05"

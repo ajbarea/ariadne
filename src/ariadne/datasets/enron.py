@@ -52,13 +52,14 @@ def map_messages(rows: Iterable[dict]) -> Iterator[Canonical]:
         if sender:
             for dst in recipients:
                 edge = edges.setdefault(
-                    (sender, dst), {"count": "0", "first_seen": date, "last_seen": date}
+                    (sender, dst), {"count": "0", "first_seen": "", "last_seen": ""}
                 )
                 edge["count"] = str(int(edge["count"]) + 1)
-                if date and date < edge["first_seen"]:
-                    edge["first_seen"] = date
-                if date and date > edge["last_seen"]:
-                    edge["last_seen"] = date
+                if date:
+                    if not edge["first_seen"] or date < edge["first_seen"]:
+                        edge["first_seen"] = date
+                    if date > edge["last_seen"]:
+                        edge["last_seen"] = date
         documents.append(
             Document(
                 id=f"email:{row.get('message_id', '')}",
