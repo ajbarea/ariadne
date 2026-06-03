@@ -11,6 +11,7 @@ def test_entity_becomes_idempotent_merge_keyed_on_id() -> None:
     assert any("MERGE" in s and "person:Halberd" in s for s in cy)
     assert any(":Person" in s for s in cy)  # type -> title-case label
     assert all("CREATE " not in s for s in cy)  # idempotent, not CREATE
+    assert "alias" in cy[0] and "H1" in cy[0]
 
 
 def test_relationship_matches_endpoints_by_id_then_merges_edge() -> None:

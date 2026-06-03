@@ -20,9 +20,9 @@ def _label(entity_type: str) -> str:
     return entity_type[:1].upper() + entity_type[1:]
 
 
-def _props(attributes: dict[str, str]) -> str:
+def _props(attributes: dict[str, str], alias: str = "n") -> str:
     # Deterministic, sorted; values are synthetic/fictional in Phase A.
-    return ", ".join(f"n.{k} = {v!r}" for k, v in sorted(attributes.items()))
+    return ", ".join(f"{alias}.{k} = {v!r}" for k, v in sorted(attributes.items()))
 
 
 def index_graph(records: Iterable[Canonical]) -> list[str]:
@@ -32,7 +32,7 @@ def index_graph(records: Iterable[Canonical]) -> list[str]:
         if isinstance(rec, Entity):
             stmt = f"MERGE (n:{_label(rec.type)} {{id: {rec.id!r}}}) SET n.name = {rec.name!r}"
             if rec.attributes:
-                stmt += ", " + _props(rec.attributes)
+                stmt += ", " + _props(rec.attributes, "n")
             out.append(stmt)
         elif isinstance(rec, Relationship):
             stmt = (
@@ -40,9 +40,7 @@ def index_graph(records: Iterable[Canonical]) -> list[str]:
                 f"MERGE (a)-[r:{rec.type}]->(b)"
             )
             if rec.attributes:
-                stmt += " SET " + ", ".join(
-                    f"r.{k} = {v!r}" for k, v in sorted(rec.attributes.items())
-                )
+                stmt += " SET " + _props(rec.attributes, "r")
             out.append(stmt)
         # Document / Attribute: Phase B.
     return out
