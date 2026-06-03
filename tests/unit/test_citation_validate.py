@@ -174,3 +174,9 @@ def test_markdown_table_rows_are_not_treated_as_claims() -> None:
     # The header and separator rows must NOT be flagged as uncited claims.
     flagged = find_uncited_claims(note)
     assert not any("Direction" in c or "---" in c for c in flagged)
+
+
+def test_colon_terminated_lead_in_is_not_a_claim() -> None:
+    note = "## Findings\n- The corpus shows the following:\n- Allen leads the desk [cite:g1].\n"
+    flagged = find_uncited_claims(note)
+    assert not any("following" in c for c in flagged)

@@ -133,6 +133,8 @@ def find_uncited_claims(
         for i, s in enumerate(sentences):
             if i <= last_cited or not _HAS_LETTER_RE.search(s):
                 continue
+            if s.rstrip().endswith(":"):  # lead-in introducing a list/table, not a claim
+                continue
             # A trailing analytic judgment grounded by evidence cited earlier in
             # the SAME segment needn't repeat the cite (ICD-206). Facts, and any
             # claim in a segment with no citation at all, are still flagged.
