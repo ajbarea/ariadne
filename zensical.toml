@@ -28,6 +28,7 @@ nav = [
           { "0004 · Postgres over Redis" = "architecture/decisions/0004-postgres-over-redis-for-relational-store.md" },
           { "0005 · Defer subagent fan-out" = "architecture/decisions/0005-defer-subagent-fan-out.md" },
           { "0006 · Dataset-agnostic pipeline" = "architecture/decisions/0006-dataset-agnostic-pipeline.md" },
+          { "0007 · Hybrid retrieval (full-text first)" = "architecture/decisions/0007-hybrid-retrieval-fulltext-first.md" },
       ]},
   ]},
   { "Research" = [
