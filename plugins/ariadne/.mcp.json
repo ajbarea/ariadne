@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ariadne": {
+      "command": "uvx",
+      "args": ["--from", "ariadne", "ariadne-mcp"]
+    }
+  }
+}

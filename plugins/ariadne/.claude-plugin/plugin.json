@@ -1,0 +1,20 @@
+{
+  "name": "ariadne",
+  "description": "Ariadne sensemaking for Claude Code — bundles the Ariadne MCP server and an analyst-workup skill so you can produce cited analytic notes for a target entity across graph, relational, full-text, and semantic stores.",
+  "author": {
+    "name": "AJ",
+    "email": "ajbareaa@gmail.com"
+  },
+  "repository": "https://github.com/ajbarea/ariadne",
+  "homepage": "https://github.com/ajbarea/ariadne",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "mcp",
+    "sensemaking",
+    "entity-resolution",
+    "graphrag",
+    "intelligence-analysis",
+    "citations"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "ariadne",
+  "version": "1.0.0",
+  "description": "Ariadne — rigorous, citation-grounded entity sensemaking over heterogeneous stores, as a Claude Code plugin.",
+  "owner": {
+    "name": "AJ",
+    "email": "ajbareaa@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "ariadne",
+      "description": "Run citation-grounded entity workups (graph + relational + full-text + semantic) from Claude Code via the bundled Ariadne MCP server.",
+      "source": "./plugins/ariadne",
+      "category": "analysis"
+    }
+  ]
+}
