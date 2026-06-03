@@ -134,3 +134,30 @@ def test_claim_trailing_after_last_citation_in_segment_is_flagged() -> None:
     report = validate_citations(note, _ledger_with(1))
     assert report.ok is False
     assert any("secretly funds D" in c for c in report.uncited)
+
+
+def test_trailing_judgment_in_a_cited_segment_is_not_flagged() -> None:
+    # Real example from a live Enron workup: a judgment trailing cited evidence.
+    note = (
+        "## Relationships\n"
+        "- Of 38 external recipients, the leading domains are personal/webmail "
+        "[cite:g10]. The webmail-heavy tail is consistent with the personal "
+        "real-estate correspondence rather than counterparty trading flow.\n"
+    )
+    assert find_uncited_claims(note) == []
+
+
+def test_standalone_judgment_without_any_citation_is_still_flagged() -> None:
+    # A judgment in a segment with NO citation has no evidence to depend on.
+    note = "## Summary\n- An analyst would miss that Rangel is the single conduit.\n"
+    assert find_uncited_claims(note)  # non-empty: ungrounded judgment is flagged
+
+
+def test_trailing_factual_claim_in_a_cited_segment_is_still_flagged() -> None:
+    # A new FACT after a cite is not a judgment; it must carry its own cite.
+    note = (
+        "## Summary\n"
+        "- Allen leads the West desk [cite:g1]. He also secretly owns a competitor firm.\n"
+    )
+    flagged = find_uncited_claims(note)
+    assert any("secretly owns" in c for c in flagged)

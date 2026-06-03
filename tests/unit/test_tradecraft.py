@@ -59,3 +59,12 @@ def test_is_estimative_detects_an_analytic_confidence_statement() -> None:
 
 def test_is_estimative_is_false_for_a_plain_factual_claim() -> None:
     assert is_estimative("Halberd is a member of the Signals-Cell") is False
+
+
+def test_is_analytic_judgment_detects_inference_and_estimative() -> None:
+    from ariadne.provenance.tradecraft import is_analytic_judgment
+
+    assert is_analytic_judgment("This is consistent with a gatekeeper role")
+    assert is_analytic_judgment("Halberd is likely the lead")  # estimative
+    assert is_analytic_judgment("an analyst would miss the bridge")
+    assert is_analytic_judgment("Halberd is a member of Signals-Cell") is False

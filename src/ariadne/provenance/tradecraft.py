@@ -63,6 +63,25 @@ _NONSTANDARD_RE = re.compile(r"\b(" + "|".join(_NONSTANDARD) + r")\b", re.IGNORE
 
 _CONFIDENCE_RE = re.compile(r"\b(?:low|moderate|high)\s+confidence\b", re.IGNORECASE)
 
+# Inference/reasoning connectives that mark an analytic JUDGMENT (vs a sourced
+# fact). Heuristic; pairs with is_estimative (WEP/hedge/confidence).
+_INFERENCE_MARKERS = (
+    "suggests",
+    "indicates",
+    "implies",
+    "consistent with",
+    "in other words",
+    "points to",
+    "reflects",
+    "plausibly",
+    "appears to",
+    "means that",
+    "signature of",
+    "rather than",
+    "would ",
+)
+_INFERENCE_RE = re.compile("|".join(re.escape(m) for m in _INFERENCE_MARKERS), re.IGNORECASE)
+
 
 @dataclass(frozen=True)
 class TradecraftReport:
@@ -81,6 +100,18 @@ def is_estimative(text: str) -> bool:
     rather than reject it. Uses the same ICD-203 vocabulary as the lint.
     """
     return bool(_WEP_RE.search(text) or _NONSTANDARD_RE.search(text) or _CONFIDENCE_RE.search(text))
+
+
+def is_analytic_judgment(text: str) -> bool:
+    """True if ``text`` reads as an analytic judgment/inference rather than a
+    sourced fact (estimative language or inference connectives).
+
+    # research(2026-06): ICD-206 — a judgment must cite the source it *depends
+    # on*; one grounded by evidence cited in the same segment need not repeat the
+    # cite. Distinguished from facts per ICD-203. Heuristic marker set; `would `
+    # (trailing space) targets modal/inferential use.
+    """
+    return is_estimative(text) or bool(_INFERENCE_RE.search(text))
 
 
 def lint_estimative_language(note: str) -> TradecraftReport:

@@ -26,7 +26,10 @@ import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
-from ariadne.provenance.tradecraft import is_estimative as _is_estimative
+from ariadne.provenance.tradecraft import (
+    is_analytic_judgment as _is_analytic_judgment,
+    is_estimative as _is_estimative,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -106,19 +109,34 @@ def _iter_claim_segments(
 
 
 def find_uncited_claims(
-    note: str, *, exempt_keywords: tuple[str, ...] = _EXEMPT_SECTION_KEYWORDS
+    note: str,
+    *,
+    exempt_keywords: tuple[str, ...] = _EXEMPT_SECTION_KEYWORDS,
+    is_judgment: Callable[[str], bool] = _is_analytic_judgment,
 ) -> list[str]:
     """Return the asserted claim sentences that carry no ``[cite:gN]`` (recall).
 
     Only prose sentences that fall *after* a segment's last citation (or a
     segment with no citation at all) count as uncited; a trailing citation covers
     the sentences before it.
+
+    Analytic judgments (sentences with ICD-203 estimative language or inference
+    connectives) that trail a segment which ALREADY carries a citation are exempt
+    — per ICD-206, such a judgment depends on evidence cited in the same segment
+    and need not repeat the cite. Facts, and any claim in a segment with no
+    citation at all, are still flagged regardless.
     """
     uncited: list[str] = []
     for sentences, last_cited in _iter_claim_segments(note, exempt_keywords):
-        uncited.extend(
-            s for i, s in enumerate(sentences) if i > last_cited and _HAS_LETTER_RE.search(s)
-        )
+        for i, s in enumerate(sentences):
+            if i <= last_cited or not _HAS_LETTER_RE.search(s):
+                continue
+            # A trailing analytic judgment grounded by evidence cited earlier in
+            # the SAME segment needn't repeat the cite (ICD-206). Facts, and any
+            # claim in a segment with no citation at all, are still flagged.
+            if last_cited >= 0 and is_judgment(s):
+                continue
+            uncited.append(s)
     return uncited
 
 
