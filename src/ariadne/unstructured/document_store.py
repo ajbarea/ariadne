@@ -145,3 +145,49 @@ def store_embeddings(conn, id_to_vec: dict[str, list[float]]) -> int:  # type: i
     for doc_id, vec in id_to_vec.items():
         conn.execute(sql, {"id": doc_id, "embedding": _vector_literal(vec)})
     return len(id_to_vec)
+
+
+# ---------------------------------------------------------------------------
+# Hybrid RRF search — B3.1 Task 3
+# ---------------------------------------------------------------------------
+
+
+def hybrid_search_sql(candidates: int = 20) -> str:
+    """RRF-fused full-text + vector search.
+
+    Params: %(q)s natural-language query, %(qvec)s the query embedding as a
+    '[...]' vector literal, %(k)s RRF smoothing (use 60), %(limit)s. Each leg
+    contributes 1/(k+rank); ranks come from row_number() over each leg's
+    ordering. (ADR-0007; RRF needs no score normalization.)
+    """
+    cand = str(int(candidates))
+    fts = (
+        "WITH fts AS ("
+        "  SELECT id, row_number() OVER ("
+        "    ORDER BY ts_rank(content_tsv, websearch_to_tsquery('english', %(q)s)) DESC) AS rank"
+        "  FROM documents WHERE content_tsv @@ websearch_to_tsquery('english', %(q)s)"
+        "  LIMIT " + cand + "), "
+    )
+    vec = (
+        "vec AS ("
+        "  SELECT id, row_number() OVER (ORDER BY embedding <=> %(qvec)s::vector) AS rank"
+        "  FROM documents WHERE embedding IS NOT NULL"
+        "  ORDER BY embedding <=> %(qvec)s::vector LIMIT " + cand + ") "
+    )
+    tail = (
+        "SELECT COALESCE(fts.id, vec.id) AS id, "
+        "  COALESCE(1.0 / (%(k)s + fts.rank), 0) + COALESCE(1.0 / (%(k)s + vec.rank), 0) AS rrf "
+        "FROM fts FULL OUTER JOIN vec USING (id) "
+        "ORDER BY rrf DESC LIMIT %(limit)s"
+    )
+    return fts + vec + tail
+
+
+def hybrid_search(conn, query: str, embedder, *, k: int = 60, limit: int = 10) -> list[str]:  # type: ignore[type-arg]
+    """Embed ``query`` and return RRF-fused document ids (full-text + vector)."""
+    qvec = _vector_literal(embedder.embed([query])[0])
+    rows = conn.execute(
+        hybrid_search_sql().encode(),
+        {"q": query, "qvec": qvec, "k": k, "limit": limit},
+    ).fetchall()
+    return [r[0] for r in rows]

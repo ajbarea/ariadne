@@ -123,6 +123,9 @@ ignore = [
 "tests/**" = ["S101", "E402", "S603", "S607", "ASYNC221", "S108", "S105", "S106", "S608"]
 "scripts/*.py" = ["T201", "S607"]
 "src/ariadne/cli.py" = ["T201"]
+# SQL-builder module: S608 fires on every parameterised query string; all
+# user input travels through %(param)s placeholders so there is no injection risk.
+"src/ariadne/unstructured/document_store.py" = ["S608"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["ariadne"]
