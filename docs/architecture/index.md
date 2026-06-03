@@ -18,6 +18,14 @@ vocabulary every design choice is expressed in:
 See the [Claude Agent SDK Reference](../research/claude-agent-sdk-reference.md)
 for the full doc-cited mechanics.
 
+## Decisions
+
+Significant, contestable choices — *which store, which connector, what we
+deferred and why* — live in the [Decision log](decisions/index.md) as ADRs. When
+someone asks "why this instead of that?", that is the place to point. The
+Postgres-over-Redis comparison is
+[ADR-0004](decisions/0004-postgres-over-redis-for-relational-store.md).
+
 ## Emerging shape (from the research)
 
 The [June-2026 best-practice research](../research/best-practice-architecture.md)

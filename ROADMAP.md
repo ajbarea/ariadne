@@ -151,9 +151,64 @@ items must not be hardened against one answer.
 - [x] CLI takes a target **entity or organizational node**, returns a cited analytic note. End-to-end on one store.
 
 ### Phase 2 — Heterogeneous retrieval
-- [ ] Add relational/SQL and vector/unstructured connectors.
-- [ ] Source-routing: agent decides which store to query; reconcile overlapping results.
-- [ ] Subagent fan-out for parallel per-store retrieval.
+- [x] **Relational/SQL connector built** — `relational/postgres_server.py` +
+      `infra/postgres/` (synthetic personnel seed with a planted cross-modality
+      link), `postgres-mcp@0.3.0` restricted mode; seeded-Postgres integration
+      test green (2026-06-02). Not yet wired into the workup (next).
+- [x] **SQL wired into the workup** (`--sql`): provenance hook cites both stores
+      under one `gN` space; the `entity-workup` skill routes by question and
+      reconciles. A live two-store run surfaced the Halberd↔Wren cross-modality
+      tie, flagged a graph/relational conflict, and scored `grounded=True`
+      (2026-06-02). `# research(2026-06): ER-RAG shared-key routing + MADAM-RAG conflict-flagging.`
+- [ ] Add the vector/unstructured connector.
+- [ ] Subagent fan-out for parallel per-store retrieval — **deferred pending a
+      design pass** (not blocked on research). Naive fan-out conflicts with the
+      slice's two load-bearing properties: cross-store **reconciliation** is a
+      shared-context task (the research doc flags fan-out as *not* generalising to
+      shared-context work), and the parent-side `PostToolUse` `gN` provenance hook
+      never sees a subagent's isolated tool calls (only its summary returns). The
+      correct shape — workers retrieve in parallel and return *pre-cited* evidence,
+      lead reconciles — is a real provenance redesign. YAGNI for a 2-store slice
+      already scoring `grounded=True`; revisit at higher store count / context
+      pressure (fan-out costs ~15× tokens). See IMPL.md.
+
+  > **SQL connector — decided.** `# research(2026-06):` use
+  > [`crystaldba/postgres-mcp`](https://github.com/crystaldba/postgres-mcp)
+  > ("Postgres MCP Pro") in **Restricted Mode** — read-only transactions,
+  > execution-time caps, SQL parsed with `pglast` to reject COMMIT/ROLLBACK
+  > statement-stacking. **Avoid** the official `@modelcontextprotocol/server-postgres`:
+  > its `BEGIN TRANSACTION READ ONLY` guardrail is bypassable via semicolon
+  > statement-stacking — a confirmed SQLi through v0.6.2
+  > ([Datadog Security Labs](https://securitylabs.datadoghq.com/articles/mcp-vulnerability-case-study-SQL-injection-in-the-postgresql-mcp-server/)).
+  > Mirrors the Phase-1 official-guardrailed-server-over-hand-rolled call.
+  > `XiYanSQL` MCP is an optional Text2SQL alternative (local-deployable).
+  > Vector connector, source-routing, and subagent fan-out still need a clean
+  > research pass — the verified run only confirmed the SQL choice.
+
+  > **Redis vs. Postgres for the relational store — decided: stay on Postgres.**
+  > Full comparison in
+  > [ADR-0004](./docs/architecture/decisions/0004-postgres-over-redis-for-relational-store.md)
+  > (the canonical record). `# research(2026-06):` Redis is a category mismatch for this connector's job
+  > (structured attribute retrieval, cross-store entity resolution via joins,
+  > auditable evidence): it is an in-memory key-value store with no relational
+  > join engine, and "provides no memory-management logic" of its own. The brief's
+  > governance/validation spine wants durable, ACID, auditable evidence — exactly
+  > Postgres's strength with our restricted read-only + `pglast` guard. The 2026
+  > trend runs *toward* Postgres-as-substrate (pgvector, `SKIP LOCKED`,
+  > `LISTEN/NOTIFY` displacing classic Redis patterns); consensus is "start on
+  > Postgres for reliability/auditability, add Redis only when latency profiling
+  > proves a bottleneck" — and a sensemaking workup has no sub-ms hot path. Redis
+  > *does* fit two **additive** roles, not a swap: (a) the agent **memory/session**
+  > layer for long investigations (official
+  > [`redis/agent-memory-server`](https://github.com/redis/agent-memory-server)
+  > exposes an MCP interface, sub-ms reads); (b) **one** candidate for the open
+  > vector connector below (Redis 8 folds in RediSearch vector search) — but
+  > `pgvector` is the consolidation-friendly rival there, so that fork settles when
+  > we build the connector, not now. Sources:
+  > [SitePoint](https://www.sitepoint.com/state-management-for-long-running-agents-redis-vs-postgres/) ·
+  > [Alongside](https://www.alongside.team/blog/redis-vs-postgresql-agent-memory-session-state) ·
+  > [PingCAP](https://www.pingcap.com/compare/best-database-for-ai-agents/) ·
+  > [redis/mcp-redis](https://github.com/redis/mcp-redis).
 
   > **Research watch — vector-store compression.** `# research(2026-06):` Google's
   > [TurboQuant](https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/)
@@ -168,11 +223,38 @@ items must not be hardened against one answer.
 - [ ] Cross-modal evidence fusion into the analytic product.
 
 ### Phase 4 — Rigor, eval & integration
-- [ ] Provenance/citation surface in the analytic product; confidence handling.
-- [ ] Evaluation harness for the four success criteria (traversal, reconciliation,
-      pivot-burden reduction, non-obvious connections); add a spec/validation pass
-      ("how do you know it works?") and governance checks (quality, security,
+- [x] **Citation gate v2 — Stage 1 (coverage/recall):** uncited-claim detection
+      (2026-06-02). Brought forward because it closed a confirmed governance hole.
+      `# research(2026-06): ALCE citation recall.`
+- [x] **Citation gate v2 — Stage 2 (entailment/precision):** `EntailmentVerifier`
+      protocol + HHEM-2.1-Open adapter behind the optional `eval` extra (2026-06-02;
+      real-model integration test green). `# research(2026-06): ALCE precision + HHEM.`
+- [x] **Tradecraft lint (ICD-203):** `lint_estimative_language` flags non-standard
+      estimative hedges, maps WEP terms to bands, detects the confidence axis
+      (2026-06-02; advisory `tradecraft.json`). `# research(2026-06): ICD-203 WEP.`
+- [x] **Estimative claims routed out of the entailment gate** (2026-06-03):
+      `tradecraft.is_estimative` (ICD-203 hedges / WEP terms / confidence) gates
+      `find_unsupported_claims`, so a calibrated analytic judgment is checked by
+      the calibration lint, not falsely rejected by HHEM. Separates factual
+      precision from analytic calibration. `# research(2026-06): ICD-203 likelihood vs ALCE entailment.`
+- [ ] LLM-RUBRIC scoring of the analytic standards; optional CLI `--entail` flag.
+      Grounded design:
+      [docs/research/analytic-rigor-eval.md](./docs/research/analytic-rigor-eval.md).
+- [x] **Evaluation harness (planted-needle):** `ariadne eval <dir>` scores recall
+      / trajectory / `grounded` (surfaced AND traversed, not guessed) / pivot-burden
+      against the Compound-Alpha fixture (2026-06-02; the real Halberd workup scores
+      `grounded=True`). `# research(2026-06): MuSiQue + AgenticRAGTracer.`
+- [x] **Per-edge supporting-fact F1 + cross-store needle** (2026-06-02): statement
+      extraction is connector-agnostic (Postgres `sql` counts toward trajectory);
+      `WREN_TIE_FIXTURE` scores the cross-modality Halberd↔Wren shared-employer tie
+      (`grounded` requires the relational store was actually queried, so a graph-only
+      assertion is caught as a guess); per-edge precision/recall/F1 on both fixtures;
+      `ariadne eval --fixture {halberd,wren-tie}`. The heterogeneous-retrieval
+      capability is now measurable. `# research(2026-06): HotpotQA/MuSiQue supporting-fact F1.`
+- [ ] Extend the harness further: more needle fixtures, the reconciliation
+      criterion as a first-class score, and governance checks (quality, security,
       data integrity).
+- [ ] Provenance/citation surface in the analytic product; confidence handling.
 - [ ] SCADS integration interfaces: document how sibling tools plug in as callable tools.
 - [ ] Capture **reusable workflow patterns** (a brief deliverable) for future SCADS use cases.
 

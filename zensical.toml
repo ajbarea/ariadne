@@ -20,6 +20,14 @@ nav = [
   { "Architecture" = [
       { "Overview" = "architecture/index.md" },
       { "Claude Agent SDK Reference" = "research/claude-agent-sdk-reference.md" },
+      { "Decisions" = [
+          { "Decision log" = "architecture/decisions/index.md" },
+          { "0001 · Claude Agent SDK" = "architecture/decisions/0001-orchestration-on-claude-agent-sdk.md" },
+          { "0002 · Official MCP connectors" = "architecture/decisions/0002-official-mcp-connectors-over-hand-rolled.md" },
+          { "0003 · postgres-mcp Restricted Mode" = "architecture/decisions/0003-postgres-mcp-restricted-mode.md" },
+          { "0004 · Postgres over Redis" = "architecture/decisions/0004-postgres-over-redis-for-relational-store.md" },
+          { "0005 · Defer subagent fan-out" = "architecture/decisions/0005-defer-subagent-fan-out.md" },
+      ]},
   ]},
   { "Research" = [
       { "Overview" = "research/index.md" },

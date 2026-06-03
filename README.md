@@ -77,10 +77,16 @@ export ANTHROPIC_API_KEY=sk-...
 
 # 3. run a workup (writes ./workups/<entity>/note.md, provenance.jsonl, citations.json)
 uv run ariadne workup Halberd
+
+# 4. score the run against the planted-needle fixture
+uv run ariadne eval workups/halberd
 ```
 
 Every fact in the note carries a `[cite:gN]` id that resolves to a recorded graph
-query in `provenance.jsonl`; the run fails if any citation is unverified.
+query in `provenance.jsonl`; the run fails if any citation is uncited, dangling,
+or (with the optional `eval` extra) unsupported by its cited evidence. `ariadne
+eval` then scores whether the run **surfaced and actually traversed** the seed's
+planted non-obvious bridge — `grounded=True` means it reasoned, not guessed.
 
 **Dev gates** (requires [`uv`](https://docs.astral.sh/uv/)):
 
