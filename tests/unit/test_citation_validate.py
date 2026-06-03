@@ -161,3 +161,16 @@ def test_trailing_factual_claim_in_a_cited_segment_is_still_flagged() -> None:
     )
     flagged = find_uncited_claims(note)
     assert any("secretly owns" in c for c in flagged)
+
+
+def test_markdown_table_rows_are_not_treated_as_claims() -> None:
+    note = (
+        "## Graph footprint\n"
+        "Her ties are summarized below [cite:g1]:\n"
+        "| Direction | Counterparty | Msgs |\n"
+        "| --- | --- | --- |\n"
+        "| Ina -> other | information.management | 1 [cite:g5] |\n"
+    )
+    # The header and separator rows must NOT be flagged as uncited claims.
+    flagged = find_uncited_claims(note)
+    assert not any("Direction" in c or "---" in c for c in flagged)

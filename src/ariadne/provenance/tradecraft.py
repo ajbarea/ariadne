@@ -73,6 +73,8 @@ _INFERENCE_MARKERS = (
     "in other words",
     "points to",
     "reflects",
+    "reveals",
+    "understates",
     "plausibly",
     "appears to",
     "means that",

@@ -68,3 +68,10 @@ def test_is_analytic_judgment_detects_inference_and_estimative() -> None:
     assert is_analytic_judgment("Halberd is likely the lead")  # estimative
     assert is_analytic_judgment("an analyst would miss the bridge")
     assert is_analytic_judgment("Halberd is a member of Signals-Cell") is False
+
+
+def test_is_analytic_judgment_detects_reveals_and_understates() -> None:
+    from ariadne.provenance.tradecraft import is_analytic_judgment
+
+    assert is_analytic_judgment("the email-body modality reveals a gatekeeper role")
+    assert is_analytic_judgment("the graph-only view understates her access")

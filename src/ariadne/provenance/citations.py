@@ -102,6 +102,8 @@ def _iter_claim_segments(
             continue
         if in_exempt:
             continue
+        if stripped.startswith("|"):  # markdown table row/separator — not a prose claim
+            continue
         line = _NUMBERED_RE.sub("", _BULLET_RE.sub("", raw)).strip()
         sentences = [s.strip() for s in _SENTENCE_SPLIT_RE.split(line) if s.strip()]
         last_cited = max((i for i, s in enumerate(sentences) if _CITE_RE.search(s)), default=-1)

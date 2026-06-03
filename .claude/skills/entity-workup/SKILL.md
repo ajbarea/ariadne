@@ -50,6 +50,14 @@ the system did not surface ids, cite your graph queries in the order you ran
 them: the first query is `g1`, the second `g2`, and so on. A note with an
 uncited claim, or a `[cite:gN]` for a query you never ran, fails validation.
 
+Distinguish underlying facts from your analytic judgments (ICD-206). Every
+analytic judgment must cite the evidence it depends on — place the `[cite:gN]`
+of the supporting evidence on the judgment sentence too, not only on factual
+statements. (A judgment grounded by evidence already cited in the same bullet may
+rely on that cite; a judgment in its own sentence or paragraph must carry the cite
+of its basis.) Use calibrated estimative language (ICD-203: likely, probable,
+unlikely, etc.) for all judgments.
+
 ## Output
 
 Output **only** the finished analytic note (Markdown), no preamble.
