@@ -30,6 +30,17 @@ dependencies = [
     "python-dotenv>=1.0",
 ]
 
+[project.optional-dependencies]
+# research(2026-06): Stage-2 citation entailment (precision) via Vectara
+# HHEM-2.1-Open. Heavy + optional — the core validation path runs without it.
+# See docs/research/analytic-rigor-eval.md and src/ariadne/provenance/entailment.py.
+eval = [
+    # HHEM-2.1-Open ships a trust_remote_code modeling file written for the
+    # transformers 4.x API; transformers 5.x breaks it (all_tied_weights_keys).
+    "transformers>=4.45,<5",
+    "torch>=2.2",
+]
+
 [project.scripts]
 ariadne = "ariadne.__main__:main"
 
@@ -46,7 +57,8 @@ dev = [
     "ruff>=0.15",
     "ty>=0.0.39,<0.1",
     "zensical>=0.0.24",
-    "testcontainers[neo4j]>=4.9",
+    "testcontainers[neo4j,postgres]>=4.9",
+    "psycopg[binary]>=3.2",
 ]
 
 [build-system]
@@ -100,7 +112,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "E402", "S603", "S607", "ASYNC221", "S108", "S105", "S106"]
+"tests/**" = ["S101", "E402", "S603", "S607", "ASYNC221", "S108", "S105", "S106", "S608"]
 "scripts/*.py" = ["T201", "S607"]
 "src/ariadne/cli.py" = ["T201"]
 

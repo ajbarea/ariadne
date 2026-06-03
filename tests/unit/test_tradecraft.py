@@ -1,0 +1,61 @@
+"""ICD-203 tradecraft lint — estimative-language standardization."""
+
+from __future__ import annotations
+
+from ariadne.provenance.tradecraft import (
+    TradecraftReport,
+    is_estimative,
+    lint_estimative_language,
+)
+
+
+def test_detects_standard_wep_term_with_band() -> None:
+    report = lint_estimative_language("Halberd is likely the cell lead [cite:g1].")
+    assert isinstance(report, TradecraftReport)
+    assert ("likely", "55-80%") in report.standard_terms
+
+
+def test_very_likely_is_not_double_counted_as_likely() -> None:
+    report = lint_estimative_language("A co-location is very likely [cite:g1].")
+    assert ("very likely", "80-95%") in report.standard_terms
+    assert all(term != "likely" for term, _band in report.standard_terms)
+
+
+def test_flags_nonstandard_hedge() -> None:
+    report = lint_estimative_language("Halberd possibly commands the cell.")
+    assert "possibly" in report.nonstandard_terms
+    assert report.standard_terms == []
+
+
+def test_detects_analytic_confidence_statement() -> None:
+    report = lint_estimative_language("Assessed with moderate confidence [cite:g1].")
+    assert report.has_confidence_statement is True
+
+
+def test_clean_note_has_no_findings() -> None:
+    report = lint_estimative_language("Halberd is a member of Signals-Cell [cite:g1].")
+    assert report.standard_terms == []
+    assert report.nonstandard_terms == []
+    assert report.has_confidence_statement is False
+
+
+def test_matching_is_case_insensitive() -> None:
+    report = lint_estimative_language("Perhaps the link is Unlikely.")
+    assert "perhaps" in report.nonstandard_terms
+    assert ("unlikely", "20-45%") in report.standard_terms
+
+
+def test_is_estimative_detects_a_standard_wep_term() -> None:
+    assert is_estimative("Halberd is likely the signals lead") is True
+
+
+def test_is_estimative_detects_a_nonstandard_hedge() -> None:
+    assert is_estimative("Halberd is possibly the signals lead") is True
+
+
+def test_is_estimative_detects_an_analytic_confidence_statement() -> None:
+    assert is_estimative("Assessed with moderate confidence.") is True
+
+
+def test_is_estimative_is_false_for_a_plain_factual_claim() -> None:
+    assert is_estimative("Halberd is a member of the Signals-Cell") is False

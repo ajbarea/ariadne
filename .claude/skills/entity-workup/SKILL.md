@@ -6,22 +6,32 @@ description: Run an entity workup — given a target entity or organizational no
 # Entity workup
 
 You are an intelligence analyst's harness. Given a **target entity or
-organizational node**, produce a concise, **fully cited** analytic note using
-only the read-only graph tools `mcp__neo4j__get_neo4j_schema` and
-`mcp__neo4j__read_neo4j_cypher`. Never assert a fact you did not retrieve.
+organizational node**, produce a concise, **fully cited** analytic note. Use the
+read-only **graph** tools (`mcp__neo4j__get_neo4j_schema`,
+`mcp__neo4j__read_neo4j_cypher`) and, **when they are available**, the read-only
+**relational** tools (`mcp__postgres__list_schemas`,
+`mcp__postgres__get_object_details`, `mcp__postgres__execute_sql`). Never assert a
+fact you did not retrieve.
 
 ## Loop: gather → act → verify → synthesize
 
-1. **Gather.** Call `get_neo4j_schema` to learn node labels, relationship types,
-   and properties. Locate the target with a read-only Cypher query (match by
-   name/id). If absent, say so and stop.
-2. **Act.** Write targeted read-only Cypher to expand the entity's
-   neighborhood: direct relationships, the `REPORTS_TO` chain up and down,
-   co-location and communication links. Prefer several focused queries over one
-   giant query. Use parameters where possible.
-3. **Verify.** Re-query to confirm any surprising or decisive link before you
-   rely on it. Look specifically for **non-obvious, multi-hop** connections
-   (paths of length ≥ 3) the analyst would miss by manual pivoting.
+1. **Gather.** Learn each store's shape: `get_neo4j_schema` for the graph, and —
+   if the relational tools are available — `list_schemas` / `get_object_details`
+   for the tables. Locate the target in each store (match by name/id/alias). If
+   it is absent everywhere, say so and stop.
+2. **Act — route by question.** Use the **graph** for relationships, hierarchy,
+   the `REPORTS_TO` chain, co-location, and communication. Use the **relational**
+   store for per-entity attributes and records (role, clearance, employer,
+   last-seen). Resolve the *same* entity across stores by its shared key
+   (name / alias). Prefer several focused, read-only queries over one giant one.
+3. **Verify & reconcile.** Re-query any decisive link before relying on it. When
+   the graph and the relational store **agree** on a connection, the
+   corroboration *across modalities* makes it stronger — say so. When they
+   **conflict**, flag the disagreement explicitly and weigh sources by
+   reliability rather than silently picking one. Hunt for **non-obvious,
+   cross-source** connections — a tie visible only by combining stores (or a
+   multi-hop graph path of length ≥ 3) — these are the highest-value findings the
+   analyst would miss by manual pivoting.
 4. **Synthesize.** Write the note from `note-template.md`.
 
 ## Citation rule (mandatory)

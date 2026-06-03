@@ -36,7 +36,28 @@ async def test_hook_records_graph_calls_and_returns_cite_context() -> None:
 
 
 @pytest.mark.asyncio
-async def test_hook_ignores_non_graph_tools() -> None:
+async def test_hook_records_relational_calls_too() -> None:
+    # Heterogeneous retrieval: SQL evidence is cited the same way as graph evidence.
+    led = ProvenanceLedger()
+    hook = make_provenance_hook(led)
+    out = await hook(
+        cast(
+            "PostToolUseHookInput",
+            {
+                "tool_name": "mcp__postgres__execute_sql",
+                "tool_input": {"sql": "SELECT * FROM personnel"},
+                "tool_response": "rows...",
+            },
+        ),
+        "tool-use-sql",
+        _CTX,
+    )
+    assert led.has("g1")
+    assert "g1" in str(out) and "cite" in str(out).lower()
+
+
+@pytest.mark.asyncio
+async def test_hook_ignores_non_evidence_tools() -> None:
     led = ProvenanceLedger()
     hook = make_provenance_hook(led)
     out = await hook(

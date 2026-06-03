@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ariadne.provenance.citations import CitationReport  # noqa: TC001
 from ariadne.provenance.ledger import ProvenanceLedger  # noqa: TC001
+from ariadne.provenance.tradecraft import TradecraftReport  # noqa: TC001
 
 
 def write_outputs(
@@ -17,11 +18,17 @@ def write_outputs(
     note: str,
     ledger: ProvenanceLedger,
     report: CitationReport,
+    tradecraft: TradecraftReport | None = None,
 ) -> None:
-    """Write ``note.md``, ``provenance.jsonl`` and ``citations.json`` to ``out_dir``."""
+    """Write ``note.md``, ``provenance.jsonl``, ``citations.json`` (and, when supplied,
+    the advisory ``tradecraft.json``) to ``out_dir``."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "note.md").write_text(note, encoding="utf-8")
     ledger.write_jsonl(out_dir / "provenance.jsonl")
     payload = {"entity": entity, **asdict(report)}
     (out_dir / "citations.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    if tradecraft is not None:
+        (out_dir / "tradecraft.json").write_text(
+            json.dumps(asdict(tradecraft), indent=2), encoding="utf-8"
+        )

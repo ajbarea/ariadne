@@ -1,0 +1,1 @@
+"""Relational (SQL) MCP connector."""

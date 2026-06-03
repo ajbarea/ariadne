@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: ariadne-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ariadne
+      POSTGRES_PASSWORD: ariadne
+      POSTGRES_DB: intel
+    volumes:
+      # Auto-loaded on first init.
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ariadne -d intel"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
