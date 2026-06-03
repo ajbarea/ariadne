@@ -60,6 +60,7 @@ def test_record_workup_metrics_sets_span_attrs() -> None:
     assert s.attributes["ariadne.evidence_calls"] == 1
     assert s.attributes["ariadne.citation.ok"] is False
     assert s.attributes["ariadne.citation.uncited"] == 1
+    assert s.attributes["ariadne.citation.unsupported"] == 0
 
 
 def test_setup_telemetry_is_noop_without_endpoint(monkeypatch) -> None:

@@ -45,6 +45,9 @@ def workup_span(
     entity: str, dataset: str, *, semantic: bool = False, sql: bool = False
 ) -> Iterator[trace.Span]:
     """A GenAI ``invoke_agent`` span wrapping a workup; its duration is the task time."""
+    # research(2026-06): gen_ai.* follows the OTel GenAI semantic conventions;
+    # `gen_ai.agent.name` is in the experimental agents spec and may change in the
+    # 1.0 stable semconv — revisit when it stabilizes.
     with _tracer.start_as_current_span(
         "invoke_agent",
         attributes={
@@ -75,8 +78,7 @@ def record_workup_metrics(
     _workups.add(1, attrs)
     _duration.record(duration_s, attrs)
     _evidence.add(n_calls, attrs)
-    if fails:
-        _failures.add(fails, attrs)
+    _failures.add(fails, attrs)
     span = trace.get_current_span()
     span.set_attribute("ariadne.evidence_calls", n_calls)
     span.set_attribute("ariadne.citation.ok", report.ok)
