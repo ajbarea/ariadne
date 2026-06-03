@@ -289,6 +289,29 @@ items must not be hardened against one answer.
 
 ### Phase 5 — Deployment hardening
 - [ ] Resolve the cloud-vs-air-gapped fork per component; document the swap points.
+- [ ] **Observability — traces + metrics for the MCP server / harness.**
+      `# research(2026-06):` instrument with **OpenTelemetry GenAI semantic
+      conventions** (CNCF-backed, adopted by Datadog/Google/AWS/Azure) — the
+      standard span tree is `invoke_agent` → `chat` (per LLM call) → `execute_tool`
+      (per evidence tool call), with `gen_ai.*` attributes (model, input/output
+      tokens, finish reason). The Claude Agent SDK already emits OTEL via
+      `CLAUDE_CODE_ENABLE_TELEMETRY=1` + an OTLP exporter — wire that through plus a
+      handful of Ariadne-specific spans/metrics. **Most of the metrics already
+      exist as artifacts; this surfaces them as telemetry:**
+      - *task duration / time-to-report* — **new** (wrap `run_workup`; per-phase
+        gather→act→verify→synthesize timing).
+      - *# queries* — already the provenance-ledger `gN` count (`provenance.jsonl`);
+        emit per `execute_tool` span + a counter.
+      - *accuracy report* — already the eval harness (`recall` / `trajectory` /
+        `grounded` / supporting-fact F1); emit as metrics when a fixture is scored.
+      - *compliance* — already the citation gate (`uncited` / `unsupported` /
+        `dangling`) + ICD-203 tradecraft lint; emit pass/fail + counts as
+        span events / metrics.
+      Net: one OTEL layer turns the existing `citations.json` / `tradecraft.json` /
+      eval scores + new timing into dashboards (latency, query volume, accuracy,
+      governance compliance per run). Sources:
+      [OTel GenAI observability](https://opentelemetry.io/blog/2026/genai-observability/),
+      [agentic-system conventions](https://github.com/open-telemetry/semantic-conventions/issues/2664).
 
   > **Research watch — on-prem serving efficiency.** `# research(2026-06):`
   > [TurboQuant](https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/)
