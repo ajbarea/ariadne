@@ -44,8 +44,11 @@ the canonical schema (`Entity` / `Relationship` / `Document` / `Attribute`); a
 dataset-agnostic indexer fans the records into the stores. The agent,
 `entity-workup` skill, connectors, and eval harness never change. Governance
 (access-control, PII gating) attaches at the canonical layer once, not per
-dataset. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md) for the
-decision record and
+dataset. Unstructured/free-text evidence is retrieved full-text-first via a
+Postgres `tsvector` GIN index (`websearch_to_tsquery`), per
+[ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md), with the semantic pgvector
+leg as a follow-on. See [ADR-0006](decisions/0006-dataset-agnostic-pipeline.md)
+for the dataset-abstraction decision record and
 [`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)
 for the full design.
 

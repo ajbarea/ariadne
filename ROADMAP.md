@@ -165,9 +165,16 @@ items must not be hardened against one answer.
       synthetic adapter + `--dataset` flag. Decision: [ADR-0006](./docs/architecture/decisions/0006-dataset-agnostic-pipeline.md).
       Full design: [`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](./docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md).
       `# research(2026-06): canonical-data-model pattern (datadriven.io + enterpriseintegrationpatterns.com).`
-- [ ] **Phase B — Enron adapter:** HF `corbt/enron-emails` → canonical (headers→graph,
-      body→Document); hybrid retrieval connector (full-text first, then pgvector).
-      Generalization + tri-modal sensemaking on real public data.
+- [x] **Phase B1 — Live indexing + full-text retrieval** (2026-06-03):
+      `document_store.py` `tsvector` GIN index + `websearch_to_tsquery`;
+      `load_graph` / `load_documents` idempotent loaders; `ariadne index --dataset <name>` CLI.
+      Decision: [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
+- [ ] **Phase B2 — Enron HF adapter:** `corbt/enron-emails` → canonical
+      (headers→graph, body→Document); `ariadne index --dataset enron` proves
+      the pipeline on real public data.
+- [ ] **Phase B3 — Semantic pgvector leg + RRF fusion:** adds the vector connector
+      and reciprocal-rank fusion with the full-text leg — completes the hybrid
+      retrieval design in [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
 - [ ] **Phase C — Avocado adapter:** local PST/export → canonical; `access="restricted"`,
       access-gated behind `ARIADNE_ALLOW_RESTRICTED=1`; malware caveat (loveletter,
       ~27 msgs) — ingest text/headers only. Built now, populated when licensed data

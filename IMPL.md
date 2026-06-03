@@ -73,6 +73,15 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   [docs/superpowers/plans/2026-06-03-phase-a-dataset-abstraction.md](./docs/superpowers/plans/2026-06-03-phase-a-dataset-abstraction.md).
   Decision: [ADR-0006](./docs/architecture/decisions/0006-dataset-agnostic-pipeline.md).
 
+- **Phase B1 — Live indexing + Postgres full-text retrieval shipped (2026-06-03).**
+  `src/ariadne/unstructured/document_store.py` — `tsvector` generated column +
+  GIN index, `websearch_to_tsquery`-based search. `src/ariadne/datasets/load.py`
+  — `load_graph` idempotent via per-label id-uniqueness constraints; `load_documents`
+  bulk-inserts `Document` records. `ariadne index --dataset <name>` CLI wires the
+  full pipeline. Decision: [ADR-0007](./docs/architecture/decisions/0007-hybrid-retrieval-fulltext-first.md).
+  Full plan:
+  [docs/superpowers/plans/2026-06-03-phase-b1-live-indexing-fulltext.md](./docs/superpowers/plans/2026-06-03-phase-b1-live-indexing-fulltext.md).
+
 ## In flight — rigor (Phase 4) + Phase 2 retrieval
 
 Rigor next (grounded; see the research doc):

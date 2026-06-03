@@ -22,7 +22,11 @@ fact you did not retrieve.
 2. **Act — route by question.** Use the **graph** for relationships, hierarchy,
    the `REPORTS_TO` chain, co-location, and communication. Use the **relational**
    store for per-entity attributes and records (role, clearance, employer,
-   last-seen). Resolve the *same* entity across stores by its shared key
+   last-seen). For free-text / email-body evidence, search the document store via
+   `execute_sql` using `content_tsv @@ websearch_to_tsquery('english', '<terms>')`
+   and order results by `ts_rank(content_tsv, websearch_to_tsquery('english',
+   '<terms>')) DESC`; cite returned documents as evidence exactly like any other
+   source. Resolve the *same* entity across stores by its shared key
    (name / alias). Prefer several focused, read-only queries over one giant one.
 3. **Verify & reconcile.** Re-query any decisive link before relying on it. When
    the graph and the relational store **agree** on a connection, the
