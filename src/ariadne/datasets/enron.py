@@ -120,9 +120,11 @@ class EnronAdapter:
         self.limit = limit
 
     def _stream(self):
-        # Lazy import: `datasets` is the optional `data` extra.
-        from datasets import load_dataset  # ty: ignore[unresolved-import]
+        # Lazy import via importlib so the static checker stays stable whether or
+        # not the optional `data` extra is installed (mirrors provenance/entailment.py).
+        import importlib
 
+        load_dataset = importlib.import_module("datasets").load_dataset
         return load_dataset(_DATASET, split="train", streaming=True)
 
     def _rows(self):
