@@ -289,7 +289,7 @@ items must not be hardened against one answer.
 
 ### Phase 5 — Deployment hardening
 - [ ] Resolve the cloud-vs-air-gapped fork per component; document the swap points.
-- [ ] **Observability — traces + metrics for the MCP server / harness.**
+- [x] **Observability — traces + metrics for the MCP server / harness (2026-06-03).** [ADR-0010](./docs/architecture/decisions/0010-observability-opentelemetry.md).
       `# research(2026-06):` instrument with **OpenTelemetry GenAI semantic
       conventions** (CNCF-backed, adopted by Datadog/Google/AWS/Azure) — the
       standard span tree is `invoke_agent` → `chat` (per LLM call) → `execute_tool`

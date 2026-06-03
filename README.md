@@ -104,6 +104,43 @@ Config caveat: the tool is portable; the data is not. Point the server at your
 stores (`NEO4J_*` / `DATABASE_URI`) and set `ANTHROPIC_API_KEY` per install.
 See [ADR-0009](./docs/architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md).
 
+## Observability
+
+Ariadne emits OpenTelemetry traces and metrics via the optional `otel` extra.
+The base install (api-only) is a no-op — nothing is emitted unless you configure
+an OTLP endpoint.
+
+```bash
+# 1. install the otel extra
+uv sync --extra otel
+
+# 2. point at your OTLP collector (Jaeger, Grafana, Datadog, etc.)
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+
+# 3. optionally add the Claude Agent SDK's per-LLM-call spans
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+```
+
+What is emitted per workup:
+
+- **`invoke_agent` span** — covers the full workup; duration = task time.
+- **`ariadne.workups` counter** and **`ariadne.workup.duration` histogram** —
+  latency and throughput.
+- **`ariadne.evidence.calls` counter** — evidence-tool calls (from the
+  provenance ledger); surfaces existing `provenance.jsonl` data.
+- **`ariadne.citation.failures` counter** — uncited + unsupported claims;
+  surfaces existing `citations.json` gate output.
+- **Span attributes** for citation compliance (`citation.ok`, `citation.uncited`,
+  `citation.unsupported`) and tradecraft compliance (`tradecraft.estimative_terms`,
+  `tradecraft.has_confidence`) — surfaces existing `tradecraft.json` output.
+
+When `CLAUDE_CODE_ENABLE_TELEMETRY=1` is set, the Agent SDK's per-LLM-call spans
+nest under Ariadne's `invoke_agent` span — one trace covers the full workup
+without any extra config.
+
+See [ADR-0010](./docs/architecture/decisions/0010-observability-opentelemetry.md)
+for the design rationale and considered alternatives.
+
 ## Quickstart
 
 Phase 1 works up a target entity against a graph store and returns a cited analytic note.

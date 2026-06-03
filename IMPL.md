@@ -111,6 +111,17 @@ Re-verified end-to-end 2026-06-02 (lint + 35 unit + seeded-Neo4j + live agent e2
   generalizes to a second, real corpus. Full plan:
   [docs/superpowers/plans/2026-06-03-phase-b2-enron-adapter.md](./docs/superpowers/plans/2026-06-03-phase-b2-enron-adapter.md).
 
+- **Observability shipped (2026-06-03).** OTel traces + metrics via GenAI
+  semantic conventions — one `invoke_agent` span per workup (task duration),
+  `ariadne.workups` / `ariadne.workup.duration` / `ariadne.evidence.calls` /
+  `ariadne.citation.failures` metrics, span attrs for citation + tradecraft
+  compliance. Surfaces existing `citations.json` / `tradecraft.json` artifacts
+  as telemetry; only timing is new. `opentelemetry-api` core dep (no-op until
+  `setup_telemetry()` configures the SDK from `OTEL_EXPORTER_OTLP_ENDPOINT`);
+  sdk + OTLP exporter in the `otel` extra. Decision: [ADR-0010](./docs/architecture/decisions/0010-observability-opentelemetry.md).
+  Full plan:
+  [docs/superpowers/plans/2026-06-03-observability-otel.md](./docs/superpowers/plans/2026-06-03-observability-otel.md).
+
 - **Distribution shipped (2026-06-03).** `ariadne` MCP server
   (`workup` + `hybrid_search` tools, `ariadne-mcp` console script) + Claude Code
   plugin bundle (`.claude-plugin/marketplace.json` at root +
