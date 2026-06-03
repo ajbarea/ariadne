@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import os
 import sys
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -29,6 +30,7 @@ import ariadne.datasets.synthetic  # noqa: F401  (registers the synthetic adapte
 from ariadne.datasets.base import DATASETS
 from ariadne.evaluation.needle import FIXTURES, score_workup_dir
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
+from ariadne.observability import record_workup_metrics, setup_telemetry, workup_span
 from ariadne.provenance.citations import validate_citations
 from ariadne.provenance.hook import make_provenance_hook
 from ariadne.provenance.ledger import ProvenanceLedger
@@ -193,24 +195,34 @@ async def run_workup(
     note_parts: list[str] = []
     result_text: str | None = None
     had_error: bool = False
-    async for message in query(prompt=prompt, options=options):
-        if isinstance(message, AssistantMessage):
-            note_parts.extend(
-                block.text for block in message.content if isinstance(block, TextBlock)
-            )
-        elif isinstance(message, ResultMessage):
-            result_text = message.result
-            had_error = bool(getattr(message, "is_error", False))
+    with workup_span(entity, dataset, semantic=with_semantic, sql=with_sql):
+        started = time.monotonic()
+        async for message in query(prompt=prompt, options=options):
+            if isinstance(message, AssistantMessage):
+                note_parts.extend(
+                    block.text for block in message.content if isinstance(block, TextBlock)
+                )
+            elif isinstance(message, ResultMessage):
+                result_text = message.result
+                had_error = bool(getattr(message, "is_error", False))
+        elapsed = time.monotonic() - started
+        note = (result_text or "\n".join(note_parts)).strip()
+        report = validate_citations(note, ledger)
+        tradecraft = lint_estimative_language(note)
+        record_workup_metrics(
+            entity=entity,
+            dataset=dataset,
+            duration_s=elapsed,
+            report=report,
+            tradecraft=tradecraft,
+            led=ledger,
+        )
+        out_dir = Path(out_root) / _slug(entity)
+        write_outputs(
+            out_dir, entity=entity, note=note, ledger=ledger, report=report, tradecraft=tradecraft
+        )
 
-    note = (result_text or "\n".join(note_parts)).strip()
-    report = validate_citations(note, ledger)
-    tradecraft = lint_estimative_language(note)
-    out_dir = Path(out_root) / _slug(entity)
-    write_outputs(
-        out_dir, entity=entity, note=note, ledger=ledger, report=report, tradecraft=tradecraft
-    )
-
-    print(f"Wrote {out_dir}/note.md ({len(ledger.entries)} graph calls cited).")
+    print(f"Wrote {out_dir}/note.md ({len(ledger.entries)} graph calls cited) in {elapsed:.1f}s.")
     if tradecraft.nonstandard_terms:
         print(
             "Tradecraft (advisory): non-standard estimative terms "
@@ -239,6 +251,7 @@ def main(argv: list[str] | None = None) -> int:
     # clobbering already-exported vars. usecwd=True searches up from where the
     # user runs the command (not from this installed module's location).
     load_dotenv(find_dotenv(usecwd=True), override=False)
+    setup_telemetry()
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.command == "eval":
         return _run_eval(args.workup_dir, args.fixture)

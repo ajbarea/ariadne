@@ -95,6 +95,9 @@ async def hybrid_search(query: str, limit: int = 5) -> dict[str, Any]:
 
 def main() -> None:
     """Entry point -- runs the stdio MCP server."""
+    from ariadne.observability import setup_telemetry
+
+    setup_telemetry()
     mcp.run()
 
 
