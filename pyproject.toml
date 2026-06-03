@@ -80,10 +80,13 @@ dev = [
     "zensical>=0.0.24",
     "testcontainers[neo4j,postgres]>=4.9",
     "psycopg[binary]>=3.2",
-    # research(2026-06): SDK needed for in-memory exporters in unit tests.
-    # Production export uses the otel extra; tests use InMemorySpanExporter +
-    # InMemoryMetricReader. See ADR-0010.
+    # research(2026-06): SDK + OTLP exporter in dev so `ty` resolves the
+    # setup_telemetry() imports without the `otel` extra (else CI `make lint`
+    # breaks on unresolved-import — same optional-extra trap as data/embed). Tests
+    # use InMemorySpanExporter + InMemoryMetricReader; production export = otel
+    # extra. See ADR-0010.
     "opentelemetry-sdk>=1.30",
+    "opentelemetry-exporter-otlp>=1.30",
 ]
 
 [build-system]

@@ -189,6 +189,7 @@ otel = [
 [package.dev-dependencies]
 dev = [
     { name = "hypothesis" },
+    { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-sdk" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pytest" },
@@ -221,6 +222,7 @@ provides-extras = ["data", "otel", "embed", "eval"]
 [package.metadata.requires-dev]
 dev = [
     { name = "hypothesis", specifier = ">=6.140" },
+    { name = "opentelemetry-exporter-otlp", specifier = ">=1.30" },
     { name = "opentelemetry-sdk", specifier = ">=1.30" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pytest", specifier = ">=9.0" },
