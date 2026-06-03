@@ -31,10 +31,19 @@ dependencies = [
     # research(2026-06): pin mcp as a direct dep (transitively via claude-agent-sdk);
     # required by ariadne.mcp_server (ADR-0009) and ariadne-mcp entry point.
     "mcp>=1.2",
+    # research(2026-06): OTel library guidance — depend only on -api (no-op until SDK
+    # configured by the app entry point). SDK + exporter live in dev + otel extra.
+    # See ADR-0010 and docs/superpowers/plans/2026-06-03-observability-otel.md.
+    "opentelemetry-api>=1.30",
 ]
 
 [project.optional-dependencies]
 data = ["datasets>=3"]
+
+# research(2026-06): SDK + OTLP exporter are optional so the base install emits
+# nothing (api-only). Enable for production export or development tracing.
+# See ADR-0010 and docs/superpowers/plans/2026-06-03-observability-otel.md.
+otel = ["opentelemetry-sdk>=1.30", "opentelemetry-exporter-otlp>=1.30"]
 
 # research(2026-06): Semantic retrieval leg (ADR-0007) — sentence-transformers
 # provides the real embedding backend; default model is bge-small-en-v1.5
@@ -71,6 +80,10 @@ dev = [
     "zensical>=0.0.24",
     "testcontainers[neo4j,postgres]>=4.9",
     "psycopg[binary]>=3.2",
+    # research(2026-06): SDK needed for in-memory exporters in unit tests.
+    # Production export uses the otel extra; tests use InMemorySpanExporter +
+    # InMemoryMetricReader. See ADR-0010.
+    "opentelemetry-sdk>=1.30",
 ]
 
 [build-system]
