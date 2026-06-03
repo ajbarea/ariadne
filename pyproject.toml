@@ -31,6 +31,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+data = ["datasets>=3"]
+
 # research(2026-06): Stage-2 citation entailment (precision) via Vectara
 # HHEM-2.1-Open. Heavy + optional — the core validation path runs without it.
 # See docs/research/analytic-rigor-eval.md and src/ariadne/provenance/entailment.py.
