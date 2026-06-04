@@ -37,6 +37,30 @@ capability for traversing organizational hierarchies; multimodal evidence is
 fused **agentically** by converting imagery/video to structured text before
 reasoning over it.
 
+<div class="arch-diagram" markdown="0">
+  <div class="arch-row">
+    <div class="arch-node arch-node--input"><span class="arch-node-title">Target entity</span><span class="arch-node-sub">a person, unit, or org node</span></div>
+  </div>
+  <div class="arch-flow"></div>
+  <div class="arch-row">
+    <div class="arch-node arch-node--lead"><span class="arch-node-title">Lead agent</span><span class="arch-node-sub">gather → act → verify → repeat</span></div>
+  </div>
+  <div class="arch-flow"><span class="arch-flow-label">dispatches parallel, context-isolated subagents</span></div>
+  <div class="arch-row arch-row--three">
+    <div class="arch-node arch-node--worker"><span class="arch-badge">Graph</span><span class="arch-node-title">Neo4j</span><span class="arch-node-sub">relationships via MCP</span></div>
+    <div class="arch-node arch-node--worker"><span class="arch-badge">Relational</span><span class="arch-node-title">Postgres</span><span class="arch-node-sub">records via MCP</span></div>
+    <div class="arch-node arch-node--worker"><span class="arch-badge">Unstructured</span><span class="arch-node-title">Hybrid search</span><span class="arch-node-sub">text + vector via MCP</span></div>
+  </div>
+  <div class="arch-flow"><span class="arch-flow-label">findings return to the lead</span></div>
+  <div class="arch-row">
+    <div class="arch-node arch-node--synth"><span class="arch-node-title">Synthesis</span><span class="arch-node-sub">provenance + citation gate</span></div>
+  </div>
+  <div class="arch-flow"></div>
+  <div class="arch-row">
+    <div class="arch-node arch-node--output"><span class="arch-node-title">Cited analytic note</span></div>
+  </div>
+</div>
+
 ## Datasets
 
 A future developer adds a corpus by writing one **adapter** that maps raw data to

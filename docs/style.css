@@ -516,6 +516,140 @@ body.hero-page .md-header {
   opacity: 0.88;
 }
 
+/* ---- Architecture diagram (bespoke, zero-dependency, air-gap-safe) -------- */
+/* research(2026-06): docs UX guidance favors a visual alongside the written
+   spec for a topology like orchestrator-worker. Built in CSS rather than Mermaid
+   because Zensical's mermaid driver renders blank in this version AND Mermaid
+   loads from a CDN at runtime, which would break Ariadne's own air-gapped
+   deployment (ADR-0012). */
+
+.md-typeset .arch-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 2rem 0;
+  padding: 1.6rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 16%, transparent);
+  border-radius: 1rem;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, var(--ari-mist), transparent 70%),
+    color-mix(in srgb, var(--ari-obsidian) 55%, transparent);
+}
+
+.arch-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.arch-row--three {
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.md-typeset .arch-node {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: center;
+  padding: 0.85rem 1.3rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 22%, transparent);
+  background: color-mix(in srgb, var(--ari-indigo-light) 45%, transparent);
+  min-width: 9rem;
+}
+
+.arch-node-title {
+  font-weight: 700;
+  color: var(--ari-thread-light);
+  font-size: 1rem;
+}
+
+.arch-node-sub {
+  font-size: 0.76rem;
+  letter-spacing: 0.01em;
+  opacity: 0.75;
+}
+
+/* Lead orchestrator and synthesis are the load-bearing nodes: heavier border. */
+.md-typeset .arch-node--lead,
+.md-typeset .arch-node--synth {
+  border-color: color-mix(in srgb, var(--ari-thread) 55%, transparent);
+  background: color-mix(in srgb, var(--ari-indigo-light) 70%, transparent);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--ari-thread) 12%, transparent);
+}
+
+.md-typeset .arch-node--input {
+  background: color-mix(in srgb, var(--ari-indigo-light) 28%, transparent);
+}
+
+/* The output node is the end of the thread: scarlet, mirroring the hero trace. */
+.md-typeset .arch-node--output {
+  border-color: color-mix(in srgb, var(--ari-scarlet) 50%, transparent);
+  background: color-mix(in srgb, var(--ari-scarlet) 14%, transparent);
+  color: #ffd9cf;
+  font-weight: 700;
+}
+
+.md-typeset .arch-node--worker {
+  flex: 1 1 0;
+  min-width: 8.5rem;
+  max-width: 13rem;
+}
+
+.arch-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ari-thread-light);
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 28%, transparent);
+  border-radius: 2rem;
+  padding: 0.05rem 0.55rem;
+  margin: 0 auto 0.35rem;
+}
+
+/* Vertical connector between rows: a golden thread segment with a caption. */
+.arch-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 2.4rem;
+  padding: 0.3rem 0;
+}
+
+.arch-flow::before {
+  content: "";
+  width: 2px;
+  height: 1.5rem;
+  background: linear-gradient(to bottom,
+    color-mix(in srgb, var(--ari-thread) 70%, transparent),
+    color-mix(in srgb, var(--ari-thread) 30%, transparent));
+}
+
+.arch-flow-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+  color: var(--ari-thread-light);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .arch-row--three {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .md-typeset .arch-node--worker {
+    max-width: none;
+  }
+}
+
 /* ---- Responsive ---------------------------------------------------------- */
 
 @media (max-width: 960px) {
