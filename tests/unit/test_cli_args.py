@@ -73,3 +73,24 @@ def test_main_does_not_override_exported_env(monkeypatch, tmp_path) -> None:
     # load_dotenv(override=False) must not clobber the already-exported key.
     assert main(["workup", "Alpha"]) == 0
     assert os.environ["ANTHROPIC_API_KEY"] == "from-shell"
+
+
+def test_workup_accepts_profile_flag() -> None:
+    from ariadne.cli import parse_args
+
+    args = parse_args(["workup", "Halberd", "--profile", "fast-local"])
+    assert args.profile == "fast-local"
+
+
+def test_workup_profile_defaults_to_default() -> None:
+    from ariadne.cli import parse_args
+
+    args = parse_args(["workup", "Halberd"])
+    assert args.profile == "default"
+
+
+def test_profiles_subcommand_parses() -> None:
+    from ariadne.cli import parse_args
+
+    args = parse_args(["profiles"])
+    assert args.command == "profiles"

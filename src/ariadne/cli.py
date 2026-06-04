@@ -117,6 +117,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Also compute + store document embeddings (semantic leg; needs the 'embed' extra + pgvector).",
     )
+    wk.add_argument(
+        "--profile",
+        default="default",
+        help="Model profile from the curated allowlist (see `ariadne profiles`).",
+    )
+    sub.add_parser("profiles", help="List the available model profiles (no API key needed)")
     return parser.parse_args(argv)
 
 
@@ -160,6 +166,18 @@ def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
     if minimum is not None and report.overall < minimum:
         print(f"Rubric FAILED — overall {report.overall:.2f} < {minimum:.2f}", file=sys.stderr)
         return 1
+    return 0
+
+
+def _run_profiles(env: dict[str, str]) -> int:
+    """List the curated model profiles this deployment offers."""
+    from ariadne.profiles import load_profiles
+
+    for name, p in sorted(load_profiles(env).items()):
+        model = p.model or "(deployment default)"
+        print(f"{name:<14} egress={p.egress:<9} model={model}")
+        if p.description:
+            print(f"{'':<14} {p.description}")
     return 0
 
 
@@ -354,6 +372,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_eval(args.workup_dir, args.fixture, reconcile=args.reconcile)
     if args.command == "index":
         return _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
+    if args.command == "profiles":
+        return _run_profiles(dict(os.environ))
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",
@@ -371,5 +391,6 @@ def main(argv: list[str] | None = None) -> int:
             with_semantic=args.semantic,
             with_entail=args.entail,
             dataset=args.dataset,
+            profile=args.profile,
         )
     )
