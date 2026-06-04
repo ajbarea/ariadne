@@ -127,13 +127,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--validate",
         metavar="NAME",
         default=None,
-        help="Run a real workup with NAME against the Halberd needle; PASS iff it grounds.",
+        help="Run a real workup with NAME against each dataset's needle; PASS iff it grounds.",
+    )
+    pr.add_argument(
+        "--dataset",
+        choices=sorted(DATASETS),
+        default=None,
+        help="Restrict --validate to one dataset (default: all registered cases).",
     )
     pr.add_argument(
         "--timeout",
         type=float,
         default=600.0,
-        help="Wall-clock budget (seconds) for --validate (default 600).",
+        help="Wall-clock budget (seconds) per dataset for --validate (default 600).",
     )
     return parser.parse_args(argv)
 
@@ -189,15 +195,25 @@ async def _run_under_budget(coro, budget: float) -> int | None:
         return None
 
 
+# Per-dataset capability cases: (dataset, entity, needle fixture). Both graph-only.
+_VALIDATION_CASES: tuple[tuple[str, str, str], ...] = (
+    ("synthetic", "Halberd", "halberd"),
+    ("enron", "vince.kaminski@enron.com", "kaminski-aol"),
+)
+
+
 def _validate_profile(
     name: str,
     *,
     env: dict[str, str],
     timeout: float = 600.0,
+    dataset: str | None = None,
     runner=None,
     scorer=None,
 ) -> int:
-    """Run a real workup with `name` against the Halberd needle under a budget; PASS iff grounded."""
+    """Run a real workup with `name` against each dataset's planted needle under a
+    budget; a dataset PASSes iff its note grounds in time. Returns 0 iff all pass."""
+    import shutil
     import tempfile
     from pathlib import Path
 
@@ -208,34 +224,37 @@ def _validate_profile(
     if runner is None and not env.get("ANTHROPIC_API_KEY"):
         print("ANTHROPIC_API_KEY is not set — export it to validate a profile.", file=sys.stderr)
         return 2
-    runner = runner or run_workup
-    scorer = scorer or (lambda d: score_workup_dir(d, FIXTURES["halberd"]))
-    import shutil
-
-    out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
-    try:
-        rc = asyncio.run(
-            _run_under_budget(
-                runner("Halberd", out_root, env, dataset="synthetic", profile=name),
-                timeout,
+    cases = [c for c in _VALIDATION_CASES if dataset is None or c[0] == dataset]
+    if not cases:
+        print(f"No validation case registered for dataset {dataset!r}.", file=sys.stderr)
+        return 2
+    run = runner or run_workup
+    all_pass = True
+    for ds, entity, fixture in cases:
+        out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
+        try:
+            rc = asyncio.run(
+                _run_under_budget(run(entity, out_root, env, dataset=ds, profile=name), timeout)
             )
-        )
-        if rc is None:
+            if rc is None:
+                print(
+                    f"  {ds:<10} FAIL — exceeded the {timeout:.0f}s budget (throughput-bound).",
+                    file=sys.stderr,
+                )
+                all_pass = False
+                continue
+            out_dir = str(Path(out_root) / _slug(entity))
+            report = scorer(out_dir) if scorer else score_workup_dir(out_dir, FIXTURES[fixture])
+            status = "PASS" if report.grounded else "FAIL"
             print(
-                f"Profile {name!r}: FAIL — workup exceeded the {timeout:.0f}s budget "
-                f"(throughput-bound; not viable on this host).",
-                file=sys.stderr,
+                f"  {ds:<10} {status} — grounded={report.grounded} "
+                f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
             )
-            return 1
-        report = scorer(str(Path(out_root) / _slug("Halberd")))
-        status = "PASS" if report.grounded else "FAIL"
-        print(
-            f"Profile {name!r}: {status} — grounded={report.grounded} "
-            f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
-        )
-        return 0 if report.grounded else 1
-    finally:
-        shutil.rmtree(out_root, ignore_errors=True)
+            all_pass = all_pass and report.grounded
+        finally:
+            shutil.rmtree(out_root, ignore_errors=True)
+    print(f"Profile {name!r}: {'PASS' if all_pass else 'FAIL'} ({len(cases)} dataset(s) checked).")
+    return 0 if all_pass else 1
 
 
 def _run_profiles(env: dict[str, str]) -> int:
@@ -443,7 +462,12 @@ def main(argv: list[str] | None = None) -> int:
         return _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
     if args.command == "profiles":
         if args.validate:
-            return _validate_profile(args.validate, env=dict(os.environ), timeout=args.timeout)
+            return _validate_profile(
+                args.validate,
+                env=dict(os.environ),
+                timeout=args.timeout,
+                dataset=args.dataset,
+            )
         return _run_profiles(dict(os.environ))
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(

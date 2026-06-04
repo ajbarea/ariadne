@@ -49,3 +49,47 @@ def test_validate_rejects_unknown_profile() -> None:
 
     with pytest.raises(ValueError, match="Valid profiles"):
         _validate_profile("bogus", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(True))
+
+
+def test_validate_runs_every_dataset_case_by_default() -> None:
+    seen: list[str] = []
+
+    async def _counting_runner(entity, out_root, env, **kw) -> int:
+        seen.append(kw["dataset"])
+        return 0
+
+    rc = _validate_profile(
+        "default", env={}, runner=_counting_runner, scorer=lambda d: _FakeReport(True)
+    )
+    assert rc == 0
+    assert set(seen) == {"synthetic", "enron"}  # both registered cases ran
+
+
+def test_validate_restricts_to_one_dataset() -> None:
+    seen: list[str] = []
+
+    async def _counting_runner(entity, out_root, env, **kw) -> int:
+        seen.append(kw["dataset"])
+        return 0
+
+    rc = _validate_profile(
+        "default",
+        env={},
+        dataset="synthetic",
+        runner=_counting_runner,
+        scorer=lambda d: _FakeReport(True),
+    )
+    assert rc == 0
+    assert seen == ["synthetic"]  # only the requested dataset ran
+
+
+def test_validate_fails_overall_if_any_dataset_fails() -> None:
+    async def _runner(entity, out_root, env, **kw) -> int:
+        return 0
+
+    # synthetic grounds, enron does not -> overall FAIL
+    def _scorer(out_dir: str) -> _FakeReport:
+        return _FakeReport(grounded="halberd" in out_dir or "Halberd" in out_dir)
+
+    rc = _validate_profile("default", env={}, runner=_runner, scorer=_scorer)
+    assert rc == 1
