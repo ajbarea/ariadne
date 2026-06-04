@@ -31,7 +31,7 @@ simply does not define a cloud profile, so the analyst literally cannot name one
 
 ### D1 — Profile registry (Ariadne-owned allowlist)
 
-A profile is `{name, model, egress, description}`:
+A profile is `{name, model, egress, description, envelope}`:
 - `name` — what the user selects (`fast-local`, `rigorous`, `air-gap`).
 - `model` — the identifier handed to `ClaudeAgentOptions(model=...)`; routes through
   whatever `ANTHROPIC_BASE_URL` points at (a LiteLLM `model_name`, or a direct
@@ -39,6 +39,10 @@ A profile is `{name, model, egress, description}`:
 - `egress` — advisory governance class (`none` | `anthropic` | `<provider>`),
   surfaced for audit. **Not** a runtime network control (see Non-goals).
 - `description` — shown by `ariadne profiles` / `list_profiles()`.
+- `envelope` — the model's **operating envelope** (see D6): `max_turns`,
+  `max_thinking_tokens`, and a `tool_result_cap`. Lets a small/local model run lean
+  while a frontier model runs generous, from the same code. Optional; omitted
+  fields fall back to the SDK / current behaviour.
 
 The registry is **Ariadne-side** (not derived from LiteLLM's `/v1/models`) so it is
 deployment-agnostic: it works whether the backend is LiteLLM→Ollama, direct
@@ -85,6 +89,32 @@ workup span — so every analytic product is auditable for *which model and egre
 class produced it*. This reuses the existing governance/observability spine
 (low cost) and directly serves the brief's governance triad.
 
+### D6 — Operating envelope (model-aware context discipline)
+
+`# research / measured (2026-06-04):` A live workup on `qwen3:14b` (M1 Pro) was not
+stalled or unable to tool-call — it was **throughput-bound**: each turn reprocessed
+a ~30k-token, ever-growing context (system prompt + skill + tool defs + every prior
+tool result + the model's own thinking) at ~80 tok/s ≈ 5 min/turn. A frontier model
+with a large context window and server-side prompt caching absorbs this; a small
+local model on commodity hardware does not. So a profile must carry not just *which
+model* but *how leanly to run the loop*.
+
+Levers, split by what we own:
+- **Ours (per profile):** `max_turns` and `max_thinking_tokens` on
+  `ClaudeAgentOptions` (both verified present 2026-06-04); a `tool_result_cap` that
+  bounds how much each `mcp__*` evidence tool returns into context — the **largest
+  growing component we fully control**, applied in the tool wrappers. Local profiles
+  set lean values; the `default`/cloud profile leaves them unset (current behaviour).
+- **Not ours:** the SDK owns the agent loop and does its own whole-conversation
+  compaction on its own schedule; `ClaudeAgentOptions` exposes **no per-model
+  context-window or compaction knob**. We therefore do **not** hand-roll history
+  "chunking" — we keep each turn's contributed context small via the levers above.
+- **Serving-side (per the LiteLLM/Ollama config, not code):** thinking off for the
+  local route, KV-cache reuse, and an explicit context window.
+
+The envelope is surfaced in `governance.json` alongside the profile, so an analytic
+product records the discipline it ran under.
+
 ### D5 — LiteLLM config alignment
 
 `infra/litellm/config.yaml` gains named routes (e.g. `fast-local` → `ollama_chat/qwen3:14b`,
@@ -98,8 +128,13 @@ class produced it*. This reuses the existing governance/observability spine
   outbound-network blocking. The hard air-gap guarantee remains operator curation;
   actual egress *enforcement* (network policy + a no-egress CI guard) is the
   separate ADR-0012 follow-up.
-- **No per-profile tuning** (temperature, max-tokens, system-prompt variants). A
-  profile selects a model, nothing more, until a use case demands otherwise.
+- **No sampling/prompt tuning in the envelope** (temperature, top-p, system-prompt
+  variants). The envelope (D6) carries only loop-discipline knobs that exist to make
+  a small model *viable* — `max_turns`, `max_thinking_tokens`, `tool_result_cap` —
+  not quality-tuning dials.
+- **No hand-rolled conversation compaction.** The SDK owns the loop and its own
+  whole-history compaction; we keep per-turn context small via the envelope, not by
+  re-chunking the transcript ourselves (D6).
 - **No `fallback_model` wiring** yet (the SDK field exists; not needed for v1).
 
 ## Testing (TDD, hermetic — no live model)
@@ -108,8 +143,10 @@ class produced it*. This reuses the existing governance/observability spine
   `default` → `None`; TOML load merges/overrides built-ins; an air-gap registry
   (no cloud profile) rejects a cloud name.
 - `build_options`: sets `model` iff the profile resolves to one; omits it for
-  `default`.
-- `run_workup`/MCP/CLI: arg plumbing smoke; governance.json records the profile.
+  `default`; sets `max_turns`/`max_thinking_tokens` from the envelope only when present.
+- `tool_result_cap`: a tool wrapper truncates an oversized evidence result to the cap
+  and leaves a small result untouched.
+- `run_workup`/MCP/CLI: arg plumbing smoke; governance.json records the profile + envelope.
 - Lint stable with and without optional extras.
 
 ## Decision record
