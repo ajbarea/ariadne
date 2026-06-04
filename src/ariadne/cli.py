@@ -13,7 +13,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from claude_agent_sdk import (
     AssistantMessage,
@@ -199,6 +199,9 @@ def build_options(
     env: dict[str, str],
     with_sql: bool = False,
     with_semantic: bool = False,
+    model: str | None = None,
+    max_turns: int | None = None,
+    max_thinking_tokens: int | None = None,
 ) -> ClaudeAgentOptions:
     hook = make_provenance_hook(ledger)
     mcp_servers: dict[str, McpServerConfig] = {"neo4j": neo4j_stdio_config(env)}
@@ -216,6 +219,14 @@ def build_options(
         mcp_servers["ariadne"] = make_ariadne_server(env, embedder)
         allowed_tools += list(ARIADNE_TOOLS)
         matchers.append(HookMatcher(matcher="mcp__ariadne__.*", hooks=[hook]))
+    # Envelope/model are optional: omit unset fields so the SDK default applies.
+    extra: dict[str, Any] = {}
+    if model is not None:
+        extra["model"] = model
+    if max_turns is not None:
+        extra["max_turns"] = max_turns
+    if max_thinking_tokens is not None:
+        extra["max_thinking_tokens"] = max_thinking_tokens
     return ClaudeAgentOptions(
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,
@@ -223,6 +234,7 @@ def build_options(
         permission_mode="default",
         skills=["entity-workup"],  # SDK auto-allows Skill tool and sets setting_sources
         hooks={"PostToolUse": matchers},
+        **extra,
     )
 
 
