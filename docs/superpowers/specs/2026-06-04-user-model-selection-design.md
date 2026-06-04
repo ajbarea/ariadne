@@ -39,10 +39,10 @@ A profile is `{name, model, egress, description, envelope}`:
 - `egress` — advisory governance class (`none` | `anthropic` | `<provider>`),
   surfaced for audit. **Not** a runtime network control (see Non-goals).
 - `description` — shown by `ariadne profiles` / `list_profiles()`.
-- `envelope` — the model's **operating envelope** (see D6): `max_turns`,
-  `max_thinking_tokens`, and a `tool_result_cap`. Lets a small/local model run lean
-  while a frontier model runs generous, from the same code. Optional; omitted
-  fields fall back to the SDK / current behaviour.
+- `envelope` — the model's **operating envelope** (see D6): `max_turns` and
+  `max_thinking_tokens`. Lets a small/local model run lean while a frontier model
+  runs generous, from the same code. Optional; omitted fields fall back to the SDK /
+  current behaviour.
 
 The registry is **Ariadne-side** (not derived from LiteLLM's `/v1/models`) so it is
 deployment-agnostic: it works whether the backend is LiteLLM→Ollama, direct
@@ -101,16 +101,21 @@ model* but *how leanly to run the loop*.
 
 Levers, split by what we own:
 - **Ours (per profile):** `max_turns` and `max_thinking_tokens` on
-  `ClaudeAgentOptions` (both verified present 2026-06-04); a `tool_result_cap` that
-  bounds how much each `mcp__*` evidence tool returns into context — the **largest
-  growing component we fully control**, applied in the tool wrappers. Local profiles
-  set lean values; the `default`/cloud profile leaves them unset (current behaviour).
+  `ClaudeAgentOptions` (both verified present 2026-06-04). Local profiles set lean
+  values; the `default`/cloud profile leaves them unset (current behaviour).
 - **Not ours:** the SDK owns the agent loop and does its own whole-conversation
   compaction on its own schedule; `ClaudeAgentOptions` exposes **no per-model
   context-window or compaction knob**. We therefore do **not** hand-roll history
-  "chunking" — we keep each turn's contributed context small via the levers above.
+  "chunking." The bulk of per-turn context is the **external** `mcp__neo4j__` /
+  `mcp__postgres__` results, and the PostToolUse hook only *observes* (returns
+  `additionalContext`) — it cannot rewrite a result — so a uniform Ariadne-side
+  `tool_result_cap` is **not cleanly available today**. Those servers carry their own
+  guardrails (Neo4j read timeout/limit, postgres-mcp restricted mode). A future
+  result-rewrite mechanism could add capping; it is **out of scope for v1** and would
+  not have helped the measured graph/sql case anyway.
 - **Serving-side (per the LiteLLM/Ollama config, not code):** thinking off for the
-  local route, KV-cache reuse, and an explicit context window.
+  local route, KV-cache reuse, and an explicit context window — the largest practical
+  win for the measured case, and config not code.
 
 The envelope is surfaced in `governance.json` alongside the profile, so an analytic
 product records the discipline it ran under.
@@ -130,8 +135,10 @@ product records the discipline it ran under.
   separate ADR-0012 follow-up.
 - **No sampling/prompt tuning in the envelope** (temperature, top-p, system-prompt
   variants). The envelope (D6) carries only loop-discipline knobs that exist to make
-  a small model *viable* — `max_turns`, `max_thinking_tokens`, `tool_result_cap` —
-  not quality-tuning dials.
+  a small model *viable* — `max_turns`, `max_thinking_tokens` — not quality dials.
+- **No `tool_result_cap` in v1** (deferred): external MCP results dominate context and
+  aren't Ariadne-rewritable via the observe-only PostToolUse hook; serving-side
+  thinking-off + the servers' own guardrails cover the measured case.
 - **No hand-rolled conversation compaction.** The SDK owns the loop and its own
   whole-history compaction; we keep per-turn context small via the envelope, not by
   re-chunking the transcript ourselves (D6).
@@ -144,8 +151,6 @@ product records the discipline it ran under.
   (no cloud profile) rejects a cloud name.
 - `build_options`: sets `model` iff the profile resolves to one; omits it for
   `default`; sets `max_turns`/`max_thinking_tokens` from the envelope only when present.
-- `tool_result_cap`: a tool wrapper truncates an oversized evidence result to the cap
-  and leaves a small result untouched.
 - `run_workup`/MCP/CLI: arg plumbing smoke; governance.json records the profile + envelope.
 - Lint stable with and without optional extras.
 
