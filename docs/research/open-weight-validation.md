@@ -91,6 +91,19 @@ every axis, so a passing score from a larger model is meaningful, not a rubber s
    quality rows are a follow-up on a GPU host or hosted open-weight endpoint; the
    throughput wall on commodity Apple Silicon is itself a useful SCADS air-gap
    deployment finding (plan for inference hardware, not just model weights).
+5. **Measured 2026-06-04: thinking-off helps, but prefill of the static context is the
+   real wall.** Disabling qwen3 reasoning (`think:false` through LiteLLM, the June-2026
+   best practice) cut a trivial query from 29.2s to 1.3s, so it is clearly worth doing.
+   Yet a thinking-off `qwen3:14b` workup still exceeded a 300s budget after one turn:
+   Ollama's log shows a single ~28k-token prompt (system prompt + the entity-workup
+   skill + tool schemas + tool results) still 72% through *prompt processing* at 300s,
+   at 67-220 tok/s, never reaching generation. The binding constraint is **prefill of
+   the large static prefix, re-processed every turn**, not generation or thinking.
+   The production fix is **prefix caching on a GPU server (vLLM / SGLang)** so the
+   static prefix is prefilled once and reused across the agentic loop, which Ollama on
+   a laptop does not do. Best practice for a local / air-gap Ariadne: vLLM or SGLang on
+   a GPU host with prefix caching, thinking-off, and a Qwen3-A3B-class MoE, then certify
+   it with `ariadne profiles --validate` on that hardware. The M1 Pro is a dev box.
 
 ## What this validates for the brief
 
