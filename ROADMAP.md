@@ -290,12 +290,20 @@ items must not be hardened against one answer.
 - [ ] Extend the harness further: more needle fixtures, the reconciliation
       criterion as a first-class score, and governance checks (quality, security,
       data integrity).
+- [ ] **`entity-workup` skill-prompt improvement** — prompt the agent to weigh
+      alternatives, state implications, and use WEP estimative terms + an explicit
+      analytic-confidence statement. The tradecraft lint and the ICD-203 rubric
+      (ADR-0011) both show the live notes do little of this; needs a live re-run
+      to confirm the scores move.
 - [ ] Provenance/citation surface in the analytic product; confidence handling.
 - [ ] SCADS integration interfaces: document how sibling tools plug in as callable tools.
 - [ ] Capture **reusable workflow patterns** (a brief deliverable) for future SCADS use cases.
 
 ### Phase 5 — Deployment hardening
 - [ ] Resolve the cloud-vs-air-gapped fork per component; document the swap points.
+- [ ] **Publish to PyPI** so `uvx ariadne-mcp` installs without a local checkout
+      (the one remaining distribution step from ADR-0009). Blocked on AJ: needs a
+      PyPI token + a non-`ariadne` package name (taken by the GraphQL lib).
 - [x] **Observability — traces + metrics for the MCP server / harness (2026-06-03).** [ADR-0010](./docs/architecture/decisions/0010-observability-opentelemetry.md).
       `# research(2026-06):` instrument with **OpenTelemetry GenAI semantic
       conventions** (CNCF-backed, adopted by Datadog/Google/AWS/Azure) — the
@@ -331,23 +339,6 @@ items must not be hardened against one answer.
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
 - [ ] Tooling that raises analysts' domain knowledge / analytic capacity.
 
----
-
-## Shipped
-
-- **2026-06-03** — Distribution: `ariadne` MCP server (`workup` + `hybrid_search`
-  tools, `ariadne-mcp` script) + Claude Code plugin bundle (`marketplace.json` +
-  `plugins/ariadne/` with `.mcp.json` + analyst-workup skill). Ariadne is now
-  callable from any MCP-speaking CLI and one-click installable in Claude Code.
-  ADR-0009. Remaining release step: publish to PyPI so `uvx ariadne-mcp` works
-  without a local checkout.
-
-- **2026-06-01** — Phase 1 vertical slice: read-only Neo4j MCP connector,
-  entity-workup skill, PostToolUse provenance hook + citation-coverage validator,
-  and `ariadne workup <entity>` CLI running the live agent loop to produce a cited
-  analytic note (note.md + provenance.jsonl + citations.json) over a seeded Neo4j.
-- **2026-06-01** — Repo scaffolded; Claude Agent SDK reference captured;
-  June-2026 best-practice research synthesized; Zensical docs site stood up.
-- **2026-06-01** — Project charter distilled from the SCADS onboarding brief into
-  **Mission & charter** (problem, central research question, deliverables, success
-  criteria, design constraints, program context); source PDF removed.
+> **Completed work** is the `[x]` items in the phases above — that is the
+> one-line ledger of what's done. The full record of *how* each shipped lives in
+> `docs/superpowers/plans/`, the ADRs, and git history.
