@@ -15,6 +15,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+_PROFILE_KEYS = frozenset({"model", "egress", "description", "envelope"})
+_ENVELOPE_KEYS = frozenset({"max_turns", "max_thinking_tokens"})
+
 
 @dataclass(frozen=True)
 class Envelope:
@@ -46,9 +49,22 @@ def load_profiles(env: Mapping[str, str]) -> dict[str, Profile]:
     path = env.get("ARIADNE_PROFILES")
     if not path:
         return registry
-    data = tomllib.loads(Path(path).read_text(encoding="utf-8"))
+    profile_path = Path(path)
+    if not profile_path.is_file():
+        raise FileNotFoundError(f"ARIADNE_PROFILES points to a missing file: {path!r}")
+    data = tomllib.loads(profile_path.read_text(encoding="utf-8"))
     for name, spec in data.get("profiles", {}).items():
+        # Validate profile keys
+        unknown = set(spec) - _PROFILE_KEYS
+        if unknown:
+            raise ValueError(f"Profile {name!r} has unknown key(s): {', '.join(sorted(unknown))}")
+        # Validate envelope keys
         env_spec = spec.get("envelope", {})
+        unknown_env = set(env_spec) - _ENVELOPE_KEYS
+        if unknown_env:
+            raise ValueError(
+                f"Profile {name!r} envelope has unknown key(s): {', '.join(sorted(unknown_env))}"
+            )
         registry[name] = Profile(
             name=name,
             model=spec.get("model"),

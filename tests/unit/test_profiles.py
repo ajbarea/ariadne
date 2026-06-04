@@ -42,5 +42,26 @@ def test_air_gap_registry_makes_cloud_unavailable(tmp_path) -> None:
     p = tmp_path / "profiles.toml"
     p.write_text('[profiles.air-gap]\nmodel = "qwen3:30b"\negress = "none"\n', encoding="utf-8")
     reg = load_profiles({"ARIADNE_PROFILES": str(p)})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Valid profiles"):
         resolve_profile("rigorous", reg)  # no cloud profile defined -> not selectable
+
+
+def test_strict_parse_rejects_unknown_profile_key(tmp_path) -> None:
+    p = tmp_path / "profiles.toml"
+    p.write_text('[profiles.x]\nmoodel = "typo"\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="unknown key"):
+        load_profiles({"ARIADNE_PROFILES": str(p)})
+
+
+def test_strict_parse_rejects_unknown_envelope_key(tmp_path) -> None:
+    p = tmp_path / "profiles.toml"
+    p.write_text(
+        '[profiles.x]\nmodel = "m"\n[profiles.x.envelope]\nmax_turn = 5\n', encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="envelope has unknown key"):
+        load_profiles({"ARIADNE_PROFILES": str(p)})
+
+
+def test_missing_profiles_file_names_the_env_var(tmp_path) -> None:
+    with pytest.raises(FileNotFoundError, match="ARIADNE_PROFILES"):
+        load_profiles({"ARIADNE_PROFILES": str(tmp_path / "nope.toml")})
