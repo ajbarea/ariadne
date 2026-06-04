@@ -671,29 +671,37 @@ git commit -m "feat(profiles): MCP workup(profile=) + list_profiles tool"
 # Operator-curated model profiles (ADR-0013). Copy this file and point
 # ARIADNE_PROFILES at it. Air-gap deployments: define ONLY local profiles — an
 # analyst then cannot select a cloud model, because an unknown name is rejected.
+#
+# HONESTY RULE: `default` and `rigorous` (cloud Claude) are known-good. The LOCAL
+# profiles below are TEMPLATES, not validated configs — a local model must clear
+# the workup before you trust it. Run `ariadne profiles --validate <name>` on YOUR
+# hardware first. (A 2026-06-04 run found qwen3:14b throughput-bound on a 32 GB M1
+# Pro — it did not finish a workup in practical time. Do not assume it works.)
 
 [profiles.default]
 # model omitted -> use the deployment's ANTHROPIC_* env (zero behaviour change)
 egress = "inherit"
 description = "Deployment default model."
 
+[profiles.rigorous]
+model = "claude-opus-4-8"
+egress = "anthropic"
+description = "Frontier Claude for the hardest analytic products. Known-good."
+
+# --- TEMPLATES below: validate with `ariadne profiles --validate <name>` before use ---
+
 [profiles.fast-local]
 model = "fast-local"   # a LiteLLM model_name routing to a local Ollama worker
 egress = "none"
-description = "Local open-weight model via Ollama; lean envelope."
+description = "TEMPLATE: local open-weight model via Ollama; validate before trusting."
 [profiles.fast-local.envelope]
 max_turns = 16
 max_thinking_tokens = 0   # thinking off (also set serving-side) keeps the loop cheap
 
-[profiles.rigorous]
-model = "claude-opus-4-8"
-egress = "anthropic"
-description = "Frontier Claude for the hardest analytic products."
-
 [profiles.air-gap]
 model = "air-gap"      # a LiteLLM route to an in-enclave open-weight worker
 egress = "none"
-description = "In-enclave open-weight model; no outbound network."
+description = "TEMPLATE: in-enclave open-weight model; validate before trusting."
 [profiles.air-gap.envelope]
 max_turns = 16
 max_thinking_tokens = 0
@@ -734,7 +742,149 @@ git commit -m "feat(profiles): operator example TOML, LiteLLM named routes, plug
 
 ---
 
-## Task 7: ADR-0013
+## Task 7: Profile capability validation (`ariadne profiles --validate <name>`)
+
+**Goal:** Don't let a user select a profile that can't actually do the job. `--validate`
+runs a real workup with the profile against the synthetic Halberd planted needle under
+a wall-clock budget, then scores it: timeout (throughput-bound) → FAIL; not `grounded`
+→ FAIL; grounded within budget → PASS. Reuses the eval harness (the same instrument
+that failed the 0.6B floor cleanly).
+
+**Files:**
+- Modify: `src/ariadne/cli.py` (`profiles` subparser gains `--validate`/`--timeout`; `main` dispatch; new `_validate_profile`)
+- Test: `tests/unit/test_cli_profile_validate.py`
+
+**Design (injectable for hermetic tests):**
+
+```python
+async def _run_under_budget(coro, timeout: float) -> int | None:
+    """Return the workup's exit code, or None if it exceeded the wall-clock budget."""
+    import asyncio
+
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout)
+    except asyncio.TimeoutError:
+        return None
+
+
+def _validate_profile(
+    name: str,
+    *,
+    env: dict[str, str],
+    timeout: float = 600.0,
+    runner=None,
+    scorer=None,
+) -> int:
+    """Run a real workup with `name` against the Halberd needle under a budget; PASS iff grounded."""
+    import asyncio
+    import tempfile
+    from pathlib import Path
+
+    from ariadne.evaluation.needle import FIXTURES, score_workup_dir
+    from ariadne.profiles import load_profiles, resolve_profile
+
+    resolve_profile(name, load_profiles(env))  # clear error if the name is not in the allowlist
+    runner = runner or run_workup
+    scorer = scorer or (lambda d: score_workup_dir(d, FIXTURES["halberd"]))
+    out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
+    rc = asyncio.run(
+        _run_under_budget(
+            runner("Halberd", out_root, env, dataset="synthetic", profile=name), timeout
+        )
+    )
+    if rc is None:
+        print(
+            f"Profile {name!r}: FAIL — workup exceeded the {timeout:.0f}s budget "
+            f"(throughput-bound; not viable on this host).",
+            file=sys.stderr,
+        )
+        return 1
+    report = scorer(str(Path(out_root) / _slug("Halberd")))
+    status = "PASS" if report.grounded else "FAIL"
+    print(
+        f"Profile {name!r}: {status} — grounded={report.grounded} "
+        f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
+    )
+    return 0 if report.grounded else 1
+```
+
+In `parse_args`, replace the bare `profiles` subparser with one that takes options:
+```python
+    pr = sub.add_parser("profiles", help="List or validate the available model profiles")
+    pr.add_argument("--validate", metavar="NAME", default=None,
+                    help="Run a real workup with NAME against the Halberd needle; PASS iff it grounds.")
+    pr.add_argument("--timeout", type=float, default=600.0,
+                    help="Wall-clock budget (seconds) for --validate (default 600).")
+```
+In `main`, the `profiles` dispatch becomes:
+```python
+    if args.command == "profiles":
+        if args.validate:
+            return _validate_profile(args.validate, env=dict(os.environ), timeout=args.timeout)
+        return _run_profiles(dict(os.environ))
+```
+> `--validate` needs an API key + a live Neo4j; it dispatches *before* the global API-key guard (like `eval`/`index`), and surfaces its own clear failure if the workup can't run.
+
+**Tests (`tests/unit/test_cli_profile_validate.py`, hermetic — fakes, no live model):**
+```python
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from ariadne.cli import _validate_profile
+
+
+@dataclass
+class _FakeReport:
+    grounded: bool
+    recall: float = 1.0
+    trajectory: float = 1.0
+
+
+async def _fast_runner(entity, out_root, env, **kw) -> int:
+    return 0
+
+
+async def _slow_runner(entity, out_root, env, **kw) -> int:
+    import asyncio
+
+    await asyncio.sleep(5)
+    return 0
+
+
+def test_validate_passes_when_grounded() -> None:
+    rc = _validate_profile("default", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(True))
+    assert rc == 0
+
+
+def test_validate_fails_when_not_grounded() -> None:
+    rc = _validate_profile("default", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(False))
+    assert rc == 1
+
+
+def test_validate_fails_on_timeout() -> None:
+    rc = _validate_profile(
+        "default", env={}, timeout=0.05, runner=_slow_runner, scorer=lambda d: _FakeReport(True)
+    )
+    assert rc == 1
+
+
+def test_validate_rejects_unknown_profile() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="Valid profiles"):
+        _validate_profile("bogus", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(True))
+```
+
+Steps: write tests → run (FAIL) → implement → run (PASS) → `make lint` → commit:
+```bash
+git add src/ariadne/cli.py tests/unit/test_cli_profile_validate.py
+git commit -m "feat(profiles): ariadne profiles --validate runs the eval harness as a capability gate"
+```
+
+---
+
+## Task 8: ADR-0013
 
 **Files:**
 - Create: `docs/architecture/decisions/0013-user-selectable-model-profiles.md`
@@ -769,6 +919,14 @@ deployments define only local profiles, so a cloud selection is impossible by
 construction (an unknown name is rejected with the valid names). The profile + egress
 are recorded in `governance.json` and on the OTel span for audit.
 
+A curated allowlist is only trustworthy if every profile can actually do the job, so
+`ariadne profiles --validate <name>` runs a real workup against the planted Halberd
+needle under a wall-clock budget and PASSes only if it grounds in time — a
+throughput-bound or incapable model FAILs. Example profiles are honest: only `default`
+and `rigorous` (cloud Claude) are presented as working; local profiles are labeled
+templates to validate first. Strict TOML parsing rejects unknown keys so a typo cannot
+silently degrade a profile.
+
 `tool_result_cap` was considered for the envelope and **rejected for v1**: the
 context bulk is external `mcp__neo4j__`/`mcp__postgres__` results, the PostToolUse
 hook only observes (cannot rewrite a result), and those servers carry their own
@@ -794,7 +952,7 @@ git commit -m "docs(adr): 0013 user-selectable model profiles"
 
 ---
 
-## Task 8: Final verification
+## Task 9: Final verification
 
 - [ ] **Step 1: Full hermetic suite**
 

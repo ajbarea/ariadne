@@ -127,6 +127,31 @@ product records the discipline it ran under.
 `model_name`s match the profile `model` identifiers. Documented in
 `infra/litellm/README.md`.
 
+### D7 — Profile capability validation (don't ship a profile that can't do the job)
+
+A curated allowlist is only trustworthy if every profile in it actually *completes*
+an Ariadne workup. The eval harness is the instrument. `ariadne profiles --validate
+<name>` runs a real workup with that profile against the synthetic Halberd
+planted-needle fixture under a **wall-clock budget**, then scores it with
+`score_workup_dir(HALBERD_FIXTURE)`:
+
+- **times out** (throughput-bound — e.g. the measured qwen3:14b DNF) → **FAIL**,
+- completes but **not `grounded`** (can't reason/traverse) → **FAIL**,
+- completes **`grounded`** within budget → **PASS**.
+
+This reuses the exact harness that demonstrated discriminating power (the 0.6B floor
+failed every axis). Two supporting rules:
+
+- **Honest examples.** Only `default` and `rigorous` (cloud Claude, known-good) ship
+  as *working*. Local profiles ship as labeled *templates* an operator must
+  `--validate` on their own hardware before trusting — the 2026-06-04 run found
+  `qwen3:14b` throughput-bound on commodity Apple Silicon, so it is **not** presented
+  as a working default.
+- **Strict parsing.** `load_profiles` rejects unknown keys in a `[profiles.<name>]`
+  table (or its `envelope`), so a typo (`moodel = …`) cannot silently degrade a
+  profile into the deployment default — the config-level form of "a profile that
+  doesn't do what the user thinks."
+
 ## Non-goals (YAGNI)
 
 - **No network egress enforcement.** This builds selection + allowlist + audit, not
@@ -143,12 +168,20 @@ product records the discipline it ran under.
   whole-history compaction; we keep per-turn context small via the envelope, not by
   re-chunking the transcript ourselves (D6).
 - **No `fallback_model` wiring** yet (the SDK field exists; not needed for v1).
+- **No runtime gate blocking an unvalidated profile** at selection time. Validation
+  (D7) is an operator tool plus honest curation, not a persisted per-hardware runtime
+  block — that would need to store validation state keyed by host, which is YAGNI.
 
 ## Testing (TDD, hermetic — no live model)
 
 - `resolve_profile`: valid → model; unknown → `ValueError` enumerating valid names;
   `default` → `None`; TOML load merges/overrides built-ins; an air-gap registry
   (no cloud profile) rejects a cloud name.
+- `load_profiles` strict parse: an unknown key in a `[profiles.<name>]` table or its
+  `envelope` raises `ValueError` naming the bad key (no silent degrade).
+- Validation (D7): the capability check reports FAIL on timeout, FAIL on
+  not-`grounded`, PASS on grounded-within-budget. The orchestration is hermetically
+  testable with an injected fake runner + fake scorer (no live model).
 - `build_options`: sets `model` iff the profile resolves to one; omits it for
   `default`; sets `max_turns`/`max_thinking_tokens` from the envelope only when present.
 - `run_workup`/MCP/CLI: arg plumbing smoke; governance.json records the profile + envelope.
