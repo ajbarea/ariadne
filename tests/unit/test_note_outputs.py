@@ -59,13 +59,7 @@ def test_write_outputs_writes_tradecraft_when_provided(tmp_path) -> None:
 
 
 def test_governance_json_records_profile(tmp_path) -> None:
-    import json
-
     from ariadne.profiles import Envelope, Profile
-    from ariadne.provenance.citations import validate_citations
-    from ariadne.provenance.governance import audit_read_only
-    from ariadne.provenance.ledger import ProvenanceLedger
-    from ariadne.report.note import write_outputs
 
     ledger = ProvenanceLedger()
     gov = audit_read_only(ledger.entries)
@@ -83,3 +77,4 @@ def test_governance_json_records_profile(tmp_path) -> None:
     assert payload["profile"]["name"] == "fast-local"
     assert payload["profile"]["egress"] == "none"
     assert payload["profile"]["max_turns"] == 12
+    assert payload["profile"]["max_thinking_tokens"] == 0

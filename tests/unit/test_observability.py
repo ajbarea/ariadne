@@ -89,6 +89,36 @@ def test_record_workup_metrics_records_governance_violations() -> None:
     assert s.attributes["ariadne.governance.write_attempts"] == 1
 
 
+def test_record_workup_metrics_records_profile() -> None:
+    from ariadne.observability import record_workup_metrics, workup_span
+    from ariadne.profiles import Envelope, Profile
+    from ariadne.provenance.citations import CitationReport
+    from ariadne.provenance.ledger import ProvenanceLedger
+
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    led = ProvenanceLedger()
+    report = CitationReport(ok=True, cited=[], dangling=[], unused=[])
+    profile = Profile(
+        name="fast-local",
+        model="fast-local",
+        egress="none",
+        envelope=Envelope(max_turns=12, max_thinking_tokens=0),
+    )
+    with workup_span("Halberd", "synthetic"):
+        record_workup_metrics(
+            entity="Halberd",
+            dataset="synthetic",
+            duration_s=1.0,
+            report=report,
+            tradecraft=None,
+            led=led,
+            profile=profile,
+        )
+    s = next(s for s in _spans() if s.name == "invoke_agent")
+    assert s.attributes["ariadne.profile"] == "fast-local"
+    assert s.attributes["ariadne.profile.egress"] == "none"
+
+
 def test_setup_telemetry_is_noop_without_endpoint(monkeypatch) -> None:
     from ariadne import observability
 
