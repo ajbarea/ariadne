@@ -1,0 +1,2 @@
+{"id": "g1", "ts": "2026-06-04T12:00:00+00:00", "tool": "mcp__neo4j__get_neo4j_schema", "tool_input": {}, "response_excerpt": "(:Person)-[:CO_LOCATED]->(:Site); (:Person)-[:MEMBER_OF]->(:Org)"}
+{"id": "g2", "ts": "2026-06-04T12:00:01+00:00", "tool": "mcp__neo4j__read_neo4j_cypher", "tool_input": {"query": "MATCH (p:Person {name: 'Halberd'})-[:CO_LOCATED]->(s:Site) RETURN s.name"}, "response_excerpt": "Compound-Alpha"}

@@ -1,0 +1,83 @@
+# Lint + test + read-only governance gate. Mirrors the fleet's pinned-SHA
+# convention; jobs call the `make` targets so CI is the same gate as local.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff + ty)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up uv (with Python)
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.5"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+      - name: Lint (ruff format --check + ruff check + ty)
+        run: make lint
+      - name: Minimize uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  test:
+    name: Unit + smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up uv (with Python)
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.5"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+      - name: Run unit + smoke tests
+        run: make test-unit
+      - name: Minimize uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  governance:
+    name: Read-only governance gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up uv (with Python)
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.5"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+      - name: Audit the sample workup's read-only contract (expect exit 0)
+        run: uv run ariadne governance tests/fixtures/sample_workup
+      - name: Minimize uv cache
+        if: always()
+        run: uv cache prune --ci
