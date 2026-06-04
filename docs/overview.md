@@ -1,72 +1,60 @@
 # Overview
 
-Ariadne is a **sensemaking harness for nonatomic entities**, built within the
-SCADS program.
+Ariadne is a sensemaking harness for entities that live inside large
+organizations, built within the SCADS program.
 
 ## The problem
 
-Modern collection environments produce intelligence about entities embedded
-within large, complex organizational hierarchies, stored across highly
-heterogeneous systems. Relevant information about a single entity or
-relationship may be distributed across:
+Intelligence about a single entity is distributed across systems that were never
+designed to interoperate:
 
-- **graph databases** — relationships, hierarchy, networks
-- **structured / relational stores** — records, attributes, facts
-- **unstructured repositories** — free text, documents, transcripts
+- **graph databases** for relationships, hierarchy, and networks
+- **relational stores** for records, attributes, and facts
+- **unstructured repositories** for free text, documents, and transcripts
 
-…while the associated content spans **multiple modalities**: metadata records,
-free text, imagery, and video. No single query interface addresses this full
-spectrum, so analysts pivot manually across disparate systems, losing context
-and momentum at every transition. The hard part is not data access — it is
-**coherent, multi-hop reasoning across heterogeneous representations**, where
-critical evidence may be linked only through implicit organizational
-relationships buried across modalities.
+The content spans modalities as well: metadata, free text, imagery, and video. The
+barrier is not getting into any one store. It is reasoning across all of them at
+once, because the evidence that links two facts often exists only through an
+implicit organizational relationship, sitting in a different store and a different
+format than either fact.
 
 ## The approach
 
-Ariadne uses the **Claude Agent SDK** as a *unifying analytic interface* over
-these diverse data environments: an **orchestration layer** that dispatches
-specialized tools and skills to retrieve, interpret, and synthesize information
-across graph, structured, and unstructured sources — without replacing existing
-data infrastructure.
+Ariadne uses the **Claude Agent SDK** as a single analytic interface over these
+systems. An orchestration layer dispatches specialized tools to retrieve,
+interpret, and synthesize evidence across graph, relational, and unstructured
+sources, without replacing the infrastructure underneath.
 
-**Central research question:** given such a harness and its user interface, what
-specific **tools, skills, and hooks** are necessary to support a rigorous
-end-to-end analytic workflow targeting entities within an organizational
-hierarchy? Ariadne identifies and prototypes the **minimum viable toolset** —
-database connectors, modality-specific processors (image/video analyzers, NLP
-extractors), and hierarchical reasoning hooks — required to demonstrate
-meaningful analytic value.
+The research question: what tools, skills, and hooks does a harness need to
+support a rigorous end-to-end analytic workflow over entities in an
+organizational hierarchy? Ariadne prototypes the minimum viable set: database
+connectors, modality processors (image and video analyzers, text extractors), and
+hierarchical reasoning hooks.
 
 ## The deliverable
 
-A working prototype that demonstrates an end-to-end analytic workflow within the
-harness. The prototype takes a **target entity or organizational node** as input
-and, through a coordinated sequence of tool invocations, surfaces relevant
-evidence from across all available data structures and modalities, synthesizing
-findings into a coherent analytic product.
+A working prototype that runs an end-to-end workflow. It takes a target entity or
+organizational node as input, runs a coordinated sequence of tool calls, and
+synthesizes the evidence into a cited analytic product.
 
-Success is evaluated on the harness's ability to:
+It is judged on four things:
 
-1. **traverse** organizational relationships,
-2. **reconcile** information across modalities,
-3. **reduce** the analyst's manual-pivot burden, and
-4. **surface non-obvious connections** impractical to discover through
-   conventional tooling.
+1. **Traverse** organizational relationships.
+2. **Reconcile** evidence across modalities.
+3. **Reduce** the analyst's manual-pivot burden.
+4. **Surface** non-obvious connections that conventional tooling would miss.
 
-## SCADS umbrella role
+## The SCADS umbrella role
 
-Ariadne is an **umbrella effort** within the SCADS program, designed to
-incorporate and build upon datasets, tools, and analytic insights from sibling
-projects. Rather than duplicating work, it defines **integration interfaces**
-that let contributions from other SCADS projects — graph-extraction pipelines,
-entity-resolution models, multimodal indexing schemes — be surfaced as callable
-tools within the harness. This positions Ariadne both as a standalone research
-contribution and as a unifying demonstration layer for the SCADS portfolio.
+Ariadne is an umbrella effort within SCADS. Rather than duplicate work, it defines
+integration interfaces so contributions from sibling projects (graph-extraction
+pipelines, entity-resolution models, multimodal indexing) surface as callable
+tools inside the harness. That makes it both a standalone research contribution
+and a demonstration layer for the wider portfolio.
 
 ## Where to next
 
-- [Getting Started](getting-started.md) — set up the toolchain and run the scaffold.
-- [Best-Practice Architecture](research/best-practice-architecture.md) — the
-  June-2026 research grounding the design.
-- [Roadmap](roadmap.md) — the phased build order.
+- [Get Started](getting-started.md): set up the toolchain and run the scaffold.
+- [Best-Practice Architecture](research/best-practice-architecture.md): the
+  research grounding the design.
+- [Roadmap](roadmap.md): the phased build order.

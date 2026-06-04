@@ -1,14 +1,15 @@
-# Getting Started
+# Get Started
 
-> [!NOTE]
-> Ariadne is in its **scaffold + research** phase. The harness architecture is
-> being defined from [June-2026 best practice](research/best-practice-architecture.md)
-> before any connector or library is pinned, so the steps below set up the
-> toolchain and run the placeholder CLI — not yet the full analytic workflow.
+!!! note "Scaffold and research phase"
+
+    Ariadne's harness architecture is being defined from
+    [current best practice](research/best-practice-architecture.md) before any
+    connector or library is pinned. The steps below set up the toolchain and run
+    the placeholder CLI, not yet the full analytic workflow.
 
 ## Prerequisites
 
-- [`uv`](https://docs.astral.sh/uv/) — Python packaging and runner
+- [`uv`](https://docs.astral.sh/uv/), Python packaging and runner
 - Python ≥ 3.12 (uv can install it for you)
 
 ## Setup
@@ -16,7 +17,7 @@
 ```bash
 git clone https://github.com/ajbarea/ariadne.git
 cd ariadne
-make setup        # uv sync — installs dependencies + dev group
+make setup        # uv sync: installs dependencies + dev group
 ```
 
 ## Everyday commands
@@ -58,9 +59,9 @@ It deploys automatically to GitHub Pages on every push to `main` that touches
 
 | Path            | Purpose                                                       |
 | --------------- | ------------------------------------------------------------- |
-| `src/ariadne/`  | The Python package — harness wiring, CLI entrypoint.          |
+| `src/ariadne/`  | The Python package, harness wiring, CLI entrypoint.          |
 | `tools/`        | Custom/in-process agent tools (connectors, processors).       |
-| `skills/`       | Agent Skills — packaged analytic procedures.                  |
+| `skills/`       | Agent Skills, packaged analytic procedures.                  |
 | `mcp_servers/`  | MCP connectors for graph / SQL / vector stores.               |
 | `docs/`         | This documentation site (conventions, architecture, research).|
 | `tests/`        | Test suite (unit + integration).                              |
