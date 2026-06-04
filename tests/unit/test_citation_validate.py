@@ -180,3 +180,17 @@ def test_colon_terminated_lead_in_is_not_a_claim() -> None:
     note = "## Findings\n- The corpus shows the following:\n- Allen leads the desk [cite:g1].\n"
     flagged = find_uncited_claims(note)
     assert not any("following" in c for c in flagged)
+
+
+def test_meta_analytic_caveat_is_exempt_from_uncited() -> None:
+    from ariadne.provenance.citations import find_uncited_claims
+
+    note = "## Findings\nH2 cannot be ruled out without a second modality."
+    assert find_uncited_claims(note) == []  # evidential-limit statement, not a claim
+
+
+def test_uncited_fact_in_findings_still_flagged() -> None:
+    from ariadne.provenance.citations import find_uncited_claims
+
+    note = "## Findings\nHalberd operates out of Compound-Alpha."
+    assert find_uncited_claims(note) == ["Halberd operates out of Compound-Alpha."]

@@ -116,6 +116,42 @@ def is_analytic_judgment(text: str) -> bool:
     return is_estimative(text) or bool(_INFERENCE_RE.search(text))
 
 
+# Statements of evidential LIMIT / insufficiency — what the evidence does NOT
+# establish. Like estimative hedges, these are analytic-confidence calibration, not
+# evidence claims, so ICD-206 governs them via this lint rather than the cite gate.
+_CAVEAT_MARKERS = (
+    "cannot be ruled out",
+    "cannot be confirmed",
+    "cannot be established",
+    "cannot be verified",
+    "cannot be determined",
+    "could not be confirmed",
+    "without a second",
+    "without additional",
+    "without corroborat",
+    "needs corroboration",
+    "requires corroboration",
+    "requires a second",
+    "insufficient evidence",
+    "no direct evidence",
+    "remains unconfirmed",
+    "remains tentative",
+)
+_CAVEAT_RE = re.compile("|".join(re.escape(m) for m in _CAVEAT_MARKERS), re.IGNORECASE)
+
+
+def is_analytic_caveat(text: str) -> bool:
+    """True if ``text`` states an evidential LIMIT (what the evidence does not
+    establish) rather than asserting an evidence claim.
+
+    # research(2026-06): ICD-206 separates analytic judgments (which must cite their
+    # basis) from confidence/limitation statements. "X cannot be ruled out without a
+    # second modality" asserts insufficiency, not a fact — so it is governed by the
+    # calibration lint, not the citation-recall gate.
+    """
+    return bool(_CAVEAT_RE.search(text))
+
+
 def lint_estimative_language(note: str) -> TradecraftReport:
     """Report ICD-203 estimative-language usage in ``note`` (does not fail the note)."""
     standard = [

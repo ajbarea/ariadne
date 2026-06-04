@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
 from ariadne.provenance.tradecraft import (
+    is_analytic_caveat as _is_analytic_caveat,
     is_analytic_judgment as _is_analytic_judgment,
     is_estimative as _is_estimative,
 )
@@ -115,6 +116,7 @@ def find_uncited_claims(
     *,
     exempt_keywords: tuple[str, ...] = _EXEMPT_SECTION_KEYWORDS,
     is_judgment: Callable[[str], bool] = _is_analytic_judgment,
+    is_caveat: Callable[[str], bool] = _is_analytic_caveat,
 ) -> list[str]:
     """Return the asserted claim sentences that carry no ``[cite:gN]`` (recall).
 
@@ -134,6 +136,8 @@ def find_uncited_claims(
             if i <= last_cited or not _HAS_LETTER_RE.search(s):
                 continue
             if s.rstrip().endswith(":"):  # lead-in introducing a list/table, not a claim
+                continue
+            if is_caveat(s):  # evidential-limit statement, not an evidence claim (ICD-206)
                 continue
             # A trailing analytic judgment grounded by evidence cited earlier in
             # the SAME segment needn't repeat the cite (ICD-206). Facts, and any

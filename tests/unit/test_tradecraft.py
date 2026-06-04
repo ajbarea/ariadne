@@ -75,3 +75,16 @@ def test_is_analytic_judgment_detects_reveals_and_understates() -> None:
 
     assert is_analytic_judgment("the email-body modality reveals a gatekeeper role")
     assert is_analytic_judgment("the graph-only view understates her access")
+
+
+def test_is_analytic_caveat_detects_insufficiency() -> None:
+    from ariadne.provenance.tradecraft import is_analytic_caveat
+
+    assert is_analytic_caveat("H2 cannot be ruled out without a second modality.")
+    assert is_analytic_caveat("This requires corroboration from imagery.")
+
+
+def test_is_analytic_caveat_false_for_a_plain_claim() -> None:
+    from ariadne.provenance.tradecraft import is_analytic_caveat
+
+    assert not is_analytic_caveat("Halberd is co-located with Talon at Compound-Alpha.")

@@ -65,7 +65,11 @@ of the supporting evidence on the judgment sentence too, not only on factual
 statements. (A judgment grounded by evidence already cited in the same bullet may
 rely on that cite; a judgment in its own sentence or paragraph must carry the cite
 of its basis.) Use calibrated estimative language (ICD-203: likely, probable,
-unlikely, etc.) for all judgments.
+unlikely, etc.) for all judgments. **Your single decisive finding is the most
+important judgment to ground: never write it as a standalone "Decisive finding: …"
+or summary sentence without the `[cite:gN]` of the evidence it rests on.** A
+statement of an evidential *limit* ("X cannot be ruled out without a second
+modality") is a confidence caveat, not an evidence claim, and needs no cite.
 
 ## Output
 
