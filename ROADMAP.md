@@ -317,7 +317,12 @@ items must not be hardened against one answer.
       `alternatives` 4→5, overall **4.50→4.75**, `grounded=True` preserved.
       `# research(2026-06): SATs for LLM analytic writing — ACH / key-assumptions.`
 - [ ] Provenance/citation surface in the analytic product; confidence handling.
-- [ ] SCADS integration interfaces: document how sibling tools plug in as callable tools.
+- [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
+      runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
+      (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the
+      evidence/provenance, read-only governance, and entity-resolution contracts
+      both honor. [docs/integration.md](./docs/integration.md) (top-level nav).
+      Articulates Ariadne's umbrella role: integrate siblings, don't duplicate them.
 - [x] **Reusable workflow patterns brief (2026-06-04):** the brief's secondary
       deliverable — nine domain-agnostic patterns (the sensemaking loop, per-store
       MCP tool families, provenance-by-hook + citation gate, cross-modal

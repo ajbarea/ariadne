@@ -37,6 +37,7 @@ nav = [
       ]},
   ]},
   { "Workflow Patterns" = "patterns.md" },
+  { "SCADS Integration" = "integration.md" },
   { "Research" = [
       { "Overview" = "research/index.md" },
       { "Best-Practice Architecture (June 2026)" = "research/best-practice-architecture.md" },
