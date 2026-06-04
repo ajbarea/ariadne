@@ -205,28 +205,37 @@ def _validate_profile(
     from ariadne.profiles import load_profiles, resolve_profile
 
     resolve_profile(name, load_profiles(env))  # clear error if the name is not in the allowlist
+    if runner is None and not env.get("ANTHROPIC_API_KEY"):
+        print("ANTHROPIC_API_KEY is not set — export it to validate a profile.", file=sys.stderr)
+        return 2
     runner = runner or run_workup
     scorer = scorer or (lambda d: score_workup_dir(d, FIXTURES["halberd"]))
+    import shutil
+
     out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
-    rc = asyncio.run(
-        _run_under_budget(
-            runner("Halberd", out_root, env, dataset="synthetic", profile=name), budget=timeout
+    try:
+        rc = asyncio.run(
+            _run_under_budget(
+                runner("Halberd", out_root, env, dataset="synthetic", profile=name),
+                timeout,
+            )
         )
-    )
-    if rc is None:
+        if rc is None:
+            print(
+                f"Profile {name!r}: FAIL — workup exceeded the {timeout:.0f}s budget "
+                f"(throughput-bound; not viable on this host).",
+                file=sys.stderr,
+            )
+            return 1
+        report = scorer(str(Path(out_root) / _slug("Halberd")))
+        status = "PASS" if report.grounded else "FAIL"
         print(
-            f"Profile {name!r}: FAIL — workup exceeded the {timeout:.0f}s budget "
-            f"(throughput-bound; not viable on this host).",
-            file=sys.stderr,
+            f"Profile {name!r}: {status} — grounded={report.grounded} "
+            f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
         )
-        return 1
-    report = scorer(str(Path(out_root) / _slug("Halberd")))
-    status = "PASS" if report.grounded else "FAIL"
-    print(
-        f"Profile {name!r}: {status} — grounded={report.grounded} "
-        f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
-    )
-    return 0 if report.grounded else 1
+        return 0 if report.grounded else 1
+    finally:
+        shutil.rmtree(out_root, ignore_errors=True)
 
 
 def _run_profiles(env: dict[str, str]) -> int:

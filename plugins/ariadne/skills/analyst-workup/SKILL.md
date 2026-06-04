@@ -13,7 +13,7 @@ Call the `workup` tool from the bundled `ariadne` MCP server.
 
 - Required: `entity` — the name or ID of the target entity.
 - Optional: `dataset` — defaults to `synthetic`; pass the actual dataset name if the user specifies one.
-- Optional: `profile` — model + operating envelope from the deployment's curated allowlist; `list_profiles` returns the available names.
+- Optional: `profile` — model + operating envelope from the deployment's curated allowlist; run `ariadne profiles` on the host to discover available names.
 - Optional: `sql=true` — include the relational store.
 - Optional: `semantic=true` — include the semantic (vector) store.
 
