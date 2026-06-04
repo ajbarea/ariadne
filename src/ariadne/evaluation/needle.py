@@ -20,11 +20,11 @@ workup against the brief's four success criteria without a human in the loop:
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 
 from ariadne.evaluation._text import all_present, fraction_present, statement_text
+from ariadne.provenance.ledger import ProvenanceLedger
 
 
 @dataclass(frozen=True)
@@ -157,6 +157,5 @@ def score_workup_dir(out_dir: str | Path, fixture: NeedleFixture) -> EvalReport:
     """Read ``note.md`` + ``provenance.jsonl`` from ``out_dir`` and score them."""
     out_dir = Path(out_dir)
     note = (out_dir / "note.md").read_text(encoding="utf-8")
-    lines = (out_dir / "provenance.jsonl").read_text(encoding="utf-8").splitlines()
-    entries = [json.loads(line) for line in lines if line.strip()]
+    entries = ProvenanceLedger.read_jsonl(out_dir / "provenance.jsonl")
     return score_workup(note, entries, fixture)

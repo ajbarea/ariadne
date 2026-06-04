@@ -40,3 +40,17 @@ def test_write_jsonl_round_trips(tmp_path) -> None:
     lines = path.read_text().splitlines()
     assert len(lines) == 1
     assert json.loads(lines[0])["id"] == "g1"
+
+
+def test_read_jsonl_round_trips(tmp_path) -> None:
+    led = ProvenanceLedger()
+    led.record("t", {"a": 1}, "r")
+    path = tmp_path / "provenance.jsonl"
+    led.write_jsonl(path)
+    assert ProvenanceLedger.read_jsonl(path) == led.entries
+
+
+def test_read_jsonl_skips_blank_lines(tmp_path) -> None:
+    path = tmp_path / "provenance.jsonl"
+    path.write_text('{"id": "g1"}\n\n{"id": "g2"}\n', encoding="utf-8")
+    assert [e["id"] for e in ProvenanceLedger.read_jsonl(path)] == ["g1", "g2"]

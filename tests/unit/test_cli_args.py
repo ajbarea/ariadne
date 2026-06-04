@@ -94,3 +94,25 @@ def test_profiles_subcommand_parses() -> None:
 
     args = parse_args(["profiles"])
     assert args.command == "profiles"
+
+
+def test_workup_strict_flag_defaults_false() -> None:
+    assert parse_args(["workup", "Halberd"]).strict is False
+
+
+def test_workup_accepts_strict_flag() -> None:
+    assert parse_args(["workup", "Halberd", "--strict"]).strict is True
+
+
+def test_main_passes_strict_flag_to_run_workup(monkeypatch, tmp_path) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+    captured: dict[str, object] = {}
+
+    async def _stub_run_workup(*_a: object, **kwargs: object) -> int:
+        captured.update(kwargs)
+        return 0
+
+    monkeypatch.setattr(cli, "run_workup", _stub_run_workup)
+    assert main(["workup", "Alpha", "--strict"]) == 0
+    assert captured.get("strict") is True

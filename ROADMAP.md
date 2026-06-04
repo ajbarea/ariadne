@@ -307,6 +307,13 @@ items must not be hardened against one answer.
       than trusting the connector config (catches a write the agent attempted even
       if blocked). Writes `governance.json` + a loud stderr warning on violation.
       `# research(2026-06): defence-in-depth — audit the tool trace, don't assume config.`
+- [x] **Governance hard-fail gate (2026-06-04):** the read-only audit gained teeth.
+      New offline `ariadne governance <workup_dir>` re-audits a persisted run's ledger
+      and **gates by default** (exit 3 on a write attempt; no API key) — the CI teeth;
+      plus `ariadne workup --strict` self-gates the live run. Exit-code policy is
+      `cli.workup_exit_code` (a strict breach outranks analytic-quality failures);
+      shared `ProvenanceLedger.read_jsonl` loader (dedup'd with the eval scorer).
+      `# research(2026-06): distinct exit 3 for a policy/security gate, not a reused 1.`
 - [ ] Extend the harness further: more needle fixtures; fold governance signals
       into a single gate/metric; restricted-data access governance (Phase C).
 - [x] **`entity-workup` skill-prompt improvement (2026-06-04):** the note template

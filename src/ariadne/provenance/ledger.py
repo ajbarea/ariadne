@@ -46,3 +46,9 @@ class ProvenanceLedger:
         with path.open("w", encoding="utf-8") as fh:
             for entry in self._entries:
                 fh.write(json.dumps(entry) + "\n")
+
+    @staticmethod
+    def read_jsonl(path: str | Path) -> list[dict[str, Any]]:
+        """Load the entries written by ``write_jsonl`` (skips blank lines)."""
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+        return [json.loads(line) for line in lines if line.strip()]

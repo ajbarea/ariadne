@@ -126,7 +126,10 @@ Every governance signal is also emitted as telemetry.
 
 **In Ariadne.** `provenance/governance.py` (`audit_read_only` → `governance.json`),
 surfaced via OpenTelemetry
-([ADR-0010](architecture/decisions/0010-observability-opentelemetry.md)).
+([ADR-0010](architecture/decisions/0010-observability-opentelemetry.md)) and
+**enforceable** as a hard gate: `ariadne governance <workup_dir>` re-audits a
+persisted run offline and exits 3 on a write attempt (the CI teeth, no API key),
+and `ariadne workup --strict` applies the same gate to the live run.
 
 **Reuse.** The ledger audit is store-agnostic; reuse it as a defense-in-depth
 check for any read-only analytic loop.

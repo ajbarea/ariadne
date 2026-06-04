@@ -43,6 +43,8 @@ from ariadne.report.note import write_outputs
 if TYPE_CHECKING:
     from claude_agent_sdk.types import McpServerConfig
 
+    from ariadne.provenance.governance import GovernanceReport
+
 _SYSTEM_PROMPT = (
     "You are Ariadne, a sensemaking harness for intelligence analysts. Use the "
     "available read-only evidence tools — the graph store and, when present, the "
@@ -79,6 +81,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--entail",
         action="store_true",
         help="Check citation entailment (precision) with HHEM (needs the 'eval' extra).",
+    )
+    wk.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail (exit 3) if the agent violated the read-only contract "
+        "(attempted a write to the evidence stores). Default: advisory only.",
     )
     ev = sub.add_parser("eval", help="Score a workup dir against the planted-needle fixture")
     ev.add_argument("workup_dir", help="Workup output dir (note.md + provenance.jsonl)")
@@ -147,6 +155,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=3,
         help="Validation tries per dataset; PASS if any grounds (default 3, for run variance).",
     )
+    gov = sub.add_parser(
+        "governance", help="Re-audit a persisted workup for read-only contract violations"
+    )
+    gov.add_argument("workup_dir", help="Workup output dir (reads provenance.jsonl)")
     return parser.parse_args(argv)
 
 
@@ -172,6 +184,30 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
             f"{rec.handled}/{rec.total} cases"
         )
     return 0 if report.grounded else 1
+
+
+def _run_governance(workup_dir: str) -> int:
+    """Re-audit a persisted workup's ledger for read-only violations (offline gate).
+
+    Recomputes from ``provenance.jsonl`` rather than trusting ``governance.json`` —
+    the same verify-don't-trust posture the audit itself takes. Gates by default:
+    exit 3 on a read-only contract breach, like ``eval`` (no API key needed).
+    """
+    ledger_path = Path(workup_dir) / "provenance.jsonl"
+    if not ledger_path.exists():
+        print(f"No provenance.jsonl in {workup_dir!r} — nothing to audit.", file=sys.stderr)
+        return 2
+    report = audit_read_only(ProvenanceLedger.read_jsonl(ledger_path))
+    if report.ok:
+        print(f"Governance OK — {workup_dir}: read-only contract upheld.")
+        return 0
+    verbs = sorted({w["verb"] for w in report.write_attempts})
+    print(
+        f"GOVERNANCE FAILED — {workup_dir}: read-only contract violated, "
+        f"write verbs in the ledger {verbs}.",
+        file=sys.stderr,
+    )
+    return 3
 
 
 def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
@@ -355,6 +391,26 @@ def build_options(
     )
 
 
+def workup_exit_code(
+    *, governance: GovernanceReport, strict: bool, had_error: bool, citations_ok: bool
+) -> int:
+    """Resolve a workup's process exit code.
+
+    Under ``--strict`` a read-only contract breach exits 3 and takes precedence
+    over the analytic-quality failures (exit 1) — a mutated evidence store taints
+    the whole product. Default (non-strict) keeps a breach advisory.
+    """
+    # research(2026-06): distinct exit 3 (not a reused 1) lets CI route a
+    # safety-contract breach differently from an analytic miss — the convention
+    # for policy/security gates. sysexits EX_NOPERM=77 rejected for consistency
+    # with this CLI's existing 1 (analytic failure) / 2 (precondition) scheme.
+    if strict and not governance.ok:
+        return 3
+    if had_error or not citations_ok:
+        return 1
+    return 0
+
+
 async def run_workup(
     entity: str,
     out_root: str,
@@ -365,6 +421,7 @@ async def run_workup(
     with_entail: bool = False,
     dataset: str = "synthetic",
     profile: str = "default",
+    strict: bool = False,
 ) -> int:
     from ariadne.datasets.base import get_adapter
     from ariadne.profiles import load_profiles, resolve_profile
@@ -437,14 +494,14 @@ async def run_workup(
         )
     if not governance.ok:
         verbs = sorted({w["verb"] for w in governance.write_attempts})
+        posture = "FAILED (--strict)" if strict else "advisory"
         print(
-            f"GOVERNANCE: read-only contract violated — write verbs in the ledger {verbs}. "
-            "The analytic loop must not mutate the evidence stores.",
+            f"GOVERNANCE [{posture}]: read-only contract violated — write verbs in the "
+            f"ledger {verbs}. The analytic loop must not mutate the evidence stores.",
             file=sys.stderr,
         )
     if had_error:
         print("agent run reported an error", file=sys.stderr)
-        return 1
     if not report.ok:
         print(
             f"Citation check FAILED — dangling: {report.dangling} · "
@@ -452,8 +509,9 @@ async def run_workup(
             f"unsupported claims: {len(report.unsupported)}",
             file=sys.stderr,
         )
-        return 1
-    return 0
+    return workup_exit_code(
+        governance=governance, strict=strict, had_error=had_error, citations_ok=report.ok
+    )
 
 
 def _slug(entity: str) -> str:
@@ -481,6 +539,8 @@ def main(argv: list[str] | None = None) -> int:
                 attempts=args.attempts,
             )
         return _run_profiles(dict(os.environ))
+    if args.command == "governance":
+        return _run_governance(args.workup_dir)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",
@@ -499,5 +559,6 @@ def main(argv: list[str] | None = None) -> int:
             with_entail=args.entail,
             dataset=args.dataset,
             profile=args.profile,
+            strict=args.strict,
         )
     )

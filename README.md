@@ -162,6 +162,9 @@ uv run ariadne workup Halberd
 uv run ariadne eval workups/halberd --reconcile synthetic
 #    and the ICD-203 analytic-quality rubric (LLM judge; needs the 'rubric' extra)
 uv run ariadne rubric workups/halberd
+
+# 5. enforce the read-only contract offline (CI gate, no API key; exit 3 on a write attempt)
+uv run ariadne governance workups/halberd
 ```
 
 Every fact in the note carries a `[cite:gN]` id that resolves to a recorded graph
@@ -169,6 +172,12 @@ query in `provenance.jsonl`; the run fails if any citation is uncited, dangling,
 or (with the optional `eval` extra) unsupported by its cited evidence. `ariadne
 eval` then scores whether the run **surfaced and actually traversed** the seed's
 planted non-obvious bridge — `grounded=True` means it reasoned, not guessed.
+
+The analytic loop is **read-only by construction** (the graph and relational MCP
+connectors run in read-only / restricted mode); `ariadne governance` *verifies* that
+on a persisted run by auditing the provenance ledger for any mutating verb, and
+**gates by default** (exit 3 on a write attempt). Pass `--strict` to `ariadne workup`
+to apply the same gate to the live run.
 
 **Dev gates** (requires [`uv`](https://docs.astral.sh/uv/)):
 
