@@ -1,0 +1,37 @@
+# Operator-curated model profiles (ADR-0013). Copy this file and point
+# ARIADNE_PROFILES at it. Air-gap deployments: define ONLY local profiles — an
+# analyst then cannot select a cloud model, because an unknown name is rejected.
+#
+# HONESTY RULE: `default` and `rigorous` (cloud Claude) are known-good. The LOCAL
+# profiles below are TEMPLATES, not validated configs — a local model must clear
+# the workup before you trust it. Run `ariadne profiles --validate <name>` on YOUR
+# hardware first. (A 2026-06-04 run found qwen3:14b throughput-bound on a 32 GB M1
+# Pro — it did not finish a workup in practical time. Do not assume it works.)
+
+[profiles.default]
+# model omitted -> use the deployment's ANTHROPIC_* env (zero behaviour change)
+egress = "inherit"
+description = "Deployment default model."
+
+[profiles.rigorous]
+model = "claude-opus-4-8"
+egress = "anthropic"
+description = "Frontier Claude for the hardest analytic products. Known-good."
+
+# --- TEMPLATES below: validate with `ariadne profiles --validate <name>` before use ---
+
+[profiles.fast-local]
+model = "fast-local"
+egress = "none"
+description = "TEMPLATE: local open-weight model via Ollama; validate before trusting."
+[profiles.fast-local.envelope]
+max_turns = 16
+max_thinking_tokens = 0
+
+[profiles.air-gap]
+model = "air-gap"
+egress = "none"
+description = "TEMPLATE: in-enclave open-weight model; validate before trusting."
+[profiles.air-gap.envelope]
+max_turns = 16
+max_thinking_tokens = 0

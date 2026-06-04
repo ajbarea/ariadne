@@ -11,6 +11,19 @@
 #   Sources: docs.litellm.ai/docs/anthropic_unified, /docs/providers/ollama.
 
 model_list:
+  # Named routes matching the profile `model` ids in infra/profiles.example.toml.
+  - model_name: fast-local
+    litellm_params:
+      model: ollama_chat/qwen3:14b
+      api_base: http://localhost:11434
+      num_ctx: 32768
+  - model_name: air-gap
+    litellm_params:
+      model: ollama_chat/qwen3:30b
+      api_base: http://localhost:11434
+      num_ctx: 32768
+  # In a HYBRID deployment add a `rigorous` route here passing through to Anthropic
+  # (model: anthropic/claude-opus-4-8 + api_key). Omit it in an air-gap deployment.
   # Wildcard: whatever model name the SDK/CLI requests (main + small-fast) maps
   # to the one local worker. build_options() pins no model, so this is robust.
   - model_name: "*"
