@@ -119,9 +119,14 @@ items must not be hardened against one answer.
    (*"how do you know what works?"*) plus **governance** — uniform quality,
    security, and data integrity. **Open** — no verified claims this pass; top
    target for the next research pass.
-6. **Cloud vs. air-gapped fork** — forks at the **MCP connector** and **model**
-   layers (managed cloud MCP + frontier Claude vs. self-hosted/open-weight).
-   Concrete air-gapped substitutions remain **open**. (Constraint: **hybrid**.)
+6. **Cloud vs. air-gapped fork** — *resolved* (`# research(2026-06):`,
+   [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)).
+   The fork is a **single seam** — the orchestrator model, swapped at
+   `ANTHROPIC_BASE_URL` (LiteLLM → local vLLM/TGI) with no code change; the
+   connectors, embedder, entailment, and stores are already self-hostable, and
+   ADR-0007/0008's local-first choices pre-empt the embedding-egress leak.
+   Remaining is *validation* (which open-weight model clears the eval bar), not
+   architecture. (Constraint: **hybrid**.)
 
 > **Harness shape (research-backed):** orchestrator–worker — a lead agent runs
 > the *gather context → act → verify → repeat* loop and dispatches parallel,
@@ -316,7 +321,15 @@ items must not be hardened against one answer.
 - [ ] Capture **reusable workflow patterns** (a brief deliverable) for future SCADS use cases.
 
 ### Phase 5 — Deployment hardening
-- [ ] Resolve the cloud-vs-air-gapped fork per component; document the swap points.
+- [x] **Cloud-vs-air-gapped fork resolved + documented (2026-06-04):** the fork
+      is a **single seam** — the orchestrator model, swapped at the
+      `ANTHROPIC_BASE_URL` boundary (LiteLLM proxy → local vLLM/TGI open-weight
+      model) with no Ariadne code change; everything else is already in-enclave
+      or self-hostable, and the local-first embedder/multimodal choices (ADR-0007/
+      0008) pre-empt the classic embedding-egress leak. Per-component swap table +
+      rationale: [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md).
+      Open follow-ups: a no-egress CI guard; signed open-weight model-bundle import.
+      `# research(2026-06): air-gapped LLM agent deployment — LiteLLM/vLLM proxy, egress as first-class.`
 - [ ] **Publish to PyPI** so `uvx ariadne-mcp` installs without a local checkout
       (the one remaining distribution step from ADR-0009). Blocked on AJ: needs a
       PyPI token + a non-`ariadne` package name (taken by the GraphQL lib).

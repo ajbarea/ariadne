@@ -38,6 +38,7 @@ ADR is where the *comparison* lives.
 | [0009](0009-distribute-as-mcp-server-and-plugin.md) | Distribute as an MCP server, wrapped in a Claude Code plugin | Accepted |
 | [0010](0010-observability-opentelemetry.md) | Observability via OpenTelemetry (GenAI conventions) | Accepted |
 | [0011](0011-llm-rubric-analytic-standards-eval.md) | LLM-rubric scoring of analytic standards (ICD-203) | Accepted |
+| [0012](0012-cloud-vs-air-gapped-deployment-fork.md) | Cloud vs. air-gapped deployment fork (single seam) | Accepted |
 
 ## Template
 
