@@ -1,0 +1,23 @@
+# LiteLLM proxy — the ADR-0012 air-gap seam.
+#
+# Serves the Anthropic Messages API (/v1/messages) and translates tool_use /
+# tool_result blocks to a local Ollama worker's OpenAI-format function calling.
+# Point ANTHROPIC_BASE_URL at this proxy and the Claude Agent SDK / claude CLI
+# drives an open-weight model with ZERO Ariadne code change.
+#
+#   research(2026-06): LiteLLM exposes /v1/messages natively and is the
+#   recommended Anthropic<->local translation gateway; `ollama_chat/` (not
+#   `ollama/`) routes through Ollama's /api/chat which carries tool calls.
+#   Sources: docs.litellm.ai/docs/anthropic_unified, /docs/providers/ollama.
+
+model_list:
+  # Wildcard: whatever model name the SDK/CLI requests (main + small-fast) maps
+  # to the one local worker. build_options() pins no model, so this is robust.
+  - model_name: "*"
+    litellm_params:
+      model: ollama_chat/qwen3:30b   # Qwen3-30B-A3B MoE — best open-weight tool-caller that fits 32 GiB
+      api_base: http://localhost:11434
+      num_ctx: 32768                 # workup context: system + skill + tool defs + multi-hop turns
+
+litellm_settings:
+  drop_params: true   # silently drop Anthropic-only params Ollama doesn't accept (cache_control, etc.)
