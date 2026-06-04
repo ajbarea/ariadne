@@ -93,3 +93,21 @@ def test_validate_fails_overall_if_any_dataset_fails() -> None:
 
     rc = _validate_profile("default", env={}, runner=_runner, scorer=_scorer)
     assert rc == 1
+
+
+def test_validate_passes_on_retry_after_a_flaky_attempt() -> None:
+    # A capable-but-non-deterministic model: first attempt under-grounds, second grounds.
+    calls = {"n": 0}
+
+    async def _runner(entity, out_root, env, **kw) -> int:
+        return 0
+
+    def _flaky_scorer(out_dir: str) -> _FakeReport:
+        calls["n"] += 1
+        return _FakeReport(grounded=calls["n"] >= 2)
+
+    rc = _validate_profile(
+        "default", env={}, dataset="synthetic", runner=_runner, scorer=_flaky_scorer
+    )
+    assert rc == 0
+    assert calls["n"] == 2  # retried once, passed on the second attempt

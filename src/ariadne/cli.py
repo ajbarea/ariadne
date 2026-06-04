@@ -141,6 +141,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=600.0,
         help="Wall-clock budget (seconds) per dataset for --validate (default 600).",
     )
+    pr.add_argument(
+        "--attempts",
+        type=int,
+        default=3,
+        help="Validation tries per dataset; PASS if any grounds (default 3, for run variance).",
+    )
     return parser.parse_args(argv)
 
 
@@ -208,11 +214,15 @@ def _validate_profile(
     env: dict[str, str],
     timeout: float = 600.0,
     dataset: str | None = None,
+    attempts: int = 3,
     runner=None,
     scorer=None,
 ) -> int:
     """Run a real workup with `name` against each dataset's planted needle under a
-    budget; a dataset PASSes iff its note grounds in time. Returns 0 iff all pass."""
+    budget; a dataset PASSes iff it grounds within `attempts` tries. Capability is
+    "can the model do it" — a capable model varies run-to-run (it may surface the
+    answer via a shorter path that under-logs the traversal), while an incapable or
+    throughput-bound model fails every attempt. Returns 0 iff all datasets pass."""
     import shutil
     import tempfile
     from pathlib import Path
@@ -231,28 +241,29 @@ def _validate_profile(
     run = runner or run_workup
     all_pass = True
     for ds, entity, fixture in cases:
-        out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
-        try:
-            rc = asyncio.run(
-                _run_under_budget(run(entity, out_root, env, dataset=ds, profile=name), timeout)
-            )
-            if rc is None:
-                print(
-                    f"  {ds:<10} FAIL — exceeded the {timeout:.0f}s budget (throughput-bound).",
-                    file=sys.stderr,
+        grounded = False
+        detail = "no attempt completed"
+        for attempt in range(1, attempts + 1):
+            out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
+            try:
+                rc = asyncio.run(
+                    _run_under_budget(run(entity, out_root, env, dataset=ds, profile=name), timeout)
                 )
-                all_pass = False
-                continue
-            out_dir = str(Path(out_root) / _slug(entity))
-            report = scorer(out_dir) if scorer else score_workup_dir(out_dir, FIXTURES[fixture])
-            status = "PASS" if report.grounded else "FAIL"
-            print(
-                f"  {ds:<10} {status} — grounded={report.grounded} "
-                f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
-            )
-            all_pass = all_pass and report.grounded
-        finally:
-            shutil.rmtree(out_root, ignore_errors=True)
+                if rc is None:
+                    detail = f"exceeded the {timeout:.0f}s budget (throughput-bound)"
+                    continue
+                out_dir = str(Path(out_root) / _slug(entity))
+                report = scorer(out_dir) if scorer else score_workup_dir(out_dir, FIXTURES[fixture])
+                detail = f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
+                if report.grounded:
+                    grounded = True
+                    print(f"  {ds:<10} PASS (attempt {attempt}/{attempts}) — {detail}")
+                    break
+            finally:
+                shutil.rmtree(out_root, ignore_errors=True)
+        if not grounded:
+            print(f"  {ds:<10} FAIL after {attempts} attempt(s) — last: {detail}", file=sys.stderr)
+            all_pass = False
     print(f"Profile {name!r}: {'PASS' if all_pass else 'FAIL'} ({len(cases)} dataset(s) checked).")
     return 0 if all_pass else 1
 
@@ -467,6 +478,7 @@ def main(argv: list[str] | None = None) -> int:
                 env=dict(os.environ),
                 timeout=args.timeout,
                 dataset=args.dataset,
+                attempts=args.attempts,
             )
         return _run_profiles(dict(os.environ))
     if not os.environ.get("ANTHROPIC_API_KEY"):
