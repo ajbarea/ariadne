@@ -290,11 +290,13 @@ items must not be hardened against one answer.
 - [ ] Extend the harness further: more needle fixtures, the reconciliation
       criterion as a first-class score, and governance checks (quality, security,
       data integrity).
-- [ ] **`entity-workup` skill-prompt improvement** — prompt the agent to weigh
-      alternatives, state implications, and use WEP estimative terms + an explicit
-      analytic-confidence statement. The tradecraft lint and the ICD-203 rubric
-      (ADR-0011) both show the live notes do little of this; needs a live re-run
-      to confirm the scores move.
+- [x] **`entity-workup` skill-prompt improvement (2026-06-04):** the note template
+      gained **Alternatives considered** (analysis of competing hypotheses) +
+      **Implications** sections and an explicit analytic-confidence sentence; the
+      skill directs an ACH on the decisive finding and proportionate, hedged
+      judgments. Measured before→after on a live Halberd workup (ICD-203 rubric):
+      `alternatives` 4→5, overall **4.50→4.75**, `grounded=True` preserved.
+      `# research(2026-06): SATs for LLM analytic writing — ACH / key-assumptions.`
 - [ ] Provenance/citation surface in the analytic product; confidence handling.
 - [ ] SCADS integration interfaces: document how sibling tools plug in as callable tools.
 - [ ] Capture **reusable workflow patterns** (a brief deliverable) for future SCADS use cases.

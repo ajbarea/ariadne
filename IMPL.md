@@ -11,11 +11,6 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 _Nothing in flight._ Pick the next item from
 [ROADMAP](./ROADMAP.md) — open candidates worth grabbing first:
 
-- **`entity-workup` skill-prompt improvement** — prompt the agent to weigh
-  alternatives, state implications, use WEP estimative terms + an analytic-
-  confidence statement. Both the tradecraft lint and the new ICD-203 rubric show
-  the live notes currently do little of this. Needs a live re-run to verify the
-  scores move. _(Cheap, high-signal, fully autonomous.)_
 - **Vector/unstructured connector re-research** — the deep-research run only
   adversarially confirmed the SQL choice; pgvector vs Redis-8 vs a dedicated
   store still needs its own clean pass before hardening.

@@ -39,7 +39,16 @@ fact you did not retrieve.
    cross-source** connections — a tie visible only by combining stores (or a
    multi-hop graph path of length ≥ 3) — these are the highest-value findings the
    analyst would miss by manual pivoting.
-4. **Synthesize.** Write the note from `note-template.md`.
+4. **Synthesize.** Write the note from `note-template.md`. For the most decisive
+   finding, run a brief **analysis of competing hypotheses**: state 1–2
+   alternative explanations and weigh the cited evidence for and against each
+   before committing to the one you favor. Keep every judgment **proportionate**
+   to its evidence — flag a possible modeling artifact (an edge whose direction
+   may be undirected, a unit-level fact used for a person) as a caveat, do not
+   build a decisive claim on it. Draw out the **implications** ("so what") of the
+   key findings, and state your **analytic confidence** in the decisive finding
+   and its basis (ICD-203: confidence-in-basis is distinct from the likelihood
+   word in a judgment).
 
 ## Citation rule (mandatory)
 
