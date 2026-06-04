@@ -159,6 +159,8 @@ body.hero-page .md-content__inner {
   font-weight: 600 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase;
+  white-space: nowrap;
+  text-align: center;
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
@@ -204,6 +206,11 @@ body.hero-page .md-content__inner {
   margin: 0;
 }
 
+/* Keep each store icon glued to its label when the row wraps. */
+.hero-modes .mode-item {
+  white-space: nowrap;
+}
+
 .hero-modes a {
   color: inherit;
   text-decoration: none;
@@ -219,7 +226,7 @@ body.hero-page .md-content__inner {
 /* ---- Landing sections (scroll-revealed by reveal.js) --------------------- */
 
 .landing-section {
-  padding: 4.5rem 8vw;
+  padding: 3.4rem 8vw;
   opacity: 1;
 }
 
@@ -264,12 +271,97 @@ html.js-ready .landing-section.visible {
   margin: 1.6rem 0;
 }
 
-/* Feature grid for the landing page. */
+/* Credibility stat strip (reinforces "grounded in research").
+   research(2026-06): 2026 landing-page guidance treats credibility / social
+   proof as a conversion essential, not a nice-to-have — it reduces a visitor's
+   perceived risk. For a research tool the honest proof is rigor (sources,
+   adversarial verification, recorded decisions), so the numbers are verifiable
+   counts rather than testimonials. Source: leadfeeder / boundev 2026 landing-page
+   best-practice roundups. */
+.md-typeset .stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem 2.8rem;
+  margin: 1.8rem 0 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-num {
+  font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--ari-thread-light) 0%, var(--ari-thread) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.stat-label {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  opacity: 0.82;
+  max-width: 18ch;
+}
+
+@media (max-width: 600px) {
+  .md-typeset .stat-strip {
+    gap: 1.4rem 1.6rem;
+  }
+  .stat {
+    flex: 1 1 38%;
+  }
+}
+
+/* Closing call-to-action band. */
+.landing-section--cta {
+  text-align: center;
+  border-top: 1px solid color-mix(in srgb, var(--ari-thread) 16%, transparent);
+}
+
+.landing-section--cta .section-inner {
+  max-width: 42rem;
+}
+
+.landing-section--cta .section-title {
+  color: #fff7e6;
+}
+
+.landing-section--cta .section-lead {
+  margin-bottom: 1.8rem;
+}
+
+.md-typeset .section-buttons--center {
+  justify-content: center;
+}
+
+/* Drop the header/hero seam: on the landing page the header shares the
+   hero's obsidian so there's no color line at the very top. */
+body.hero-page .md-header {
+  background-color: var(--ari-obsidian);
+}
+
+/* Feature grid for the landing page. Balanced 2x2 so no quadrant is left empty. */
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.4rem;
   margin-top: 2rem;
+}
+
+@media (max-width: 600px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .feature-card {
@@ -296,6 +388,132 @@ html.js-ready .landing-section.visible {
   font-size: 0.92rem;
   line-height: 1.6;
   opacity: 0.85;
+}
+
+/* ---- "Follow the thread" trace ------------------------------------------- */
+
+.trace-note {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ari-thread);
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 35%, transparent);
+  border-radius: 2rem;
+  padding: 0.12rem 0.7rem;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  opacity: 0.9;
+}
+
+.trace-q {
+  margin: 2rem 0 0.5rem;
+  padding: 1.1rem 1.4rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--ari-indigo-light) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 22%, transparent);
+}
+
+.trace-q-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ari-thread);
+  margin-bottom: 0.35rem;
+}
+
+.md-typeset .trace-q p {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.5;
+  color: #ece6f5;
+}
+
+.md-typeset .trace-steps {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  position: relative;
+}
+
+/* The golden thread running down the steps, ending in scarlet. */
+.trace-steps::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 1.6rem;
+  bottom: 1.6rem;
+  width: 2px;
+  background: linear-gradient(to bottom,
+    transparent,
+    var(--ari-thread-deep) 6%,
+    var(--ari-thread) 45%,
+    var(--ari-scarlet) 100%);
+  opacity: 0.65;
+}
+
+.md-typeset .trace-step {
+  position: relative;
+  margin: 0;
+  padding: 1.2rem 0 1.2rem 2.7rem;
+}
+
+/* Node on the thread. */
+.trace-step::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1.6rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ari-thread);
+  box-shadow: 0 0 0 4px var(--ari-obsidian), 0 0 14px var(--ari-thread-glow);
+}
+
+.trace-step--answer::before {
+  background: var(--ari-scarlet);
+  box-shadow: 0 0 0 4px var(--ari-obsidian),
+    0 0 18px color-mix(in srgb, var(--ari-scarlet) 60%, transparent);
+}
+
+.trace-badge {
+  display: inline-block;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ari-thread-light);
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 30%, transparent);
+  border-radius: 2rem;
+  padding: 0.12rem 0.7rem;
+  margin-bottom: 0.55rem;
+}
+
+.trace-step--answer .trace-badge {
+  color: #ffd9cf;
+  border-color: color-mix(in srgb, var(--ari-scarlet) 45%, transparent);
+}
+
+.md-typeset .trace-step h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.12rem;
+  color: var(--ari-thread-light);
+}
+
+.md-typeset .trace-step--answer h3 {
+  color: #ffd9cf;
+}
+
+.md-typeset .trace-step p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.88;
 }
 
 /* ---- Responsive ---------------------------------------------------------- */

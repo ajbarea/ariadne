@@ -16,12 +16,20 @@ extra_javascript = ["javascripts/reveal.js"]
 nav = [
   { "Home" = "index.md" },
   { "Overview" = "overview.md" },
-  { "Getting Started" = "getting-started.md" },
+  { "Get Started" = "getting-started.md" },
   { "Architecture" = [
       { "Overview" = "architecture/index.md" },
+      { "Workflow Patterns" = "patterns.md" },
+      { "SCADS Integration" = "integration.md" },
+  ]},
+  { "Research" = [
+      { "Overview" = "research/index.md" },
+      { "Best-Practice Architecture" = "research/best-practice-architecture.md" },
       { "Claude Agent SDK Reference" = "research/claude-agent-sdk-reference.md" },
-      { "Decisions" = [
-          { "Decision log" = "architecture/decisions/index.md" },
+      { "Analytic-Rigor Eval" = "research/analytic-rigor-eval.md" },
+      { "Open-Weight Validation" = "research/open-weight-validation.md" },
+      { "Decision Log" = [
+          { "Overview" = "architecture/decisions/index.md" },
           { "0001 · Claude Agent SDK" = "architecture/decisions/0001-orchestration-on-claude-agent-sdk.md" },
           { "0002 · Official MCP connectors" = "architecture/decisions/0002-official-mcp-connectors-over-hand-rolled.md" },
           { "0003 · postgres-mcp Restricted Mode" = "architecture/decisions/0003-postgres-mcp-restricted-mode.md" },
@@ -36,15 +44,11 @@ nav = [
           { "0012 · Cloud vs. air-gapped fork" = "architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md" },
       ]},
   ]},
-  { "Workflow Patterns" = "patterns.md" },
-  { "SCADS Integration" = "integration.md" },
-  { "Research" = [
-      { "Overview" = "research/index.md" },
-      { "Best-Practice Architecture (June 2026)" = "research/best-practice-architecture.md" },
-      { "Claude Agent SDK Reference" = "research/claude-agent-sdk-reference.md" },
+  { "Project" = [
+      { "Requirements & Priorities" = "priorities.md" },
+      { "Roadmap" = "roadmap.md" },
+      { "Conventions" = "conventions.md" },
   ]},
-  { "Conventions" = "conventions.md" },
-  { "Roadmap" = "roadmap.md" },
 ]
 
 # ---------------------------------------------------------------------------
