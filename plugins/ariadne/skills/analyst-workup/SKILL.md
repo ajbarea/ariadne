@@ -2,7 +2,7 @@
 name: analyst-workup
 description: Produce a citation-grounded analytic note for a target entity across all available stores. Use when the user says "work up an entity", "sensemaking on a person/org", "who is X and how are they connected", "run a workup on X", or asks for entity intelligence/analysis.
 disable-model-invocation: false
-allowed-tools: mcp__ariadne__workup
+allowed-tools: mcp__ariadne__workup, mcp__ariadne__list_profiles
 ---
 
 # Analyst workup
@@ -13,7 +13,7 @@ Call the `workup` tool from the bundled `ariadne` MCP server.
 
 - Required: `entity` — the name or ID of the target entity.
 - Optional: `dataset` — defaults to `synthetic`; pass the actual dataset name if the user specifies one.
-- Optional: `profile` — model + operating envelope from the deployment's curated allowlist; run `ariadne profiles` on the host to discover available names.
+- Optional: `profile` — model + operating envelope from the deployment's curated allowlist; call the `list_profiles` tool to discover available names.
 - Optional: `sql=true` — include the relational store.
 - Optional: `semantic=true` — include the semantic (vector) store.
 
