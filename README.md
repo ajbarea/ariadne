@@ -2,6 +2,12 @@
 
 **Sensemaking for nonatomic entities using AI coding agents.** Part of the SCADS program.
 
+[![CI](https://github.com/ajbarea/ariadne/actions/workflows/ci.yml/badge.svg)](https://github.com/ajbarea/ariadne/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ajbarea/ariadne/graph/badge.svg)](https://codecov.io/gh/ajbarea/ariadne)
+[![Python](https://img.shields.io/badge/Python-3.12--3.14-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![uv](https://img.shields.io/badge/uv-package_manager-DE5FE9?style=flat-square)](https://docs.astral.sh/uv/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
+
 📖 **Docs:** <https://ajbarea.github.io/ariadne/>
 
 > Ariadne gave Theseus the thread that let him traverse the Labyrinth and find

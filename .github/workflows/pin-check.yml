@@ -1,0 +1,41 @@
+# Supply-chain guard: every remote GitHub Actions `uses:` ref must be pinned to a
+# full commit SHA. Mutable tags enable tag-rewrite attacks (tj-actions, 2025-03).
+# Canonical convention + rationale: github.com/ajbarea/techne docs/conventions.md.
+name: pin-check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pin-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Enforce SHA-pinned actions
+        run: |
+          fail=0
+          shopt -s nullglob
+          for f in .github/workflows/*.yml .github/workflows/*.yaml; do
+            while IFS= read -r line; do
+              if [[ "$line" =~ uses:[[:space:]]*([A-Za-z0-9_.-]+/[^@[:space:]]+)@([^[:space:]#]+) ]]; then
+                ref="${BASH_REMATCH[1]}"; rev="${BASH_REMATCH[2]}"
+                case "$ref" in ./* | docker://*) continue ;; esac
+                if ! [[ "$rev" =~ ^[0-9a-f]{40}$ ]]; then
+                  echo "::error file=$f::$ref@$rev is not pinned to a full commit SHA"
+                  fail=1
+                fi
+              fi
+            done < "$f"
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "Pin actions to full commit SHAs (see techne docs/conventions.md)."
+            exit 1
+          fi
+          echo "All GitHub Actions are SHA-pinned ✓"
