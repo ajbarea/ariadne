@@ -57,7 +57,7 @@ embed = ["sentence-transformers>=3"]
 eval = [
     # HHEM-2.1-Open ships a trust_remote_code modeling file written for the
     # transformers 4.x API; transformers 5.x breaks it (all_tied_weights_keys).
-    "transformers>=4.45,<5",
+    "transformers>=5.9.0,<6",
     "torch>=2.2",
 ]
 
