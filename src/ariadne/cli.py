@@ -122,7 +122,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="default",
         help="Model profile from the curated allowlist (see `ariadne profiles`).",
     )
-    sub.add_parser("profiles", help="List the available model profiles (no API key needed)")
+    pr = sub.add_parser("profiles", help="List or validate the available model profiles")
+    pr.add_argument(
+        "--validate",
+        metavar="NAME",
+        default=None,
+        help="Run a real workup with NAME against the Halberd needle; PASS iff it grounds.",
+    )
+    pr.add_argument(
+        "--timeout",
+        type=float,
+        default=600.0,
+        help="Wall-clock budget (seconds) for --validate (default 600).",
+    )
     return parser.parse_args(argv)
 
 
@@ -167,6 +179,54 @@ def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
         print(f"Rubric FAILED — overall {report.overall:.2f} < {minimum:.2f}", file=sys.stderr)
         return 1
     return 0
+
+
+async def _run_under_budget(coro, budget: float) -> int | None:
+    """Return the workup's exit code, or None if it exceeded the wall-clock budget."""
+    try:
+        return await asyncio.wait_for(coro, timeout=budget)
+    except TimeoutError:
+        return None
+
+
+def _validate_profile(
+    name: str,
+    *,
+    env: dict[str, str],
+    timeout: float = 600.0,
+    runner=None,
+    scorer=None,
+) -> int:
+    """Run a real workup with `name` against the Halberd needle under a budget; PASS iff grounded."""
+    import tempfile
+    from pathlib import Path
+
+    from ariadne.evaluation.needle import FIXTURES, score_workup_dir
+    from ariadne.profiles import load_profiles, resolve_profile
+
+    resolve_profile(name, load_profiles(env))  # clear error if the name is not in the allowlist
+    runner = runner or run_workup
+    scorer = scorer or (lambda d: score_workup_dir(d, FIXTURES["halberd"]))
+    out_root = tempfile.mkdtemp(prefix="ariadne-validate-")
+    rc = asyncio.run(
+        _run_under_budget(
+            runner("Halberd", out_root, env, dataset="synthetic", profile=name), budget=timeout
+        )
+    )
+    if rc is None:
+        print(
+            f"Profile {name!r}: FAIL — workup exceeded the {timeout:.0f}s budget "
+            f"(throughput-bound; not viable on this host).",
+            file=sys.stderr,
+        )
+        return 1
+    report = scorer(str(Path(out_root) / _slug("Halberd")))
+    status = "PASS" if report.grounded else "FAIL"
+    print(
+        f"Profile {name!r}: {status} — grounded={report.grounded} "
+        f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
+    )
+    return 0 if report.grounded else 1
 
 
 def _run_profiles(env: dict[str, str]) -> int:
@@ -373,6 +433,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "index":
         return _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
     if args.command == "profiles":
+        if args.validate:
+            return _validate_profile(args.validate, env=dict(os.environ), timeout=args.timeout)
         return _run_profiles(dict(os.environ))
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
