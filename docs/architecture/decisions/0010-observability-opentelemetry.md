@@ -82,6 +82,7 @@ measurement is timing:
 | Evidence calls (`ariadne.evidence.calls`) | provenance-ledger `gN` count | No — existing |
 | Citation failures (`ariadne.citation.failures`) | `citations.json` uncited/unsupported | No — existing |
 | Tradecraft compliance (span attrs) | `tradecraft.json` estimative terms / has-confidence | No — existing |
+| Governance violations (`ariadne.governance.violations` + span attrs) | `governance.json` read-only audit | No — existing |
 | Workup count (`ariadne.workups`) | counter incremented per run | Minimal |
 | Workup duration histogram (`ariadne.workup.duration`) | same wall time as the span | Minimal |
 

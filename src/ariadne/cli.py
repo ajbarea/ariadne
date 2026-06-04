@@ -273,6 +273,7 @@ async def run_workup(
             report=report,
             tradecraft=tradecraft,
             led=ledger,
+            governance=governance,
         )
         out_dir = Path(out_root) / _slug(entity)
         write_outputs(

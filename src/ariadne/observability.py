@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from ariadne.provenance.citations import CitationReport
+    from ariadne.provenance.governance import GovernanceReport
     from ariadne.provenance.ledger import ProvenanceLedger
     from ariadne.provenance.tradecraft import TradecraftReport
 
@@ -37,6 +38,9 @@ _evidence = _meter.create_counter(
 )
 _failures = _meter.create_counter(
     "ariadne.citation.failures", description="Citation-gate failures per workup."
+)
+_gov_violations = _meter.create_counter(
+    "ariadne.governance.violations", description="Read-only governance violations per workup."
 )
 
 
@@ -68,8 +72,9 @@ def record_workup_metrics(
     dataset: str,
     duration_s: float,
     report: CitationReport,
-    tradecraft: TradecraftReport,
+    tradecraft: TradecraftReport | None = None,
     led: ProvenanceLedger,
+    governance: GovernanceReport | None = None,
 ) -> None:
     """Emit metrics + enrich the current span from the already-computed artifacts."""
     attrs = {"ariadne.dataset": dataset}
@@ -84,8 +89,14 @@ def record_workup_metrics(
     span.set_attribute("ariadne.citation.ok", report.ok)
     span.set_attribute("ariadne.citation.uncited", len(report.uncited))
     span.set_attribute("ariadne.citation.unsupported", len(report.unsupported))
-    span.set_attribute("ariadne.tradecraft.estimative_terms", len(tradecraft.standard_terms))
-    span.set_attribute("ariadne.tradecraft.has_confidence", tradecraft.has_confidence_statement)
+    if tradecraft is not None:
+        span.set_attribute("ariadne.tradecraft.estimative_terms", len(tradecraft.standard_terms))
+        span.set_attribute("ariadne.tradecraft.has_confidence", tradecraft.has_confidence_statement)
+    if governance is not None:
+        n_violations = len(governance.write_attempts)
+        _gov_violations.add(n_violations, attrs)
+        span.set_attribute("ariadne.governance.read_only_ok", governance.ok)
+        span.set_attribute("ariadne.governance.write_attempts", n_violations)
 
 
 def setup_telemetry() -> bool:
