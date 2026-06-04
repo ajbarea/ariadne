@@ -33,6 +33,7 @@ from ariadne.evaluation.reconcile import RECON_FIXTURES, score_reconciliation_di
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
 from ariadne.observability import record_workup_metrics, setup_telemetry, workup_span
 from ariadne.provenance.citations import validate_citations
+from ariadne.provenance.governance import audit_read_only
 from ariadne.provenance.hook import make_provenance_hook
 from ariadne.provenance.ledger import ProvenanceLedger
 from ariadne.provenance.tradecraft import lint_estimative_language
@@ -264,6 +265,7 @@ async def run_workup(
         note = (result_text or "\n".join(note_parts)).strip()
         report = validate_citations(note, ledger, verifier=verifier)
         tradecraft = lint_estimative_language(note)
+        governance = audit_read_only(ledger.entries)
         record_workup_metrics(
             entity=entity,
             dataset=dataset,
@@ -274,7 +276,13 @@ async def run_workup(
         )
         out_dir = Path(out_root) / _slug(entity)
         write_outputs(
-            out_dir, entity=entity, note=note, ledger=ledger, report=report, tradecraft=tradecraft
+            out_dir,
+            entity=entity,
+            note=note,
+            ledger=ledger,
+            report=report,
+            tradecraft=tradecraft,
+            governance=governance,
         )
 
     print(f"Wrote {out_dir}/note.md ({len(ledger.entries)} graph calls cited) in {elapsed:.1f}s.")
@@ -282,6 +290,13 @@ async def run_workup(
         print(
             "Tradecraft (advisory): non-standard estimative terms "
             f"{sorted(set(tradecraft.nonstandard_terms))} — prefer ICD-203 bands.",
+            file=sys.stderr,
+        )
+    if not governance.ok:
+        verbs = sorted({w["verb"] for w in governance.write_attempts})
+        print(
+            f"GOVERNANCE: read-only contract violated — write verbs in the ledger {verbs}. "
+            "The analytic loop must not mutate the evidence stores.",
             file=sys.stderr,
         )
     if had_error:

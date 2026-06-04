@@ -295,8 +295,15 @@ items must not be hardened against one answer.
       seed's planted Halberd↔Wren corroboration + Talon location conflict;
       `ariadne eval <dir> --reconcile synthetic`. Live two-store Halberd workup
       scored `reconciliation=1.00` (2/2 cases). `# research(2026-06): brief cross-modality reconciliation criterion.`
-- [ ] Extend the harness further: more needle fixtures and governance checks
-      (quality, security, data integrity).
+- [x] **Read-only governance audit (2026-06-04):** `provenance/governance.py`
+      `audit_read_only` scans the ledger for any mutating verb (Cypher
+      CREATE/MERGE/SET/…, SQL INSERT/UPDATE/DELETE/…) — the security /
+      data-integrity axis of governance, *verifying* the read-only posture rather
+      than trusting the connector config (catches a write the agent attempted even
+      if blocked). Writes `governance.json` + a loud stderr warning on violation.
+      `# research(2026-06): defence-in-depth — audit the tool trace, don't assume config.`
+- [ ] Extend the harness further: more needle fixtures; fold governance signals
+      into a single gate/metric; restricted-data access governance (Phase C).
 - [x] **`entity-workup` skill-prompt improvement (2026-06-04):** the note template
       gained **Alternatives considered** (analysis of competing hypotheses) +
       **Implications** sections and an explicit analytic-confidence sentence; the

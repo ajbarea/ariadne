@@ -154,11 +154,14 @@ docker exec -i ariadne-neo4j cypher-shell -u neo4j -p password < infra/neo4j/see
 # 2. the live agent loop needs an API key
 export ANTHROPIC_API_KEY=sk-...
 
-# 3. run a workup (writes ./workups/<entity>/note.md, provenance.jsonl, citations.json)
+# 3. run a workup (writes ./workups/<entity>/{note.md, provenance.jsonl,
+#    citations.json, tradecraft.json, governance.json})
 uv run ariadne workup Halberd
 
-# 4. score the run against the planted-needle fixture
-uv run ariadne eval workups/halberd
+# 4. score the run: planted-needle grounding (+ optional cross-store reconciliation)
+uv run ariadne eval workups/halberd --reconcile synthetic
+#    and the ICD-203 analytic-quality rubric (LLM judge; needs the 'rubric' extra)
+uv run ariadne rubric workups/halberd
 ```
 
 Every fact in the note carries a `[cite:gN]` id that resolves to a recorded graph
