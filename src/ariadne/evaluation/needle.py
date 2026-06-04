@@ -24,6 +24,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from ariadne.evaluation._text import all_present, fraction_present, statement_text
+
 
 @dataclass(frozen=True)
 class SupportingFact:
@@ -107,29 +109,6 @@ WREN_TIE_FIXTURE = NeedleFixture(
 FIXTURES = {"halberd": HALBERD_FIXTURE, "wren-tie": WREN_TIE_FIXTURE}
 
 
-def _fraction_present(markers: tuple[str, ...], haystack_lower: str) -> float:
-    if not markers:
-        return 1.0
-    found = sum(1 for m in markers if m.lower() in haystack_lower)
-    return found / len(markers)
-
-
-def _statement_text(entry: dict) -> str:
-    """Join every string-valued tool arg so scoring is connector-agnostic.
-
-    Cypher lands under ``query``, postgres-mcp under ``sql``; scanning all string
-    args means a new connector's statement key needs no change here.
-    """
-    tool_input = entry.get("tool_input", {})
-    if not isinstance(tool_input, dict):
-        return ""
-    return "\n".join(v for v in tool_input.values() if isinstance(v, str))
-
-
-def _all_present(markers: tuple[str, ...], haystack_lower: str) -> bool:
-    return all(m.lower() in haystack_lower for m in markers)
-
-
 def _supporting_fact_scores(
     facts: tuple[SupportingFact, ...], note_lower: str, queries_lower: str
 ) -> tuple[float | None, float | None, float | None]:
@@ -142,8 +121,8 @@ def _supporting_fact_scores(
     """
     if not facts:
         return None, None, None
-    surfaced = [f for f in facts if _all_present(f.note_markers, note_lower)]
-    grounded = [f for f in surfaced if _all_present(f.ledger_markers, queries_lower)]
+    surfaced = [f for f in facts if all_present(f.note_markers, note_lower)]
+    grounded = [f for f in surfaced if all_present(f.ledger_markers, queries_lower)]
     recall = len(grounded) / len(facts)
     precision = len(grounded) / len(surfaced) if surfaced else 0.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
@@ -153,9 +132,9 @@ def _supporting_fact_scores(
 def score_workup(note: str, ledger_entries: list[dict], fixture: NeedleFixture) -> EvalReport:
     """Score a workup's note + ledger entries against ``fixture``."""
     note_lower = note.lower()
-    queries_lower = "\n".join(_statement_text(e) for e in ledger_entries).lower()
-    recall = _fraction_present(fixture.answer_markers, note_lower)
-    trajectory = _fraction_present(fixture.traversal_markers, queries_lower)
+    queries_lower = "\n".join(statement_text(e) for e in ledger_entries).lower()
+    recall = fraction_present(fixture.answer_markers, note_lower)
+    trajectory = fraction_present(fixture.traversal_markers, queries_lower)
     queries_run = len(ledger_entries)
     pivot_burden = queries_run / fixture.min_hops if fixture.min_hops else float(queries_run)
     sf_precision, sf_recall, sf_f1 = _supporting_fact_scores(

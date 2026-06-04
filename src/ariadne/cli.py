@@ -29,6 +29,7 @@ import ariadne.datasets.enron  # side-effect: registers the enron adapter
 import ariadne.datasets.synthetic  # noqa: F401  (registers the synthetic adapter)
 from ariadne.datasets.base import DATASETS
 from ariadne.evaluation.needle import FIXTURES, score_workup_dir
+from ariadne.evaluation.reconcile import RECON_FIXTURES, score_reconciliation_dir
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
 from ariadne.observability import record_workup_metrics, setup_telemetry, workup_span
 from ariadne.provenance.citations import validate_citations
@@ -86,6 +87,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="halberd",
         help="Needle fixture: 'halberd' (single-store graph) or 'wren-tie' (cross-store)",
     )
+    ev.add_argument(
+        "--reconcile",
+        choices=sorted(RECON_FIXTURES),
+        default=None,
+        help="Also score cross-store reconciliation (corroborations + conflicts).",
+    )
     rb = sub.add_parser(
         "rubric", help="Score a workup's note against the ICD-203 rubric (LLM judge)"
     )
@@ -112,7 +119,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _run_eval(workup_dir: str, fixture_name: str = "halberd") -> int:
+def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
     """Score an existing workup against a planted-needle fixture (no API key needed)."""
     report = score_workup_dir(workup_dir, FIXTURES[fixture_name])
     line = (
@@ -126,6 +133,13 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd") -> int:
             f"(p={report.supporting_fact_precision:.2f} r={report.supporting_fact_recall:.2f})"
         )
     print(line)
+    if reconcile is not None:
+        rec = score_reconciliation_dir(workup_dir, RECON_FIXTURES[reconcile])
+        print(
+            f"Reconciliation [{rec.entity}/{reconcile}]: reconciliation={rec.reconciliation:.2f} "
+            f"(corroboration={rec.corroboration:.2f} conflict={rec.conflict:.2f}) "
+            f"{rec.handled}/{rec.total} cases"
+        )
     return 0 if report.grounded else 1
 
 
@@ -296,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_telemetry()
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.command == "eval":
-        return _run_eval(args.workup_dir, args.fixture)
+        return _run_eval(args.workup_dir, args.fixture, reconcile=args.reconcile)
     if args.command == "index":
         return _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
     if not os.environ.get("ANTHROPIC_API_KEY"):

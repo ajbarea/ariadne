@@ -287,9 +287,16 @@ items must not be hardened against one answer.
       assertion is caught as a guess); per-edge precision/recall/F1 on both fixtures;
       `ariadne eval --fixture {halberd,wren-tie}`. The heterogeneous-retrieval
       capability is now measurable. `# research(2026-06): HotpotQA/MuSiQue supporting-fact F1.`
-- [ ] Extend the harness further: more needle fixtures, the reconciliation
-      criterion as a first-class score, and governance checks (quality, security,
-      data integrity).
+- [x] **Reconciliation as a first-class eval score (2026-06-04):**
+      `evaluation/reconcile.py` scores whether a note *reconciled* cross-store
+      facts — corroborated agreements and flagged conflicts — requiring the fact
+      surfaced, explicit reconciliation language, AND both stores actually
+      queried (mentioning two facts ≠ reconciling). `SYNTHETIC_RECON` encodes the
+      seed's planted Halberd↔Wren corroboration + Talon location conflict;
+      `ariadne eval <dir> --reconcile synthetic`. Live two-store Halberd workup
+      scored `reconciliation=1.00` (2/2 cases). `# research(2026-06): brief cross-modality reconciliation criterion.`
+- [ ] Extend the harness further: more needle fixtures and governance checks
+      (quality, security, data integrity).
 - [x] **`entity-workup` skill-prompt improvement (2026-06-04):** the note template
       gained **Alternatives considered** (analysis of competing hypotheses) +
       **Implications** sections and an explicit analytic-confidence sentence; the

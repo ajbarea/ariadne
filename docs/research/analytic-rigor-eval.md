@@ -146,9 +146,18 @@ count to reach it).
       `score_workup` + `HALBERD_FIXTURE` + `ariadne eval <dir>`: scores recall,
       trajectory (traversed vs guessed), `grounded` (both), and pivot-burden
       against the planted Compound-Alpha needle. The real Phase-1 Halberd workup
-      scores `grounded=True` (recall 1.0, trajectory 1.0, 14 queries). *Remaining:*
-      per-edge supporting-fact F1; more fixtures.
-- [ ] *(Bigger bet, optional)* ACH-structured `entity-workup` (AgentCDM).
+      scores `grounded=True` (recall 1.0, trajectory 1.0, 14 queries). Extended
+      with per-edge supporting-fact F1 + a cross-store needle (`wren-tie`), and
+      with **cross-store reconciliation scoring** (2026-06-04, `evaluation/reconcile.py`,
+      `ariadne eval --reconcile`): grades whether a note corroborated cross-store
+      agreements and flagged conflicts (fact surfaced + reconciliation language +
+      both stores queried). A live two-store Halberd workup scored
+      `reconciliation=1.00`. *Remaining:* more fixtures; governance checks.
+- [x] **ACH-structured `entity-workup`** (2026-06-04) — the note template now has
+      an Alternatives-considered (analysis of competing hypotheses) section and the
+      skill directs a brief ACH on the decisive finding; measured to lift the
+      ICD-203 rubric `alternatives` score. (AgentCDM-style multi-agent ACH remains
+      a bigger, optional bet.)
 
 ## Key sources
 
