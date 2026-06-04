@@ -87,7 +87,12 @@ detection — Stage 1 above is that missing piece (decompose → coverage), now 
   what ICD-203 says.
 - **LLM-RUBRIC** ([arXiv:2501.00274](https://arxiv.org/pdf/2501.00274)) — a
   calibrated multidimensional automated-eval method; the path to scoring ICD-203
-  as a rubric rather than a vibe check.
+  as a rubric rather than a vibe check. ✅ SHIPPED 2026-06-04 (the deployable,
+  pointwise subset; see [ADR-0011](../architecture/decisions/0011-llm-rubric-analytic-standards-eval.md)
+  and `evaluation/rubric.py`). Scores the four ICD-203 standards the mechanical
+  gates cannot see (alternatives / argumentation / relevance / accuracy),
+  criterion-separated, anchored 1-5, judge-bias-mitigated. The full method's
+  human-calibration network is deferred until an annotated set exists.
 - **AgentCDM** ([arXiv:2508.11995](https://arxiv.org/pdf/2508.11995)) operationalizes
   **Analysis of Competing Hypotheses (ACH)** as multi-agent scaffolding with
   evidence matrices. *Caveat: cognitive-science ACH, not the IC/ICD-203 variant —
@@ -128,8 +133,9 @@ count to reach it).
 
 - [x] **Citation gate v2 Stage 1** — uncited-claim detection (recall). Shipped
       2026-06-02. `# research(2026-06): ALCE citation recall.`
-- [ ] **Citation gate v2 Stage 2** — entailment (precision) via HHEM-2.1-Open
-      (hermetic) + key-gated frontier variant; validate on hedged claims first.
+- [x] **Citation gate v2 Stage 2** — entailment (precision) via HHEM-2.1-Open;
+      framework shipped 2026-06-02, surfaced on the CLI as `workup --entail`
+      2026-06-04 (estimative claims are routed to the calibration lint, not HHEM).
 - [x] **Tradecraft lint** ✅ SHIPPED (2026-06-02) — `provenance/tradecraft.py`
       `lint_estimative_language`: flags non-standard estimative hedges, maps used
       WEP terms to their ICD-203 band, detects the analytic-confidence axis.

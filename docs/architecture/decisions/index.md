@@ -37,6 +37,7 @@ ADR is where the *comparison* lives.
 | [0008](0008-multimodal-agentic-to-text-not-native-embeddings.md) | Multimodal via agentic-to-text, not native multimodal embeddings | Accepted |
 | [0009](0009-distribute-as-mcp-server-and-plugin.md) | Distribute as an MCP server, wrapped in a Claude Code plugin | Accepted |
 | [0010](0010-observability-opentelemetry.md) | Observability via OpenTelemetry (GenAI conventions) | Accepted |
+| [0011](0011-llm-rubric-analytic-standards-eval.md) | LLM-rubric scoring of analytic standards (ICD-203) | Accepted |
 
 ## Template
 

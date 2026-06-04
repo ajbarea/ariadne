@@ -140,9 +140,22 @@ Rigor next (grounded; see the research doc):
   calibrated *inference* the evidence does not literally state. They stay subject
   to the recall (must-cite) gate and the tradecraft calibration lint — clean
   separation of *factual* precision (HHEM) from *analytic* calibration (ICD-203).
-- Optionally wire an `--entail` flag into the CLI (still open).
-- Prompt the `entity-workup` skill to use WEP terms + state analytic confidence
-  (the real note currently uses neither — the lint surfaces this).
+- ~~Optionally wire an `--entail` flag into the CLI.~~ **Done 2026-06-04** —
+  `workup --entail` builds an `HHEMVerifier` and passes it to
+  `validate_citations`, so the entailment (precision) gate runs on demand.
+- **LLM-rubric analytic-standards scoring — Done 2026-06-04 (ADR-0011).**
+  `evaluation/rubric.py` (pure, hermetic via injected fake judge) +
+  `evaluation/judge.py` (`ClaudeAnalyticJudge`, `rubric` extra, forced tool-use)
+  + `ariadne rubric <dir>` (API-gated, optional `--min` CI gate). Scores the
+  four ICD-203 standards the mechanical gates cannot see (alternatives /
+  argumentation / relevance / accuracy), pointwise, criterion-separated,
+  anchored 1-5, with verbosity + format/anchoring bias mitigations in the judge
+  prompt. The full method's human-calibration network is deferred until an
+  annotated set exists.
+- Prompt the `entity-workup` skill to use WEP terms + state analytic confidence,
+  and to address the four rubric standards (the real note currently weighs few
+  alternatives + states few implications — both the lint and the rubric surface
+  this). **Needs a live re-run to verify.**
 - Eval harness: more needle fixtures (per-edge F1 + cross-store needle now done).
 
 Phase 2 retrieval (graph + SQL wired; remaining):

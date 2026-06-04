@@ -266,9 +266,16 @@ items must not be hardened against one answer.
       `find_unsupported_claims`, so a calibrated analytic judgment is checked by
       the calibration lint, not falsely rejected by HHEM. Separates factual
       precision from analytic calibration. `# research(2026-06): ICD-203 likelihood vs ALCE entailment.`
-- [ ] LLM-RUBRIC scoring of the analytic standards; optional CLI `--entail` flag.
-      Grounded design:
-      [docs/research/analytic-rigor-eval.md](./docs/research/analytic-rigor-eval.md).
+- [x] **LLM-rubric scoring of the analytic standards + `--entail` flag (2026-06-04):**
+      `evaluation/rubric.py` scores a note against four ICD-203 standards the
+      mechanical gates cannot see (alternatives / argumentation / relevance /
+      accuracy) — pointwise, criterion-separated, anchored 1-5, via an injected
+      `AnalyticJudge` (hermetic fake; real `ClaudeAnalyticJudge` behind the
+      `rubric` extra, forced tool-use). `ariadne rubric <dir>` (API-gated,
+      optional `--min` CI gate). `workup --entail` wires the HHEM entailment
+      verifier into the citation gate. Decision:
+      [ADR-0011](./docs/architecture/decisions/0011-llm-rubric-analytic-standards-eval.md).
+      `# research(2026-06): LLM-Rubric (pointwise, criterion-separated, anchored) + judge-bias mitigations.`
 - [x] **Evaluation harness (planted-needle):** `ariadne eval <dir>` scores recall
       / trajectory / `grounded` (surfaced AND traversed, not guessed) / pivot-burden
       against the Compound-Alpha fixture (2026-06-02; the real Halberd workup scores

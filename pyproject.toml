@@ -61,6 +61,12 @@ eval = [
     "torch>=2.2",
 ]
 
+# research(2026-06): LLM-rubric analytic-standards scoring (ADR-0011). The Claude
+# judge uses the `anthropic` Messages API directly (forced tool-use → structured
+# 1-5 scores). Optional — the scoring engine is hermetic via an injected fake
+# judge. See src/ariadne/evaluation/judge.py and docs/research/analytic-rigor-eval.md.
+rubric = ["anthropic>=0.40"]
+
 [project.scripts]
 ariadne = "ariadne.__main__:main"
 ariadne-mcp = "ariadne.mcp_server:main"

@@ -32,6 +32,7 @@ nav = [
           { "0008 · Multimodal: agentic-to-text" = "architecture/decisions/0008-multimodal-agentic-to-text-not-native-embeddings.md" },
           { "0009 · Distribute as MCP server + plugin" = "architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md" },
           { "0010 · Observability (OpenTelemetry)" = "architecture/decisions/0010-observability-opentelemetry.md" },
+          { "0011 · LLM-rubric analytic-standards eval" = "architecture/decisions/0011-llm-rubric-analytic-standards-eval.md" },
       ]},
   ]},
   { "Research" = [

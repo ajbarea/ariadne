@@ -73,6 +73,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Enable hybrid full-text+semantic search over email bodies "
         "(needs the 'embed' extra + Postgres).",
     )
+    wk.add_argument(
+        "--entail",
+        action="store_true",
+        help="Check citation entailment (precision) with HHEM (needs the 'eval' extra).",
+    )
     ev = sub.add_parser("eval", help="Score a workup dir against the planted-needle fixture")
     ev.add_argument("workup_dir", help="Workup output dir (note.md + provenance.jsonl)")
     ev.add_argument(
@@ -80,6 +85,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         choices=sorted(FIXTURES),
         default="halberd",
         help="Needle fixture: 'halberd' (single-store graph) or 'wren-tie' (cross-store)",
+    )
+    rb = sub.add_parser(
+        "rubric", help="Score a workup's note against the ICD-203 rubric (LLM judge)"
+    )
+    rb.add_argument("workup_dir", help="Workup output dir (reads note.md)")
+    rb.add_argument(
+        "--min",
+        type=float,
+        default=None,
+        help="Fail (exit 1) if the overall score is below this threshold (1-5). "
+        "Default: informational only.",
     )
     ix = sub.add_parser("index", help="Load a dataset's records into the live stores")
     ix.add_argument(
@@ -111,6 +127,25 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd") -> int:
         )
     print(line)
     return 0 if report.grounded else 1
+
+
+def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
+    """Score a workup's note against the ICD-203 rubric with the live Claude judge.
+
+    Needs ANTHROPIC_API_KEY + the 'rubric' extra. Informational by default; with
+    ``--min`` it becomes a CI-gateable pass/fail on the overall score.
+    """
+    from ariadne.evaluation.judge import ClaudeAnalyticJudge
+    from ariadne.evaluation.rubric import score_note_dir
+
+    report = score_note_dir(workup_dir, ClaudeAnalyticJudge())
+    print(f"Rubric (ICD-203) overall={report.overall:.2f}/5")
+    for s in report.dimensions:
+        print(f"  {s.key:<14} {s.score}/5  {s.rationale}")
+    if minimum is not None and report.overall < minimum:
+        print(f"Rubric FAILED — overall {report.overall:.2f} < {minimum:.2f}", file=sys.stderr)
+        return 1
+    return 0
 
 
 def _run_index(dataset: str, env: dict[str, str], semantic: bool = False) -> int:
@@ -183,6 +218,7 @@ async def run_workup(
     *,
     with_sql: bool = False,
     with_semantic: bool = False,
+    with_entail: bool = False,
     dataset: str = "synthetic",
 ) -> int:
     from ariadne.datasets.base import get_adapter
@@ -190,6 +226,11 @@ async def run_workup(
     get_adapter(dataset)  # raises KeyError on unknown; synthetic uses the seeded graph
     ledger = ProvenanceLedger()
     options = build_options(ledger=ledger, env=env, with_sql=with_sql, with_semantic=with_semantic)
+    verifier = None
+    if with_entail:
+        from ariadne.provenance.entailment import HHEMVerifier
+
+        verifier = HHEMVerifier()
     prompt = f"Run entity workup on: {entity}"
 
     note_parts: list[str] = []
@@ -207,7 +248,7 @@ async def run_workup(
                 had_error = bool(getattr(message, "is_error", False))
         elapsed = time.monotonic() - started
         note = (result_text or "\n".join(note_parts)).strip()
-        report = validate_citations(note, ledger)
+        report = validate_citations(note, ledger, verifier=verifier)
         tradecraft = lint_estimative_language(note)
         record_workup_metrics(
             entity=entity,
@@ -235,7 +276,8 @@ async def run_workup(
     if not report.ok:
         print(
             f"Citation check FAILED — dangling: {report.dangling} · "
-            f"uncited claims: {len(report.uncited)}",
+            f"uncited claims: {len(report.uncited)} · "
+            f"unsupported claims: {len(report.unsupported)}",
             file=sys.stderr,
         )
         return 1
@@ -263,6 +305,8 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+    if args.command == "rubric":
+        return _run_rubric(args.workup_dir, args.min)
     return asyncio.run(
         run_workup(
             args.entity,
@@ -270,6 +314,7 @@ def main(argv: list[str] | None = None) -> int:
             dict(os.environ),
             with_sql=args.sql,
             with_semantic=args.semantic,
+            with_entail=args.entail,
             dataset=args.dataset,
         )
     )
