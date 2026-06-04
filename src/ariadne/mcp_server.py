@@ -40,6 +40,7 @@ async def run_workup_tool(
     dataset: str = "synthetic",
     sql: bool = False,
     semantic: bool = False,
+    profile: str = "default",
     env: dict[str, str] | None = None,
     runner: _Runner | None = None,
     out_root: str | None = None,
@@ -56,7 +57,13 @@ async def run_workup_tool(
     slug = slug or _slug(entity)
     try:
         await runner(
-            entity, out_root, base_env, with_sql=sql, dataset=dataset, with_semantic=semantic
+            entity,
+            out_root,
+            base_env,
+            with_sql=sql,
+            dataset=dataset,
+            with_semantic=semantic,
+            profile=profile,
         )
         note = Path(out_root) / slug / "note.md"
         if note.exists():
@@ -69,14 +76,33 @@ async def run_workup_tool(
 
 @mcp.tool()
 async def workup(
-    entity: str, dataset: str = "synthetic", sql: bool = False, semantic: bool = False
+    entity: str,
+    dataset: str = "synthetic",
+    sql: bool = False,
+    semantic: bool = False,
+    profile: str = "default",
 ) -> str:
     """Produce a rigorous, citation-grounded analytic note for a target entity.
 
     Traverses the graph + (optionally) relational and semantic stores, reconciles
     across sources, and returns a note where every fact carries a [cite:gN] source.
+    The ``profile`` selects the model + operating envelope from the deployment's
+    curated allowlist (see ``list_profiles``).
     """
-    return await run_workup_tool(entity, dataset=dataset, sql=sql, semantic=semantic)
+    return await run_workup_tool(
+        entity, dataset=dataset, sql=sql, semantic=semantic, profile=profile
+    )
+
+
+@mcp.tool()
+async def list_profiles() -> dict[str, Any]:
+    """List the model profiles this deployment offers (the curated allowlist)."""
+    from ariadne.profiles import load_profiles
+
+    return {
+        name: {"model": p.model, "egress": p.egress, "description": p.description}
+        for name, p in load_profiles(dict(os.environ)).items()
+    }
 
 
 @mcp.tool()
