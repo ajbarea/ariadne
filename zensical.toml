@@ -36,6 +36,7 @@ nav = [
           { "0012 · Cloud vs. air-gapped fork" = "architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md" },
       ]},
   ]},
+  { "Workflow Patterns" = "patterns.md" },
   { "Research" = [
       { "Overview" = "research/index.md" },
       { "Best-Practice Architecture (June 2026)" = "research/best-practice-architecture.md" },

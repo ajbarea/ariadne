@@ -318,7 +318,13 @@ items must not be hardened against one answer.
       `# research(2026-06): SATs for LLM analytic writing — ACH / key-assumptions.`
 - [ ] Provenance/citation surface in the analytic product; confidence handling.
 - [ ] SCADS integration interfaces: document how sibling tools plug in as callable tools.
-- [ ] Capture **reusable workflow patterns** (a brief deliverable) for future SCADS use cases.
+- [x] **Reusable workflow patterns brief (2026-06-04):** the brief's secondary
+      deliverable — nine domain-agnostic patterns (the sensemaking loop, per-store
+      MCP tool families, provenance-by-hook + citation gate, cross-modal
+      reconciliation, ICD-203 tradecraft, planted-needle + rubric eval, verify-the-
+      posture governance, the dataset-agnostic seam, injectable-Protocol DI), each
+      grounded in real code + ADRs for reuse by future SCADS use cases.
+      [docs/patterns.md](./docs/patterns.md) (top-level nav).
 
 ### Phase 5 — Deployment hardening
 - [x] **Cloud-vs-air-gapped fork resolved + documented (2026-06-04):** the fork
