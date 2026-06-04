@@ -1,4 +1,4 @@
-# 0003 — Expose Postgres via `postgres-mcp` Restricted Mode
+# 0003, Expose Postgres via `postgres-mcp` Restricted Mode
 
 - **Status:** Accepted (2026-06-02)
 - **Deciders:** Ariadne maintainers
@@ -6,7 +6,7 @@
 ## Context
 
 Phase 2 adds the relational connector. The agent must run read-only SQL against a
-Postgres store, and "read-only" has to be *enforced*, not merely requested — the
+Postgres store, and "read-only" has to be *enforced*, not merely requested, the
 agent composes its own queries.
 
 ## Decision drivers
@@ -21,14 +21,14 @@ agent composes its own queries.
 ## Considered options
 
 - **[`crystaldba/postgres-mcp`](https://github.com/crystaldba/postgres-mcp)
-  ("Postgres MCP Pro") in `--access-mode=restricted`** — read-only transactions
+  ("Postgres MCP Pro") in `--access-mode=restricted`**: read-only transactions
   with execution-time caps; SQL parsed with `pglast` before execution to reject
   `COMMIT`/`ROLLBACK` statement-stacking.
-- **Official `@modelcontextprotocol/server-postgres`** — its
+- **Official `@modelcontextprotocol/server-postgres`**: its
   `BEGIN TRANSACTION READ ONLY` guardrail is **bypassable via semicolon
   statement-stacking**, a confirmed SQL-injection through v0.6.2
   ([Datadog Security Labs](https://securitylabs.datadoghq.com/articles/mcp-vulnerability-case-study-SQL-injection-in-the-postgresql-mcp-server/)).
-- **`XiYanSQL` MCP (Text2SQL)** — a local-deployable alternative, kept as an
+- **`XiYanSQL` MCP (Text2SQL)**: a local-deployable alternative, kept as an
   option if natural-language→SQL is wanted later.
 
 ## Decision

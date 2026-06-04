@@ -1,4 +1,4 @@
-# 0007 — Hybrid retrieval, full-text first (in-Postgres)
+# 0007, Hybrid retrieval, full-text first (in-Postgres)
 
 - **Status:** Accepted (2026-06-03)
 - **Deciders:** Ariadne maintainers
@@ -7,12 +7,12 @@
 ## Context
 
 The canonical pipeline (ADR-0006) includes a `Document` leg for unstructured
-evidence — email bodies, attachments, free-text records. That leg needs retrieval.
+evidence, email bodies, attachments, free-text records. That leg needs retrieval.
 The full design spec
 ([`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md))
 calls for **hybrid lexical + semantic retrieval**: a full-text (lexical) pass
 and a vector-similarity (semantic) pass whose results are fused. The question
-is sequencing — what to build first, and at what dependency cost.
+is sequencing, what to build first, and at what dependency cost.
 
 ## Decision drivers
 
@@ -51,7 +51,7 @@ local embedding model) added later and fused via Reciprocal Rank Fusion (RRF).
 - **Con:** introduces a new Postgres extension before ranking quality is a
   measured bottleneck; adds complexity earlier than the work justifies.
   `pg_textsearch` (2026 C-native BM25) is the preferred future path when
-  ranking quality matters — faster than ParadeDB and not Neon-deprecated — but
+  ranking quality matters, faster than ParadeDB and not Neon-deprecated, but
   it belongs in a named upgrade, not Phase B1.
 
 ### C. Dedicated vector database
@@ -66,11 +66,11 @@ model the analytic product depends on.
 `websearch_to_tsquery` queries via the existing `postgres-mcp` `execute_sql`
 tool. Named upgrade paths:
 
-1. **`pg_textsearch`** — C-native BM25, faster than ParadeDB, not
-   Neon-deprecated — when ranking quality on longer documents becomes a measured
+1. **`pg_textsearch`**: C-native BM25, faster than ParadeDB, not
+   Neon-deprecated, when ranking quality on longer documents becomes a measured
    need.
-2. **pgvector + local embedding model** — EmbeddingGemma-300M (primary; small
-   footprint, no cloud call); BGE-M3 fallback — for the semantic leg, fused
+2. **pgvector + local embedding model**: EmbeddingGemma-300M (primary; small
+   footprint, no cloud call); BGE-M3 fallback, for the semantic leg, fused
    with the lexical leg by Reciprocal Rank Fusion. The semantic leg is an
    isolated follow-on that does not change the lexical schema.
 
@@ -80,16 +80,16 @@ tool. Named upgrade paths:
   Postgres extension. PII document content does not leave the box.
 - The semantic leg is an isolated, additive follow-on: add a `vector` column,
   populate it with a local model, and join the two ranked lists via RRF.
-- All retrieval — both legs — stays inside Postgres and is queryable through
+- All retrieval, both legs, stays inside Postgres and is queryable through
   the same `execute_sql` interface, preserving the single-store audit trail.
 - The embedding model is injectable via an `Embedder` protocol; the default is
-  the ungated `bge-small-en-v1.5` (384-dim, Apache-2.0) — chosen over
+  the ungated `bge-small-en-v1.5` (384-dim, Apache-2.0), chosen over
   EmbeddingGemma-300m as the default because Gemma is license-gated (HF token
   friction for dev/CI); EmbeddingGemma-300m (768-dim) remains the documented
   higher-quality swap.
 
 ## Sources
 
-- [PostgreSQL full-text search — `tsvector` and `GIN` indexes](https://www.postgresql.org/docs/current/textsearch-tables.html)
-- [TigerData — `pg_textsearch`: BM25 full-text search for Postgres (2026)](https://www.tigerdata.com/blog/pg-textsearch-bm25-full-text-search-postgres)
-- [ParadeDB — Hybrid search in PostgreSQL: the missing manual](https://www.paradedb.com/blog/hybrid-search-in-postgresql-the-missing-manual)
+- [PostgreSQL full-text search, `tsvector` and `GIN` indexes](https://www.postgresql.org/docs/current/textsearch-tables.html)
+- [TigerData, `pg_textsearch`: BM25 full-text search for Postgres (2026)](https://www.tigerdata.com/blog/pg-textsearch-bm25-full-text-search-postgres)
+- [ParadeDB, Hybrid search in PostgreSQL: the missing manual](https://www.paradedb.com/blog/hybrid-search-in-postgresql-the-missing-manual)

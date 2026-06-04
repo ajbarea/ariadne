@@ -1,4 +1,4 @@
-# 0010 — Observability via OpenTelemetry (GenAI semantic conventions)
+# 0010, Observability via OpenTelemetry (GenAI semantic conventions)
 
 - **Status:** Accepted (2026-06-03)
 - **Deciders:** Ariadne maintainers
@@ -12,22 +12,22 @@ evidence calls per run), **analytic accuracy** (citation coverage, entailment
 precision, eval scores), and **governance compliance** (ICD-203 tradecraft,
 uncited/dangling claims). Without traces and metrics these properties are only
 observable through the file artifacts (`citations.json`, `tradecraft.json`,
-eval output) — there is no cross-run dashboard, no latency baseline, and no
+eval output), there is no cross-run dashboard, no latency baseline, and no
 hook into a shared observability stack when Ariadne is deployed inside a larger
 environment.
 
 ## Decision drivers
 
-- **Vendor-neutral / cross-backend** — the same instrumentation should export
+- **Vendor-neutral / cross-backend**: the same instrumentation should export
   to Datadog, Google Cloud Trace, AWS X-Ray, Azure Monitor, Jaeger, Grafana,
   and the Claude Agent SDK's own telemetry without a code change.
-- **Reuse signals Ariadne already computes** — most metrics of interest are
+- **Reuse signals Ariadne already computes**: most metrics of interest are
   already computed: query count (provenance-ledger `gN`), citation
   coverage/precision, tradecraft compliance, eval scores. We are surfacing
   them as telemetry, not recomputing them.
-- **Zero cost at the base install** — operators who do not configure an OTLP
+- **Zero cost at the base install**: operators who do not configure an OTLP
   endpoint must not pay any runtime overhead.
-- **Standard so it composes** — the Claude Agent SDK already emits OTEL via
+- **Standard so it composes**: the Claude Agent SDK already emits OTEL via
   `CLAUDE_CODE_ENABLE_TELEMETRY=1`; Ariadne's spans should nest under those
   naturally, not create a parallel, incompatible trace tree.
 
@@ -40,13 +40,13 @@ environment.
     consume OTLP natively.
   - The emerging `gen_ai.*` attribute family + `invoke_agent` / `execute_tool`
     / `chat` span kinds are purpose-built for agentic LLM systems.
-  - `opentelemetry-api` ships a **no-op implementation** — without the SDK
+  - `opentelemetry-api` ships a **no-op implementation**: without the SDK
     configured, every span/counter is a no-op and the base install is
     unaffected.
   - Composes with the Agent SDK's own telemetry (`CLAUDE_CODE_ENABLE_TELEMETRY=1`):
     the SDK's per-LLM-call spans nest under Ariadne's `invoke_agent` span
     automatically when both use the same OTLP pipeline.
-  - Isolated in the optional `otel` extra — operators that want telemetry add
+  - Isolated in the optional `otel` extra, operators that want telemetry add
     `uv sync --extra otel`; everyone else ignores it.
 - **Cons:**
   - The `gen_ai.agent.*` attribute names are still experimental; they may shift
@@ -73,16 +73,16 @@ environment.
 
 **Adopt A.** Emit one `invoke_agent` span per workup (duration = task time) +
 per-run metrics via OpenTelemetry. The key design principle is that **most
-metrics surface already-computed artifacts** — the only genuinely new
+metrics surface already-computed artifacts**: the only genuinely new
 measurement is timing:
 
 | Signal | Source | New? |
 | ------ | ------ | ---- |
-| Task duration / time-to-report | `run_workup` wall time | **Yes — new** |
-| Evidence calls (`ariadne.evidence.calls`) | provenance-ledger `gN` count | No — existing |
-| Citation failures (`ariadne.citation.failures`) | `citations.json` uncited/unsupported | No — existing |
-| Tradecraft compliance (span attrs) | `tradecraft.json` estimative terms / has-confidence | No — existing |
-| Governance violations (`ariadne.governance.violations` + span attrs) | `governance.json` read-only audit | No — existing |
+| Task duration / time-to-report | `run_workup` wall time | **Yes, new** |
+| Evidence calls (`ariadne.evidence.calls`) | provenance-ledger `gN` count | No, existing |
+| Citation failures (`ariadne.citation.failures`) | `citations.json` uncited/unsupported | No, existing |
+| Tradecraft compliance (span attrs) | `tradecraft.json` estimative terms / has-confidence | No, existing |
+| Governance violations (`ariadne.governance.violations` + span attrs) | `governance.json` read-only audit | No, existing |
 | Workup count (`ariadne.workups`) | counter incremented per run | Minimal |
 | Workup duration histogram (`ariadne.workup.duration`) | same wall time as the span | Minimal |
 
@@ -99,7 +99,7 @@ the `otel` extra is not installed, every call is a silent no-op.
 - **Base install emits nothing** (api-only no-op); the `otel` extra is an
   explicit opt-in.
 - The Agent SDK's per-LLM-call spans (`chat`, `execute_tool`) nest under
-  Ariadne's `invoke_agent` span when `CLAUDE_CODE_ENABLE_TELEMETRY=1` is set —
+  Ariadne's `invoke_agent` span when `CLAUDE_CODE_ENABLE_TELEMETRY=1` is set,
   one trace covers the full workup.
 - The `gen_ai.agent.name` attribute (and peers) are marked experimental;
   flagged for review when the GenAI semconv reaches stability 1.0.

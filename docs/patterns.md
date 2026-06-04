@@ -4,13 +4,13 @@
 > prototype, but the workflow patterns it demonstrates generalize to other
 > entity-centric analytic use cases. Each pattern below names the problem it
 > solves, its shape, where Ariadne implements it, and how to reuse it. Every
-> claim points at real code or a decision record — if one drifts from the
+> claim points at real code or a decision record, if one drifts from the
 > implementation, fix the doc.
 
-## 1. The sensemaking loop — gather → act → verify → synthesize
+## 1. The sensemaking loop: gather → act → verify → synthesize
 
 **Problem.** An analyst reasoning about one entity must pull scattered evidence,
-check it, and write a defensible product — not free-associate over a search box.
+check it, and write a defensible product, not free-associate over a search box.
 
 **Shape.** A skill encodes a fixed loop: **gather** each store's shape and locate
 the target; **act** by routing focused read-only queries to the right store;
@@ -30,8 +30,8 @@ with different query languages; the analyst should not pivot between them by han
 
 **Shape.** Expose every store as its own MCP tool family (`mcp__graph__*`,
 `mcp__postgres__*`, `mcp__ariadne__*`), all **read-only**. A lead agent routes by
-question type — graph for relationships/hierarchy/co-location, relational for
-per-entity attributes, hybrid full-text+vector for free-text — and resolves the
+question type, graph for relationships/hierarchy/co-location, relational for
+per-entity attributes, hybrid full-text+vector for free-text, and resolves the
 *same* entity across stores by a shared key.
 
 **In Ariadne.** `graph/neo4j_server.py`, `relational/postgres_server.py`,
@@ -46,7 +46,7 @@ the lead a routing rule; no change to the loop or the gates.
 ## 3. Provenance-by-hook + a citation gate
 
 **Problem.** An analytic product is only trustworthy if every claim traces to
-evidence the system actually retrieved — and the agent must not fabricate sources.
+evidence the system actually retrieved, and the agent must not fabricate sources.
 
 **Shape.** A `PostToolUse` hook stamps every evidence call with a provenance id
 (`gN`) into a ledger; the synthesis must cite `[cite:gN]`; a gate validates
@@ -61,7 +61,7 @@ covers the rigor stack).
 **Reuse.** The hook + ledger + gate are domain-agnostic; reuse as-is for any
 tool-using agent that must produce traceable output.
 
-## 4. Cross-modal reconciliation — corroborate agreements, flag conflicts
+## 4. Cross-modal reconciliation: corroborate agreements, flag conflicts
 
 **Problem.** When two stores describe the same entity, agreement should
 *strengthen* a finding and disagreement must be *surfaced*, never silently
@@ -69,7 +69,7 @@ resolved.
 
 **Shape.** On a decisive cross-store fact, the note states whether the stores
 corroborate (independent agreement → higher confidence) or conflict (flag it,
-weigh the sources). A scorer grades whether the note actually did so — fact
+weigh the sources). A scorer grades whether the note actually did so, fact
 surfaced **and** reconciliation language **and** both stores queried.
 
 **In Ariadne.** Skill verify-step; scored by `evaluation/reconcile.py`
@@ -80,8 +80,8 @@ workflow's reconciliation behavior with the same scorer.
 
 ## 5. Tradecraft calibration (ICD-203 / ICD-206)
 
-**Problem.** Analytic writing has standards — calibrated uncertainty, fact-vs-
-judgment separation, analysis of alternatives — that generic generation ignores.
+**Problem.** Analytic writing has standards, calibrated uncertainty, fact-vs-
+judgment separation, analysis of alternatives, that generic generation ignores.
 
 **Shape.** A lint maps estimative language to ICD-203 probability bands and
 detects the confidence axis; the skill directs an **analysis of competing
@@ -94,7 +94,7 @@ template's *Alternatives considered* section.
 **Reuse.** The lint and the ACH/confidence prompt pattern transfer to any
 analytic-writing task with a published standard.
 
-## 6. "How do you know it works?" — planted-needle + rubric evaluation
+## 6. "How do you know it works?": planted-needle + rubric evaluation
 
 **Problem.** The brief's central challenge is **specification & validation**: an
 analytic product has no single right answer, so quality must be measured another
@@ -114,14 +114,14 @@ argumentation, relevance, accuracy), pointwise and criterion-separated.
 **Reuse.** Plant a needle per use case for mechanical scoring; reuse the rubric
 engine (swap the dimensions) for the judgment axis.
 
-## 7. Governance — verify the posture, don't trust the config
+## 7. Governance: verify the posture, don't trust the config
 
 **Problem.** Governance must be uniform across quality, security, and data
-integrity — and verified, not assumed.
+integrity, and verified, not assumed.
 
 **Shape.** Quality is the citation gate + tradecraft lint + rubric. **Security /
 data integrity**: audit the actual tool trace for any mutating statement, so a
-write the agent attempted — even one the read-only connector blocked — is caught.
+write the agent attempted, even one the read-only connector blocked, is caught.
 Every governance signal is also emitted as telemetry.
 
 **In Ariadne.** `provenance/governance.py` (`audit_read_only` → `governance.json`),

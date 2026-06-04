@@ -1,4 +1,4 @@
-# 0005 — Defer subagent fan-out pending a design pass
+# 0005, Defer subagent fan-out pending a design pass
 
 - **Status:** Deferred (2026-06-02)
 - **Deciders:** Ariadne maintainers
@@ -6,8 +6,8 @@
 ## Context
 
 The [best-practice research](../../research/best-practice-architecture.md) names
-an **orchestrator–worker** design — a lead agent dispatching parallel,
-context-isolated subagents, one per source — as the headline architecture. The
+an **orchestrator-worker** design, a lead agent dispatching parallel,
+context-isolated subagents, one per source, as the headline architecture. The
 obvious next step would be to fan out the graph and SQL retrieval into separate
 subagents.
 
@@ -21,8 +21,8 @@ subagents.
 
 ## Considered options
 
-- **Fan out now** — one subagent per store, run in parallel.
-- **Defer** — keep the single lead agent with both connectors until a design
+- **Fan out now**: one subagent per store, run in parallel.
+- **Defer**: keep the single lead agent with both connectors until a design
   resolves the conflicts below.
 
 ## Decision
@@ -33,13 +33,13 @@ slice:
 1. **Shared context.** Reconciliation needs both stores' evidence in one context;
    the research explicitly flags multi-agent fan-out as *not* generalising to
    shared-context tasks.
-2. **Provenance.** Subagents run in isolated contexts and return only a summary —
+2. **Provenance.** Subagents run in isolated contexts and return only a summary,
    their raw tool calls never reach the parent's `gN` hook, so citations would
    attach to a worker's prose instead of to evidence entries.
 
 A correct design (workers retrieve in parallel and return **pre-cited** evidence;
 the lead reconciles) is a real redesign of the provenance layer. It is not
-blocked on research — it needs a focused design pass.
+blocked on research, it needs a focused design pass.
 
 ## Consequences
 

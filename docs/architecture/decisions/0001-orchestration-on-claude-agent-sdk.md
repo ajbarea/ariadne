@@ -1,4 +1,4 @@
-# 0001 — Orchestrate on the Claude Agent SDK
+# 0001, Orchestrate on the Claude Agent SDK
 
 - **Status:** Accepted (2026-06-01)
 - **Deciders:** Ariadne maintainers
@@ -8,7 +8,7 @@
 Ariadne is an orchestration layer over heterogeneous data stores, not a new data
 platform. It needs an agent runtime that provides tool use, packaged skills,
 lifecycle hooks (for provenance/governance), context-isolated subagents, and a
-connector standard (MCP) — the exact primitives the
+connector standard (MCP), the exact primitives the
 [best-practice research](../../research/best-practice-architecture.md) names for
 agentic entity sensemaking.
 
@@ -22,13 +22,13 @@ agentic entity sensemaking.
 
 ## Considered options
 
-- **Claude Agent SDK** — native tools / skills / hooks / subagents / MCP;
+- **Claude Agent SDK**: native tools / skills / hooks / subagents / MCP;
   doc-cited mechanics captured in the
   [SDK reference](../../research/claude-agent-sdk-reference.md).
-- **Open-source agent frameworks (e.g. OpenClaw-style harnesses)** — viable and
+- **Open-source agent frameworks (e.g. OpenClaw-style harnesses)**: viable and
   attractive for the air-gapped fork, but weaker/less-uniform hook and MCP
   stories today, and more glue to maintain.
-- **Hand-rolled orchestration loop** — maximum control, but we would rebuild
+- **Hand-rolled orchestration loop**: maximum control, but we would rebuild
   provenance hooks, subagent isolation, and MCP plumbing from scratch.
 
 ## Decision

@@ -26,7 +26,7 @@ Makefile:
 
 Each run produces `logs/dev-<UTC>-<target>.log` (and truncates the stable
 pointer `logs/dev-latest.log`) ending with a `SUMMARY` block carrying the
-overall `rc`. Do **not** call `dev-runner.sh` from inside a Makefile recipe — it
+overall `rc`. Do **not** call `dev-runner.sh` from inside a Makefile recipe; it
 invokes `make` and would recurse.
 
 ## Toolchain
@@ -54,9 +54,9 @@ every fact the harness surfaces should carry its source. Prefer designs (e.g.
 
 Architecturally significant, contestable choices are recorded as ADRs in
 [`architecture/decisions/`](architecture/index.md#decisions) using the
-[MADR](https://adr.github.io/madr/) format — one file per decision, naming the
+[MADR](https://adr.github.io/madr/) format: one file per decision, naming the
 rejected alternatives and why they lost. Write one when a reviewer could
 reasonably ask *"why not the other way?"* (a store, a framework, a connector, a
 security posture, a deferral); skip it for reversible implementation details.
 The `# research(YYYY-MM):` note in code/roadmap carries the source; the ADR
-carries the *comparison*. Records are immutable — supersede, don't rewrite.
+carries the *comparison*. Records are immutable: supersede, don't rewrite.

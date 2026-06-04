@@ -12,22 +12,22 @@ a `# research(YYYY-MM):` provenance note.
 ## Open architecture questions
 
 Resolved (or partly resolved) by the
-[June-2026 research](research/best-practice-architecture.md); treat the
-still-open items as unsettled — don't harden code against one answer.
+[best-practice research](research/best-practice-architecture.md). Treat the
+still-open items as unsettled; don't harden code against one answer.
 
-1. **MVP toolset boundary** — smallest set of tools/skills/hooks that
+1. **MVP toolset boundary**: smallest set of tools/skills/hooks that
    demonstrates end-to-end value; build vs. expose a stub for a sibling SCADS
    project.
-2. **Graph / multi-hop reasoning** — GraphRAG vs. agent-driven Cypher traversal
+2. **Graph / multi-hop reasoning**: GraphRAG vs. agent-driven Cypher traversal
    vs. hybrid; entity resolution across stores. *(Research: hybrid graph+text +
    agentic correction; GraphRAG for multi-hop only.)*
-3. **Connector strategy** — MCP servers vs. in-process tools per store.
+3. **Connector strategy**: MCP servers vs. in-process tools per store.
    *(Research: MCP tool families per store.)*
-4. **Multimodal processing** — extraction tools and cross-modal fusion.
+4. **Multimodal processing**: extraction tools and cross-modal fusion.
    *(Research: convert imagery/video to structured text, then reason.)*
-5. **Analytic rigor & eval** — provenance, grounding, confidence, success
-   metrics, structured analytic techniques. *(Open — next research pass.)*
-6. **Cloud vs. air-gapped fork** — per-component swap points. *(Partly open.)*
+5. **Analytic rigor & eval**: provenance, grounding, confidence, success
+   metrics, structured analytic techniques. *(Open, next research pass.)*
+6. **Cloud vs. air-gapped fork**: per-component swap points. *(Partly open.)*
 
 ## Phased build order
 
@@ -42,5 +42,5 @@ still-open items as unsettled — don't harden code against one answer.
 
 ## Shipped
 
-- **2026-06-01** — Repo scaffolded; Claude Agent SDK reference captured;
-  June-2026 best-practice research synthesized; Zensical docs site stood up.
+- **2026-06-01**: Repo scaffolded; Claude Agent SDK reference captured;
+  best-practice research synthesized; Zensical docs site stood up.

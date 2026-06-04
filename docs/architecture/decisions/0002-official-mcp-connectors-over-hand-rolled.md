@@ -1,4 +1,4 @@
-# 0002 — Use official MCP connectors over hand-rolled wrappers
+# 0002, Use official MCP connectors over hand-rolled wrappers
 
 - **Status:** Accepted (2026-06-01)
 - **Deciders:** Ariadne maintainers
@@ -21,11 +21,11 @@ write Cypher directly, or should we add a separate Text2Cypher translation tool?
 
 ## Considered options
 
-- **Official `mcp-neo4j-cypher` server** with `NEO4J_READ_ONLY` — battle-tested
+- **Official `mcp-neo4j-cypher` server** with `NEO4J_READ_ONLY`, battle-tested
   read-only / timeout / truncation guardrails maintained upstream.
-- **Hand-rolled in-process connector** — full control and no subprocess, but we
+- **Hand-rolled in-process connector**: full control and no subprocess, but we
   reimplement the guardrails and own every edge case.
-- **Separate Text2Cypher tool** vs **agent writes read-only Cypher** — an extra
+- **Separate Text2Cypher tool** vs **agent writes read-only Cypher**: an extra
   translation hop vs letting the agent read schema and emit Cypher directly.
 
 ## Decision

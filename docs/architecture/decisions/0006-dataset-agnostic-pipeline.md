@@ -1,4 +1,4 @@
-# 0006 — Dataset-agnostic pipeline (canonical schema + adapters)
+# 0006, Dataset-agnostic pipeline (canonical schema + adapters)
 
 - **Status:** Accepted (2026-06-03)
 - **Deciders:** Ariadne maintainers
@@ -34,7 +34,7 @@ harness never change.
 - **Pro:** two adapters per source instead of N×M point-to-point translation;
   small blast radius (one adapter file per dataset); governance attaches at the
   canonical layer once; recognized 2026 enterprise-integration pattern.
-- **Con:** someone owns the canonical schema and its versioning — the schema is
+- **Con:** someone owns the canonical schema and its versioning, the schema is
   a shared contract that must be evolved carefully.
 
 Guard the two named pitfalls: the **"god model"** (keep core records minimal;
@@ -57,7 +57,7 @@ Adopt an ingestion framework as the integration contract.
 - **Pro:** broad out-of-the-box parsing support.
 - **Con:** the framework's abstractions become the contract, not ours; conflicts
   with the lean MCP-connector design; weaker control over provenance and
-  access-control. An adapter *may* use such a library internally for parsing —
+  access-control. An adapter *may* use such a library internally for parsing,
   just not as the architecture.
 
 ## Decision
@@ -76,10 +76,10 @@ in `attributes`/`metadata`), and version the schema (`SCHEMA_VERSION`).
 - Governance is uniform across datasets: every adapter declares
   `access ∈ {public, restricted}`; a restricted adapter is gated behind an
   explicit authorized-access flag.
-- The canonical schema is a versioned shared contract — breaking changes require
+- The canonical schema is a versioned shared contract, breaking changes require
   a `SCHEMA_VERSION` bump and coordinated adapter updates.
 
 ## Sources
 
 - [Canonical Data Model guide (datadriven.io, 2026)](https://datadriven.io/data-modeling/canonical-data-model)
-- [Enterprise Integration Patterns — Canonical Data Model](https://www.enterpriseintegrationpatterns.com/patterns/messaging/CanonicalDataModel.html)
+- [Enterprise Integration Patterns, Canonical Data Model](https://www.enterpriseintegrationpatterns.com/patterns/messaging/CanonicalDataModel.html)

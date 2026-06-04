@@ -3,7 +3,7 @@
 Architectural decisions for Ariadne, recorded as **ADRs** (Architecture Decision
 Records) in the [MADR](https://adr.github.io/madr/) format. One file per decision.
 This is the single place to point to when someone asks *"why did you choose X
-instead of Y?"* — each record names the alternatives that were considered, why
+instead of Y?"*, each record names the alternatives that were considered, why
 they lost, and what the choice costs us.
 
 ## Why we keep these
@@ -11,7 +11,7 @@ they lost, and what the choice costs us.
 Decisions get made constantly and then disappear into chat logs and commit
 messages. An ADR is a small, dated, immutable record of one decision and its
 *rejected* alternatives, kept in source control next to the code so it stays in
-sync. When the context changes, we don't edit the old record — we supersede it
+sync. When the context changes, we don't edit the old record, we supersede it
 with a new one.
 
 ## When to write one

@@ -1,4 +1,4 @@
-# 0008 — Multimodal fusion via agentic-to-text, not native multimodal embeddings
+# 0008, Multimodal fusion via agentic-to-text, not native multimodal embeddings
 
 - **Status:** Accepted (2026-06-03)
 - **Deciders:** Ariadne maintainers
@@ -6,7 +6,7 @@
 
 ## Context
 
-Ariadne's roadmap includes multimodal evidence (imagery, video, audio) — Phase 3.
+Ariadne's roadmap includes multimodal evidence (imagery, video, audio), Phase 3.
 In June 2026 Google released **Gemini Embedding 2**, its first *natively
 multimodal* embedding model: text, images, video, audio, and documents mapped
 into one unified vector space. It is a strong model and, by independent
@@ -28,7 +28,7 @@ text semantic leg (ADR-0007), where the embedder is already injectable.
   the cloud-vs-air-gap fork).
 - **Transparency over opacity.** Anthropic's guidance and the project's research
   favour agentic search over text over opaque vector similarity.
-- Don't reject a genuinely strong model reflexively — weigh it on Ariadne's
+- Don't reject a genuinely strong model reflexively, weigh it on Ariadne's
   actual requirements.
 
 ## Considered options
@@ -39,24 +39,24 @@ Convert imagery/video/audio to **structured, citable text** (VQA + summarization
 / ASR), then reason, full-text- and vector-search over it with the existing
 hybrid leg (ADR-0007).
 
-- **Pros:** the converted text is **human-readable, citable, and auditable** —
+- **Pros:** the converted text is **human-readable, citable, and auditable**,
   it flows through the same provenance/citation gates as every other evidence
   source; runs with **open-weight, self-hostable** components, so it survives the
   air-gapped/PII fork; transparent (an analyst can read *why* a frame matched);
-  research-grounded (DeepMEL Modal-Fuser, V-Retriever — align visual evidence
+  research-grounded (DeepMEL Modal-Fuser, V-Retriever, align visual evidence
   into the text modality before fusion).
 - **Cons:** an extra extraction step; conversion can lose signal a raw embedding
   would keep; quality depends on the VQA/ASR model.
 
-### B. Native multimodal embedding — Gemini Embedding 2
+### B. Native multimodal embedding, Gemini Embedding 2
 
 One unified text+image+video+audio vector space; no conversion pipeline; the
 multimodal-similarity leader.
 
 - **Pros:** simplest cross-modal recall; no OCR/VQA pipeline; state-of-the-art on
   multimodal retrieval benchmarks; 3,072-dim with Matryoshka downscaling.
-- **Cons (decisive for Ariadne):** **cloud-API-only** — Gemini API / Vertex AI,
-  **no open weights, no self-hosted or on-device option** — so you would ship
+- **Cons (decisive for Ariadne):** **cloud-API-only**: Gemini API / Vertex AI,
+  **no open weights, no self-hosted or on-device option**: so you would ship
   (possibly classified / PII) imagery, video, and audio to a Google API, which
   **breaks the air-gap and PII governance** the project requires. A multimodal
   vector is a **black box**: it yields similarity but **no citable, auditable,
@@ -73,7 +73,7 @@ multimodal-similarity leader.
 ## Decision
 
 **Adopt A.** Ariadne fuses multimodal evidence by converting it to **structured,
-citable text** and reasoning/searching over that text — *not* by embedding raw
+citable text** and reasoning/searching over that text, *not* by embedding raw
 media into a shared vector space. Gemini Embedding 2 is the multimodal-similarity
 leader, but it is the **wrong fit for auditable, air-gappable sensemaking**:
 cloud-API-only (no air-gap) and uncitable (no provenance). The agentic-to-text
@@ -82,7 +82,7 @@ hybrid-retrieval machinery already built.
 
 **Left open (not rejected forever):** a native multimodal embedding could later
 serve as an **optional, complementary cross-modal recall leg** (RRF-fused with
-the text legs, via the same injectable-component pattern) — but only an
+the text legs, via the same injectable-component pattern), but only an
 **open-weight** one that satisfies the air-gap constraint, and only as a *recall
 aid*, never as the system of record. The citable converted text remains the
 evidence.
@@ -90,7 +90,7 @@ evidence.
 ## Consequences
 
 - Phase 3 builds a **multimodal-to-text extraction tool** (VQA/summarization/ASR,
-  open-weight) whose output is citable Documents indexed by the B1/B3 hybrid leg —
+  open-weight) whose output is citable Documents indexed by the B1/B3 hybrid leg,
   no new opaque vector space, no new cloud dependency.
 - The air-gapped and PII forks stay viable for multimodal data.
 - We forgo best-in-class raw multimodal-similarity recall; mitigated by extraction
@@ -98,7 +98,7 @@ evidence.
 
 ## Sources
 
-- [Gemini Embedding 2 (Google blog)](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-embedding-2/) — natively multimodal, **cloud-API-only**, 3072-dim, public preview.
+- [Gemini Embedding 2 (Google blog)](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-embedding-2/), natively multimodal, **cloud-API-only**, 3072-dim, public preview.
 - [Gemini Embedding 2 paper](https://huggingface.co/papers/2605.27295)
-- Best-practice architecture research (`docs/research/best-practice-architecture.md`) — agentic multimodal-to-text fusion (DeepMEL, V-Retriever), adversarially verified.
+- Best-practice architecture research (`docs/research/best-practice-architecture.md`), agentic multimodal-to-text fusion (DeepMEL, V-Retriever), adversarially verified.
 - Multimodal embedding landscape 2026: [Milvus](https://milvus.io/blog/choose-embedding-model-rag-2026.md), [Mixpeek](https://mixpeek.com/curated-lists/best-embedding-models) (Cohere Embed v4 / Jina v4 as open-er multimodal options).

@@ -4,13 +4,13 @@
 > ADR-0012 *decided* that the cloud/air-gapped deployment fork is a **single seam
 > at the orchestrator model**; this is the experiment that turns that architectural
 > claim into measured evidence. Everything here is a live run on this repo's code at
-> the session HEAD — no code changed, only `ANTHROPIC_BASE_URL`. Serving config is
+> the session HEAD, no code changed, only `ANTHROPIC_BASE_URL`. Serving config is
 > committed at [`infra/litellm/`](https://github.com/ajbarea/ariadne/tree/main/infra/litellm).
 
 ## The question
 
 ADR-0012 narrowed the brief's highest-leverage open question from *"how do we
-air-gap Ariadne?"* to *"which open-weight model clears the eval bar?"* — because
+air-gap Ariadne?"* to *"which open-weight model clears the eval bar?"*, because
 the architecture already forks at one point and the retrieval/embedding/eval
 layers are already local. This run answers the narrowed question on real hardware.
 
@@ -34,12 +34,12 @@ Before scoring quality, the translation path was validated end-to-end: an Anthro
 Messages API request carrying a tool definition round-tripped through LiteLLM to a
 local Ollama worker and came back as a correct `tool_use` block
 (`stop_reason: "tool_use"`). The Claude Agent SDK / `claude` CLI then drove a full
-multi-turn workup against the local worker — `POST /v1/messages` (incl. the
+multi-turn workup against the local worker, `POST /v1/messages` (incl. the
 `?beta=true` variant) returning `200 OK` throughout. **No Ariadne code is
 model-aware; the fork is genuinely one env var.**
 
 > Packaging note worth keeping: install Ollama via the **`ollama-app` cask**, not
-> the `ollama` formula — the formula ships without the `llama-server` runner the
+> the `ollama` formula, the formula ships without the `llama-server` runner the
 > current engine needs, and every `/v1/messages` call 500s with
 > `llama-server binary not found` until you switch.
 
@@ -53,12 +53,12 @@ stores were queried.
 
 | Model | Params (active) | Evidence calls | grounded | recall | trajectory | reconciliation | citation gate | rubric (ICD-203) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Claude (cloud baseline)** | frontier | 24 | ✅ True | 1.00 | 1.00 | 1.00 (2/2) | ✅ pass | ~4.50–4.75 / 5 |
-| **qwen3:14b** _(MoE 30B-A3B was queued)_ | 14B | loop ran (multi-turn tool calls) | DNF¹ | — | — | — | — | not reached |
+| **Claude (cloud baseline)** | frontier | 24 | ✅ True | 1.00 | 1.00 | 1.00 (2/2) | ✅ pass | ~4.50-4.75 / 5 |
+| **qwen3:14b** _(MoE 30B-A3B was queued)_ | 14B | loop ran (multi-turn tool calls) | DNF¹ |, |, |, |, | not reached |
 | **qwen3:0.6b** _(floor)_ | 0.6B | **0** | ❌ False | 0.00 | 0.00 | 0.00 (0/2) | ❌ fail | not scored |
 
 ¹ **DNF = throughput-bound, not a capability failure.** The 14B drove the agent
-loop correctly (valid `tool_use`, turns 1–2 completed) but did not finish a scorable
+loop correctly (valid `tool_use`, turns 1-2 completed) but did not finish a scorable
 note in practical time. Ollama's own timing shows why: each turn reprocessed a
 **~30k-token, ever-growing context** (system prompt + skill + tool defs + every prior
 tool result + qwen3's verbose thinking) at **~80 tok/s ≈ 5 min/turn** on an M1 Pro
@@ -67,7 +67,7 @@ reason. See the operating-envelope response below.
 
 The 0.6b floor is informative: it never queried the stores, answered from nothing,
 leaked raw `<thinking>` into the note, and the citation gate caught it. That is the
-eval harness demonstrating **discriminating power** — an incapable model fails
+eval harness demonstrating **discriminating power**: an incapable model fails
 every axis, so a passing score from a larger model is meaningful, not a rubber stamp.
 
 ## Findings
@@ -78,7 +78,7 @@ every axis, so a passing score from a larger model is meaningful, not a rubber s
    one. On an M1 Pro the limiter is **prompt-processing of a large, accumulating
    context** (~5 min/turn), worsened by qwen3's thinking-mode token bloat.
 2. **The fix is model-aware context discipline, not chunking-to-fit.** qwen3:14b
-   supports 256k context — the issue is per-turn *cost*, not a hard limit. The levers
+   supports 256k context, the issue is per-turn *cost*, not a hard limit. The levers
    Ariadne owns: cap tool-result verbosity (the largest growing component we
    control), `max_turns` + `max_thinking_tokens`, and serving-side thinking-off /
    KV-cache reuse. The SDK owns whole-conversation compaction and exposes no
@@ -97,5 +97,5 @@ every axis, so a passing score from a larger model is meaningful, not a rubber s
 - ADR-0012's single-seam claim is **operationally true**, not just argued: the
   cloud→air-gap swap is `ANTHROPIC_BASE_URL` + a local Ollama worker, with the
   gates, provenance, and eval byte-identical across both deployments.
-- The eval harness is the right instrument for the narrowed question — it fails a
+- The eval harness is the right instrument for the narrowed question, it fails a
   weak model cleanly, so it can certify a strong open-weight one.

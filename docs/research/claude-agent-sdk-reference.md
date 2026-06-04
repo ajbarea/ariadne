@@ -1,4 +1,4 @@
-# Claude Agent SDK — Primitives Reference (mid-2026)
+# Claude Agent SDK, Primitives Reference (mid-2026)
 
 > **Source:** captured 2026-06-01 from a `claude-code-guide` research agent that
 > searched the official Anthropic / Claude Agent SDK docs. Doc-cited. Treat as a
@@ -26,12 +26,12 @@ servers or in-process SDK definitions.
 - **MCP (local stdio):** subprocesses; reusable, language-agnostic packages.
 - **MCP (HTTP/SSE):** remote services; credentials via headers/env.
 - **Permissions/tokens:** every call is permission-gated (`allowedTools`,
-  `permissionMode`). Tool defs cost context tokens — use **tool search** to load
+  `permissionMode`). Tool defs cost context tokens, use **tool search** to load
   only needed tools per turn. MCP tools are named `mcp__<server>__<action>`;
   permit families with `allowedTools: ["mcp__db__*"]`.
 
 **Gotchas:** `permissionMode: "acceptEdits"` does **not** auto-approve MCP
-tools — use an `allowedTools` wildcard. Tool search can withhold large defs
+tools, use an `allowedTools` wildcard. Tool search can withhold large defs
 Claude might have used. Check the `system:init` message for MCP connection
 status before running.
 
@@ -50,10 +50,10 @@ knowledge; tools are single callable functions.
 
 - **Location:** `.claude/skills/<name>/SKILL.md` (project) or `~/.claude/...` (user).
 - **Frontmatter:** `name`, `description`, optional `tags`. (`allowed-tools` is
-  **ignored by the SDK** — control access via the SDK's `allowedTools`.)
+  **ignored by the SDK**: control access via the SDK's `allowedTools`.)
 - **Progressive disclosure:** only metadata is scanned at startup; full body
   loads when invoked (auto by description match, or `/skill-name`).
-- **Multi-file:** a skill dir can carry scripts, templates, data — all available
+- **Multi-file:** a skill dir can carry scripts, templates, data, all available
   when it runs; skills can shell out to Bash and parse outputs.
 
 **Packaging an `entity-workup` skill:** `SKILL.md` with a specific description
@@ -73,7 +73,7 @@ Docs: [skills in the SDK](https://code.claude.com/docs/en/agent-sdk/skills)
 ## 3. Hooks
 
 Callbacks intercepting lifecycle events: block, modify inputs/outputs, inject
-context, enforce governance — without hardcoding into prompts.
+context, enforce governance, without hardcoding into prompts.
 
 **Events:** `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`
 (TS), `UserPromptSubmit`, `MessageDisplay` (TS), `Stop`, `SubagentStart`,
@@ -86,15 +86,15 @@ replace/augment results (`updatedToolOutput`), inject context
 side effects.
 
 **Governance/provenance patterns (directly relevant to Ariadne):**
-1. `PostToolUse` audit trail — log every call (timestamp, args, result, user).
-2. `PreToolUse` authorization — is this user allowed to query this source?
-3. `PostToolUse` redaction — strip PII before Claude sees results.
-4. `PostToolUse` **provenance** — record which tool sourced each fact so the
+1. `PostToolUse` audit trail, log every call (timestamp, args, result, user).
+2. `PreToolUse` authorization, is this user allowed to query this source?
+3. `PostToolUse` redaction, strip PII before Claude sees results.
+4. `PostToolUse` **provenance**: record which tool sourced each fact so the
    synthesis cites sources.
 5. `PreToolUse` forbidden-pattern blocks (e.g. mutate `.env` / sensitive tables).
 
-**Gotchas:** hooks on one event run **in parallel** — no ordering. Priority:
-deny > defer > ask > allow. Matchers filter by **tool name** only — filter by
+**Gotchas:** hooks on one event run **in parallel**: no ordering. Priority:
+deny > defer > ask > allow. Matchers filter by **tool name** only, filter by
 path inside the callback. Default 60s timeout. `systemMessage` is user-only;
 use `additionalContext` to inject info Claude sees.
 
@@ -117,7 +117,7 @@ system prompt, and (optional) tool subset.
 - **Use for:** independent parallel retrieval (e.g. one subagent per data
   source), tool-restricted roles, isolating a long parent conversation.
 
-**Gotchas:** **no nesting** — subagents can't spawn subagents. They don't
+**Gotchas:** **no nesting**: subagents can't spawn subagents. They don't
 inherit parent permissions (set `tools` in the definition). For 100+ fanouts use
 dynamic workflows instead.
 
@@ -128,7 +128,7 @@ Docs: [subagents](https://code.claude.com/docs/en/agent-sdk/subagents)
 
 ## 5. MCP integration
 
-The SDK reads `mcpServers` (TS) / `mcp_servers` (Python) — or `.mcp.json` — and
+The SDK reads `mcpServers` (TS) / `mcp_servers` (Python), or `.mcp.json`, and
 discovers tools at startup. Transports: **local stdio** (subprocess; filesystem,
 DBs), **HTTP/SSE** (remote; headers for auth), **in-process SDK tools** (no
 subprocess).
@@ -140,11 +140,11 @@ subprocess).
   `mcp__postgres__list_tables`, …
 - **Vector (e.g. Pinecone):** HTTP server with bearer auth → `mcp__pinecone__search`, …
 
-**Auth:** env vars (stdio) or headers (HTTP). SDK doesn't run OAuth flows —
+**Auth:** env vars (stdio) or headers (HTTP). SDK doesn't run OAuth flows,
 complete OAuth in-app and pass the token. **Permissions:** grant with regex,
 e.g. `allowedTools: ["mcp__neo4j__*"]`.
 
-**Gotchas:** server discovery is at startup — new servers need a restart. Large
+**Gotchas:** server discovery is at startup, new servers need a restart. Large
 tool defs → use tool search. Crashes aren't auto-retried; the agent sees the
 failure. `acceptEdits` does not auto-approve MCP tools.
 
@@ -165,7 +165,7 @@ For long multi-hop investigations:
   (machine-written, `~/.claude/projects/<project>/memory/MEMORY.md`, first ~200
   lines loaded at startup). Subagents can keep separate auto-memory.
 - **Session storage:** `SessionStore` adapter persists transcripts to S3 / Redis /
-  Postgres / custom — required for multi-host resume. Reference impls exist.
+  Postgres / custom, required for multi-host resume. Reference impls exist.
 
 **Pattern for long work:** compaction (summarize) + memory (persist critical
 facts so they survive compaction) + session storage (durable resume) + subagents
@@ -173,7 +173,7 @@ facts so they survive compaction) + session storage (durable resume) + subagents
 `PreCompact` hook if an audit trail is required.
 
 **Gotchas:** compaction is beta. After compaction only root CLAUDE.md
-re-injects. SessionStore mirrors transcripts only — generated reports need
+re-injects. SessionStore mirrors transcripts only, generated reports need
 separate storage.
 
 Docs: [compaction](https://platform.claude.com/docs/en/build-with-claude/compaction)
@@ -195,7 +195,7 @@ subprocess per session. Baseline ~1 GiB RAM / 5 GiB disk / 1 CPU per session.
 `CLAUDE_CODE_USE_BEDROCK=1`; `CLAUDE_CODE_USE_VERTEX=1`;
 `CLAUDE_CODE_USE_FOUNDRY=1` (each + that cloud's creds).
 
-**On-prem / air-gapped — the fork that matters for Ariadne:**
+**On-prem / air-gapped, the fork that matters for Ariadne:**
 1. **Managed Agents self-hosted sandboxes (beta):** orchestration stays
    Anthropic-side; tool execution moves to your infra via a sandbox-client REST
    API. Data stays in-network.
@@ -203,7 +203,7 @@ subprocess per session. Baseline ~1 GiB RAM / 5 GiB disk / 1 CPU per session.
    calls through a proxy that enforces domain allowlists, injects credentials,
    and logs for audit.
 3. **Open-weight proxy (e.g. gateway vendors):** route Claude-style calls to
-   non-Anthropic models — but expect **feature gaps** (hooks/tools/thinking
+   non-Anthropic models, but expect **feature gaps** (hooks/tools/thinking
    parity not guaranteed); test thoroughly.
 
 **Feature availability by environment:** skills/MCP/hooks all work on first-party,
