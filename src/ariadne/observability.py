@@ -20,6 +20,7 @@ from opentelemetry import metrics, trace
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from ariadne.profiles import Profile
     from ariadne.provenance.citations import CitationReport
     from ariadne.provenance.governance import GovernanceReport
     from ariadne.provenance.ledger import ProvenanceLedger
@@ -75,6 +76,7 @@ def record_workup_metrics(
     tradecraft: TradecraftReport | None = None,
     led: ProvenanceLedger,
     governance: GovernanceReport | None = None,
+    profile: Profile | None = None,
 ) -> None:
     """Emit metrics + enrich the current span from the already-computed artifacts."""
     attrs = {"ariadne.dataset": dataset}
@@ -97,6 +99,9 @@ def record_workup_metrics(
         _gov_violations.add(n_violations, attrs)
         span.set_attribute("ariadne.governance.read_only_ok", governance.ok)
         span.set_attribute("ariadne.governance.write_attempts", n_violations)
+    if profile is not None:
+        span.set_attribute("ariadne.profile", profile.name)
+        span.set_attribute("ariadne.profile.egress", profile.egress)
 
 
 def setup_telemetry() -> bool:

@@ -247,12 +247,23 @@ async def run_workup(
     with_semantic: bool = False,
     with_entail: bool = False,
     dataset: str = "synthetic",
+    profile: str = "default",
 ) -> int:
     from ariadne.datasets.base import get_adapter
+    from ariadne.profiles import load_profiles, resolve_profile
 
     get_adapter(dataset)  # raises KeyError on unknown; synthetic uses the seeded graph
+    prof = resolve_profile(profile, load_profiles(env))
     ledger = ProvenanceLedger()
-    options = build_options(ledger=ledger, env=env, with_sql=with_sql, with_semantic=with_semantic)
+    options = build_options(
+        ledger=ledger,
+        env=env,
+        with_sql=with_sql,
+        with_semantic=with_semantic,
+        model=prof.model,
+        max_turns=prof.envelope.max_turns,
+        max_thinking_tokens=prof.envelope.max_thinking_tokens,
+    )
     verifier = None
     if with_entail:
         from ariadne.provenance.entailment import HHEMVerifier
@@ -286,6 +297,7 @@ async def run_workup(
             tradecraft=tradecraft,
             led=ledger,
             governance=governance,
+            profile=prof,
         )
         out_dir = Path(out_root) / _slug(entity)
         write_outputs(
@@ -296,6 +308,7 @@ async def run_workup(
             report=report,
             tradecraft=tradecraft,
             governance=governance,
+            profile=prof,
         )
 
     print(f"Wrote {out_dir}/note.md ({len(ledger.entries)} graph calls cited) in {elapsed:.1f}s.")
