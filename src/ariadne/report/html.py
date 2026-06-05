@@ -319,6 +319,7 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 #graph,#netgraph{width:100%;height:auto;display:block}
 .nlabel{font-family:var(--sans);font-size:10px;fill:var(--ink)}
 .elabel{font-family:var(--mono);font-size:8.5px;fill:var(--muted);letter-spacing:.04em}
+.elabel-bg{fill:var(--panel);opacity:.86}
 .legend{display:flex;gap:16px;flex-wrap:wrap;padding:0 22px 16px;font-size:11px;color:var(--soft)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .node{cursor:pointer}
@@ -577,11 +578,22 @@ function renderNet(W,H){
   const NS2="http://www.w3.org/2000/svg";
   const mk=(t,a)=>{const e=document.createElementNS(NS2,t);for(const kk in a)e.setAttribute(kk,a[kk]);return e;};
   const adj={}; nodes.forEach(d=>adj[d.id]=new Set([d.id]));
+  const elabels=[];
   links.forEach(l=>{adj[l.src].add(l.dst);adj[l.dst].add(l.src);
     const a=nodes[ix[l.src]],b=nodes[ix[l.dst]];
     gsvg.appendChild(mk("path",{class:"edge",d:`M${a.x},${a.y} L${b.x},${b.y}`,"data-pair":l.src+"|"+l.dst}));
-    const t=mk("text",{class:"elabel",x:(a.x+b.x)/2,y:(a.y+b.y)/2-3,"text-anchor":"middle"});
-    t.textContent=l.type; gsvg.appendChild(t);});
+    elabels.push({x:(a.x+b.x)/2,y:(a.y+b.y)/2,t:l.type,w:l.type.length*5.2+8});});
+  // nudge overlapping edge labels apart (mostly vertical) so crossing edges stay legible
+  for(let it=0;it<90;it++){let moved=false;
+    for(let i=0;i<elabels.length;i++)for(let j=i+1;j<elabels.length;j++){
+      const A=elabels[i],B=elabels[j],ox=(A.w+B.w)/2-Math.abs(A.x-B.x),oy=14-Math.abs(A.y-B.y);
+      if(ox>0&&oy>0){const dir=A.y===B.y?(i%2?1:-1):(A.y<B.y?-1:1),p=(oy/2+0.6)*dir;
+        A.y+=p;B.y-=p;moved=true;}}
+    if(!moved)break;}
+  elabels.forEach(L=>{const g=mk("g",{class:"elabelg"});
+    g.appendChild(mk("rect",{x:L.x-L.w/2,y:L.y-7.5,width:L.w,height:14,rx:3,class:"elabel-bg"}));
+    const t=mk("text",{class:"elabel",x:L.x,y:L.y,dy:"0.32em","text-anchor":"middle"});
+    t.textContent=L.t; g.appendChild(t); gsvg.appendChild(g);});
   nodes.forEach(d=>{const g=mk("g",{class:"node","data-node":d.id,transform:`translate(${d.x},${d.y})`});
     const r=d.target?15:10;
     if(d.target) g.appendChild(mk("circle",{r:r+5,fill:"none",stroke:"#e0a73c",
