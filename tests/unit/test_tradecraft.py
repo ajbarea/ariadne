@@ -77,6 +77,16 @@ def test_is_analytic_judgment_detects_reveals_and_understates() -> None:
     assert is_analytic_judgment("the graph-only view understates her access")
 
 
+def test_is_analytic_judgment_detects_illative_connectives() -> None:
+    # Canonical conclusion indicators (therefore/thus/hence/...) and the self-label
+    # "inferred" mark a deduction, not a sourced fact — both seen trailing cited
+    # evidence in a live Halberd workup.
+    from ariadne.provenance.tradecraft import is_analytic_judgment
+
+    assert is_analytic_judgment("Halberd's command linkage is therefore mediated by the unit node")
+    assert is_analytic_judgment("this is an inferred physical adjacency, not an asserted one")
+
+
 def test_is_analytic_caveat_detects_insufficiency() -> None:
     from ariadne.provenance.tradecraft import is_analytic_caveat
 

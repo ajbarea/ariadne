@@ -65,10 +65,20 @@ _CONFIDENCE_RE = re.compile(r"\b(?:low|moderate|high)\s+confidence\b", re.IGNORE
 
 # Inference/reasoning connectives that mark an analytic JUDGMENT (vs a sourced
 # fact). Heuristic; pairs with is_estimative (WEP/hedge/confidence).
+#
+# research(2026-06): illative (conclusion-indicating) connectives — therefore,
+# thus, hence, consequently, accordingly, it follows that, entails — plus the
+# self-labels inferred/inference. These are the standard logic "conclusion
+# indicators"; REASON indicators (because, since, so) are deliberately excluded
+# because they introduce premises that may be sourced facts, which would risk
+# exempting a genuine uncited fact (only trailing sentences in an already-cited
+# segment are exempt, so the conclusion-side markers are the safe set). Source:
+# argument-mapping conclusion/premise indicator lists, cross-checked 2026-06.
 _INFERENCE_MARKERS = (
     "suggests",
     "indicates",
     "implies",
+    "entails",
     "consistent with",
     "in other words",
     "points to",
@@ -81,6 +91,14 @@ _INFERENCE_MARKERS = (
     "signature of",
     "rather than",
     "would ",
+    "therefore",
+    "thus",
+    "hence",
+    "consequently",
+    "accordingly",
+    "it follows that",
+    "inferred",
+    "inference",
 )
 _INFERENCE_RE = re.compile("|".join(re.escape(m) for m in _INFERENCE_MARKERS), re.IGNORECASE)
 

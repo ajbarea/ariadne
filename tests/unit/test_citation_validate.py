@@ -147,6 +147,30 @@ def test_trailing_judgment_in_a_cited_segment_is_not_flagged() -> None:
     assert find_uncited_claims(note) == []
 
 
+def test_trailing_therefore_judgment_in_a_cited_segment_is_not_flagged() -> None:
+    # Live Halberd workup false positive: a "therefore" deduction trailing the
+    # cited fact it rests on, within the same bullet, must not fail recall.
+    note = (
+        "## Organizational position\n"
+        "- No REPORTS_TO edge originates from Halberd at the Person level "
+        "[cite:g5][cite:g6]. Halberd's command linkage is therefore mediated "
+        "entirely by the Signals-Cell unit node.\n"
+    )
+    assert find_uncited_claims(note) == []
+
+
+def test_trailing_inferred_judgment_in_a_cited_segment_is_not_flagged() -> None:
+    # Live Halberd workup false positive: a self-labeled "inferred" judgment
+    # trailing its cited basis in the same bullet.
+    note = (
+        "## Relationships\n"
+        "- Compound-Alpha is co-located with both cells [cite:g11]. Because the "
+        "CO_LOCATED edges are unit-to-site, this is an inferred physical "
+        "adjacency, not an asserted one.\n"
+    )
+    assert find_uncited_claims(note) == []
+
+
 def test_standalone_judgment_without_any_citation_is_still_flagged() -> None:
     # A judgment in a segment with NO citation has no evidence to depend on.
     note = "## Summary\n- An analyst would miss that Rangel is the single conduit.\n"
