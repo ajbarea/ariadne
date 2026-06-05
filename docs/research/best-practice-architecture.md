@@ -200,21 +200,35 @@ designs survives; the absolute hallucination numbers do not.
 
 ## Open questions (unsupported by verified claims, treat as low-confidence)
 
+> **Status (updated as later passes close these).** This list is the foundation
+> pass's residue as of 2026-06-01; the findings above are not edited, but each
+> question is annotated with its resolution so the trail stays legible.
+
 1. **Air-gapped fork**: which open-weight models, self-hosted MCP servers, and
    local graph/vector stores substitute for frontier Claude + managed cloud MCP,
    and what capability is lost?
+   — **Resolved (2026-06-04)** by [open-weight-validation.md](open-weight-validation.md):
+   the fork is a single seam at the orchestrator model ([ADR-0012](../architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)),
+   narrowing this to "which open-weight model clears the eval bar," now measured.
 2. **Analytic rigor mechanisms**: best-practice provenance/citation tracking,
    grounding, confidence/uncertainty quantification, and applying **structured
    analytic techniques** (intelligence tradecraft) to agent outputs; how success
    is measured (traversal, cross-modal reconciliation, pivot-burden reduction,
    non-obvious connections).
+   — **Resolved (2026-06-02)** by [analytic-rigor-eval.md](analytic-rigor-eval.md):
+   NLI citation entailment, ICD-203/206 tradecraft linting, planted-needle + LLM-rubric eval.
 3. **Entity resolution / record linkage**: reconciling one entity across graph,
    relational, and unstructured stores, and how the agent decides which store to
    query and resolves conflicts.
+   — **Open.** Not yet addressed by a dedicated pass.
 4. **Validated MVP & phased order**: the building blocks are established, but no
    empirically tested minimal end-to-end configuration was verified.
+   — **Partly addressed.** Phases 1–2 shipped and the open-weight run exercised
+   the end-to-end slice (`ariadne workup … --sql`); the full phased order is not
+   yet proven.
 
-These are the highest-value targets for the next research pass.
+Items 3 and the remainder of 4 are the highest-value targets for the next
+research pass.
 
 ## Key sources
 
