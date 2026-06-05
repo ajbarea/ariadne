@@ -44,6 +44,7 @@ ADR is where the *comparison* lives.
 | [0015](0015-subagent-fan-out-design.md) | Subagent fan-out — design specified, implementation gated | Accepted |
 | [0016](0016-entity-resolution-across-stores.md) | Entity resolution across stores — tiered, ingestion-first | Accepted |
 | [0017](0017-interactive-workup-report.md) | Results presentation — self-contained interactive workup report | Proposed |
+| [0018](0018-multimodal-connector-slate.md) | Multimodal connector slate — text/audio/relational shipped, video deferred | Accepted |
 
 ## Template
 

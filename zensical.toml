@@ -47,6 +47,7 @@ nav = [
           { "0015 · Subagent fan-out design" = "architecture/decisions/0015-subagent-fan-out-design.md" },
           { "0016 · Entity resolution across stores" = "architecture/decisions/0016-entity-resolution-across-stores.md" },
           { "0017 · Interactive workup report" = "architecture/decisions/0017-interactive-workup-report.md" },
+          { "0018 · Multimodal connector slate" = "architecture/decisions/0018-multimodal-connector-slate.md" },
       ]},
   ]},
   { "Project" = [

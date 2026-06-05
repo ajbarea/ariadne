@@ -16,12 +16,12 @@ then the Cytoscape entity graph, then trajectory + reconciliation panels.
 Awaiting AJ's nod on artifact type (self-contained HTML vs web-app vs notebook —
 ADR-0017 recommends self-contained HTML for the air-gap/lean ethos).
 
-**Dataset connectors — verified 2026-06-05.** Hermetic 33/33; live integration
-11 passed / 3 skipped (dep-gated: sentence_transformers/transformers/anthropic
-extras) / 1 fail (`test_workup_e2e` citation gate — non-deterministic recall on
-live LLM output, 2 uncited claims; orthogonal to connectors, not in CI's
-`-m "not integration"` set). Real `corbt/enron-emails` HF stream reached. Set
-`HF_TOKEN` in `.env` to lift the anonymous resolver rate limit (3k→5k per 5 min).
+**Multimodal connector slate — shipped 2026-06-05** ([ADR-0018](./docs/architecture/decisions/0018-multimodal-connector-slate.md)):
+`enron` (text) · `worldspeech` (audio) · `lahman` (relational), all on the
+canonical seam. **Video deferred**, criteria-gated (entity-rich + HF-loadable +
+ships text + acceptable license) — HF video download charts are robotics/training
+dominated; per ADR-0008 WorldSpeech already proves the sensory→text thesis.
+HF caching: defaults are best-practice; `HF_HOME`/`HF_TOKEN` optional in `.env`.
 
 Open candidates after this:
 

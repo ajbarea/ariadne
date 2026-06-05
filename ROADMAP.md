@@ -183,6 +183,17 @@ items must not be hardened against one answer.
       and body→Document deterministically; registered in `DATASETS`; `kaminski-aol`
       eval needle scores the non-obvious cross-account tie. Proves the canonical
       seam generalizes to a second, real corpus.
+- [x] **Multimodal connector slate** (2026-06-05, [ADR-0018](./docs/architecture/decisions/0018-multimodal-connector-slate.md)):
+      added `worldspeech` (`disco-eth/WorldSpeech` — **audio**: transcript→Document
+      per ADR-0008, source→org Entity; HF stream, audio col cast decode=False) and
+      `lahman` (`NeuML/baseballdata` — **relational**: People→player, stat rows→team
+      + `PLAYED_FOR(year)` edges; cache-aware CSV download). Slate now spans
+      documents / speech / relational. **Video deferred** (criteria-gated): the
+      most-downloaded HF video sets are robotics / gesture / training / benchmark —
+      none entity-rich; per ADR-0008 WorldSpeech already proves the sensory→text
+      thesis. `# research(2026-06): HF video download charts are robotics/training
+      dominated; entity-rich video (news/hearings) needs full-text search, not the
+      charts.`
 - [x] **Phase B3.1 — Semantic leg, data layer** (2026-06-03): injectable
       `Embedder` protocol (`FakeEmbedder` hermetic + `SentenceTransformerEmbedder`
       default `bge-small-en-v1.5`), pgvector `embedding vector(N)` column + HNSW
