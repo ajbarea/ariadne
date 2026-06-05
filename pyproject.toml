@@ -84,7 +84,7 @@ dev = [
     "ruff>=0.15",
     "ty>=0.0.39,<0.1",
     "zensical>=0.0.24",
-    "testcontainers[neo4j,postgres]>=4.9",
+    "testcontainers[neo4j,postgres]>=4.14.2",
     "psycopg[binary]>=3.3.4",
     # research(2026-06): SDK + OTLP exporter in dev so `ty` resolves the
     # setup_telemetry() imports without the `otel` extra (else CI `make lint`
