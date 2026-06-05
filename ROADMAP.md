@@ -501,6 +501,50 @@ items must not be hardened against one answer.
   > branch where we serve models ourselves (not the cloud frontier-model path).
   > Consider when sizing on-prem inference. Same caveat: unreleased research.
 
+### Phase 6 — Adaptive & self-improving harness
+
+> **Epic.** Move Ariadne from *code-extensible* (a maintainer hand-writes a
+> `DatasetAdapter`) to *runtime-adaptive* (a user points it at their own store) and
+> *experience-improving* (it gets better at that store across workups) — **without**
+> eroding the auditable / read-only / no-silent-merge / provenance-by-hook spine.
+> Decision + full design: [ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)
+> · [design spec](./docs/superpowers/specs/2026-06-05-adaptive-self-improving-ariadne-design.md).
+> Everything rides one lifecycle — **propose → ratify → freeze**: the agent proposes
+> a declarative artifact, a human ratifies it, it freezes as config the deterministic
+> gates keep checking. **Hard boundary:** the self-improvement loop edits only those
+> ratified artifacts — never its own gates, eval scorers, governance, or code (an
+> agent that can edit its grader will game it). `# research(2026-06): Anthropic RSI
+> (human keeps judgment/verification); audited skill-graph self-improvement w/
+> verifiable rewards (arXiv 2512.23760); Voyager/ProcMEM skill+procedural memory.`
+
+*Axis A — adaptivity:*
+- [ ] **A1 · Schema introspection** — a read-only generic connector introspects an
+      arbitrary store; the agent does iterative schema-linking (retrieve only the
+      relevant tables/columns, self-correcting query loop). `# research(2026-06):
+      AutoLink agentic schema linking (arXiv 2511.17190).`
+- [ ] **A2 · Ontology / semantic layer** — a declarative TOML of the user's entity
+      types + relationship vocabulary + an LLM-assisted mapping into it, using
+      intrinsic-vs-relational routing (attribute vs edge). SHACL-validatable later.
+      `# research(2026-06): OntoKG (arXiv 2604.02618) + Anchor (arXiv 2606.01208).`
+- [ ] **A3 · Dynamic MCP surface** — per-source tool families register at runtime as
+      datasets connect (`notifications/tools/list_changed`). `# research(2026-06):
+      dynamic-fastmcp / Spring AI / Docker Dynamic MCP.`
+
+*Axis B — self-improvement (bounded, audited):*
+- [ ] **B1 · Learned mappings (procedural memory)** — a ratified mapping is persisted
+      and reused on the next workup over that store (seeded by A1+A2).
+- [ ] **B2 · Learned analytic skills** — distil high-scoring workup trajectories into
+      named, reusable, composable skills. `# research(2026-06): Voyager / ProcMEM.`
+- [ ] **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
+      dimensions (the harness is the verifiable reward; now surfaced in the report)
+      and proposes a refined skill/mapping/query.
+
+> **First slice (next increment):** A1 + A2-into-the-existing-canonical-schema + the
+> B1 seed, on **Postgres** — introspect a real Postgres, agent proposes a mapping
+> into `person/org/site/document` + edges, human ratifies, freeze as `mapping.toml`,
+> existing indexer/workup/eval run unchanged on the user's data. Full ontology (A2),
+> dynamic MCP (A3), learned skills (B2), reflexion (B3) are later phases.
+
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
 - [ ] Tooling that raises analysts' domain knowledge / analytic capacity.

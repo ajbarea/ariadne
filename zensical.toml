@@ -49,6 +49,7 @@ nav = [
           { "0017 · Interactive workup report" = "architecture/decisions/0017-interactive-workup-report.md" },
           { "0018 · Multimodal connector slate" = "architecture/decisions/0018-multimodal-connector-slate.md" },
           { "0019 · Retrieval-side evaluation" = "architecture/decisions/0019-retrieval-side-evaluation-for-sensemaking.md" },
+          { "0020 · Adaptive & self-improving" = "architecture/decisions/0020-adaptive-self-improving-ariadne.md" },
       ]},
   ]},
   { "Project" = [
