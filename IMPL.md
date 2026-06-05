@@ -8,8 +8,22 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-_Nothing in flight._ Pick the next item from
-[ROADMAP](./ROADMAP.md) — open candidates worth grabbing first:
+**Interactive workup report** ([ADR-0017](./docs/architecture/decisions/0017-interactive-workup-report.md),
+*proposed*) — make results explorable, not a flat note. Next concrete step: a
+`report/html.py` emitting a self-contained `report.html` (start with the cited
+note + clickable-provenance chips, pure text+JSON, hermetic golden-file test),
+then the Cytoscape entity graph, then trajectory + reconciliation panels.
+Awaiting AJ's nod on artifact type (self-contained HTML vs web-app vs notebook —
+ADR-0017 recommends self-contained HTML for the air-gap/lean ethos).
+
+**Dataset connectors — verified 2026-06-05.** Hermetic 33/33; live integration
+11 passed / 3 skipped (dep-gated: sentence_transformers/transformers/anthropic
+extras) / 1 fail (`test_workup_e2e` citation gate — non-deterministic recall on
+live LLM output, 2 uncited claims; orthogonal to connectors, not in CI's
+`-m "not integration"` set). Real `corbt/enron-emails` HF stream reached. Set
+`HF_TOKEN` in `.env` to lift the anonymous resolver rate limit (3k→5k per 5 min).
+
+Open candidates after this:
 
 - **Entity-resolution implementation** — strategy now specified
   ([ADR-0016](./docs/architecture/decisions/0016-entity-resolution-across-stores.md));

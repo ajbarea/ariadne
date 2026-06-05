@@ -46,6 +46,7 @@ nav = [
           { "0014 · pgvector for the semantic leg" = "architecture/decisions/0014-pgvector-for-the-semantic-leg.md" },
           { "0015 · Subagent fan-out design" = "architecture/decisions/0015-subagent-fan-out-design.md" },
           { "0016 · Entity resolution across stores" = "architecture/decisions/0016-entity-resolution-across-stores.md" },
+          { "0017 · Interactive workup report" = "architecture/decisions/0017-interactive-workup-report.md" },
       ]},
   ]},
   { "Project" = [

@@ -330,6 +330,18 @@ items must not be hardened against one answer.
       `alternatives` 4→5, overall **4.50→4.75**, `grounded=True` preserved.
       `# research(2026-06): SATs for LLM analytic writing — ACH / key-assumptions.`
 - [ ] Provenance/citation surface in the analytic product; confidence handling.
+- [ ] **Interactive workup report** ([ADR-0017](./docs/architecture/decisions/0017-interactive-workup-report.md),
+      *proposed*). A flat `note.md` buries Ariadne's whole value — the `[cite:gN]`
+      are dead text, the traversed entity graph is invisible, reconciliation is
+      prose. Emit a **self-contained, offline, zero-dependency `report.html`**
+      alongside the note: cited note with **clickable provenance** (chip → the
+      Cypher/SQL that grounds it) · interactive **entity graph** (traversed
+      subgraph, Cytoscape.js vendored offline) · **provenance trajectory**
+      (`g1…gN`) · **reconciliation panel** (corroboration/conflict badges). Reuses
+      the artifacts already produced; hermetically testable (golden-file HTML).
+      Build order: clickable-provenance note → graph → trajectory/reconciliation.
+      `# research(2026-06): analyst link-analysis sensemaking (Maltego/Palantir/i2)
+      + GraphRAG result viz (XGraphRAG); air-gap → self-contained single file.`
 - [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
       runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
       (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the
