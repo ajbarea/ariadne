@@ -45,6 +45,7 @@ ADR is where the *comparison* lives.
 | [0016](0016-entity-resolution-across-stores.md) | Entity resolution across stores — tiered, ingestion-first | Accepted |
 | [0017](0017-interactive-workup-report.md) | Results presentation — self-contained interactive workup report | Accepted |
 | [0018](0018-multimodal-connector-slate.md) | Multimodal connector slate — text/audio/relational shipped, video deferred | Accepted |
+| [0019](0019-retrieval-side-evaluation-for-sensemaking.md) | Retrieval-side evaluation — context utilization, not precision@k | Accepted |
 
 ## Template
 

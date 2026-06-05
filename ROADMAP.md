@@ -135,10 +135,21 @@ items must not be hardened against one answer.
    precision/recall, groundedness/faithfulness, answer relevance,
    citation/source-attribution). Two **candidate deltas** worth a future
    increment, neither a hole in the current posture:
-   - **Retrieval-side metrics (context precision/recall).** Ariadne scores
-     answer-side grounding (recall / entailment / supporting-fact F1) but not
-     *retriever* quality — what proportion of retrieved evidence actually
-     contributed vs. was noise. A bounded add to the eval harness.
+   - **Retrieval-side metrics — design decided ([ADR-0019](./docs/architecture/decisions/0019-retrieval-side-evaluation-for-sensemaking.md)).**
+     A June-2026 research pass reframed this for the agentic/iterative domain
+     instead of porting RAG-QA metrics verbatim: **precision@k does not apply**
+     (Ariadne retrieves by a sequence of tool calls, not a ranked single-pass
+     lookup — the 2026 SoK on Agentic RAG says iterative retrieval "requires
+     fundamentally different measurement approaches"); **retrieval-recall is
+     already covered** by gold-fixture needle `recall` + supporting-fact F1 (the
+     SoK's "cumulative relevance"). The genuine, ungated, deterministic add is a
+     **context-utilization** descriptive stat (`|distinct cited gN| / |distinct
+     retrieved gN|`) — reported, never gated, with the explicit caveat that
+     exploratory and negative-confirmation retrieval legitimately lower it.
+     Retrieval-drift + LLM-judge passage-utility are deferred. Implementation
+     (one stat + a dashboard card) is the next eval-harness increment.
+     `# research(2026-06): SoK Agentic RAG (arXiv 2603.07379) — trajectory-aware
+     retrieval eval: context utilization / cumulative relevance / retrieval drift.`
    - **Multi-judge averaging (FACTS-style).** DeepMind FACTS Grounding averages
      three independent judges to cut single-judge bias; Ariadne uses one. The
      cross-vendor form (Gemini/GPT-4o/Claude) tensions with the air-gapped
