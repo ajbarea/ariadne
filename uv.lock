@@ -247,7 +247,7 @@ dev = [
     { name = "hypothesis", specifier = ">=6.140" },
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.30" },
     { name = "opentelemetry-sdk", specifier = ">=1.30" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.4" },
     { name = "pytest", specifier = ">=9.0" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov", specifier = ">=6.0" },
