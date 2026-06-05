@@ -1,6 +1,6 @@
 # 0017, Results presentation — a self-contained interactive workup report
 
-- **Status:** Proposed (2026-06-05) — direction for review; implementation is a ROADMAP item
+- **Status:** Accepted (2026-06-05) — v1 shipped: `ariadne report <dir>` -> self-contained `report.html` (cited note + clickable-provenance evidence drawer + radial provenance-thread graph + trajectory + run dashboard). The accurate entity-subgraph view (reconstructed from a structured workup emission) remains a follow-on.
 - **Deciders:** Ariadne maintainers
 
 ## Context

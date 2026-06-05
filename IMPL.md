@@ -8,13 +8,13 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Interactive workup report** ([ADR-0017](./docs/architecture/decisions/0017-interactive-workup-report.md),
-*proposed*) — make results explorable, not a flat note. Next concrete step: a
-`report/html.py` emitting a self-contained `report.html` (start with the cited
-note + clickable-provenance chips, pure text+JSON, hermetic golden-file test),
-then the Cytoscape entity graph, then trajectory + reconciliation panels.
-Awaiting AJ's nod on artifact type (self-contained HTML vs web-app vs notebook —
-ADR-0017 recommends self-contained HTML for the air-gap/lean ethos).
+_Nothing in flight._ Recently shipped: the **interactive workup report v1**
+([ADR-0017](./docs/architecture/decisions/0017-interactive-workup-report.md)) —
+`ariadne report <dir>` → self-contained `report.html` (dashboard + clickable-
+provenance note + evidence drawer + radial provenance graph + trajectory),
+verified headlessly. Follow-ons: accurate entity-subgraph view from a structured
+workup emission; reconciliation panel; consider rendering the report at the end
+of `ariadne workup` automatically.
 
 **Multimodal connector slate — shipped 2026-06-05** ([ADR-0018](./docs/architecture/decisions/0018-multimodal-connector-slate.md)):
 `enron` (text) · `worldspeech` (audio) · `lahman` (relational), all on the

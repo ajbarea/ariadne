@@ -168,7 +168,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "governance", help="Re-audit a persisted workup for read-only contract violations"
     )
     gov.add_argument("workup_dir", help="Workup output dir (reads provenance.jsonl)")
+    rp = sub.add_parser(
+        "report", help="Render a self-contained interactive report.html for a workup dir"
+    )
+    rp.add_argument("workup_dir", help="Workup output dir (reads note.md + the JSON artifacts)")
     return parser.parse_args(argv)
+
+
+def _run_report(workup_dir: str) -> int:
+    """Render the offline interactive report.html from a persisted workup."""
+    from ariadne.report.html import write_report
+
+    out = write_report(workup_dir)
+    print(f"Wrote {out}")
+    return 0
 
 
 def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
@@ -555,6 +568,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_profiles(dict(os.environ))
     if args.command == "governance":
         return _run_governance(args.workup_dir)
+    if args.command == "report":
+        return _run_report(args.workup_dir)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

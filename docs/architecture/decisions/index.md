@@ -43,7 +43,7 @@ ADR is where the *comparison* lives.
 | [0014](0014-pgvector-for-the-semantic-leg.md) | pgvector for the semantic-leg vector store | Accepted |
 | [0015](0015-subagent-fan-out-design.md) | Subagent fan-out — design specified, implementation gated | Accepted |
 | [0016](0016-entity-resolution-across-stores.md) | Entity resolution across stores — tiered, ingestion-first | Accepted |
-| [0017](0017-interactive-workup-report.md) | Results presentation — self-contained interactive workup report | Proposed |
+| [0017](0017-interactive-workup-report.md) | Results presentation — self-contained interactive workup report | Accepted |
 | [0018](0018-multimodal-connector-slate.md) | Multimodal connector slate — text/audio/relational shipped, video deferred | Accepted |
 
 ## Template
