@@ -16,6 +16,12 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
+    ignore:
+      # HHEM-2.1-Open's trust_remote_code model targets the transformers 4.x API;
+      # v5 breaks it (all_tied_weights_keys / tie_weights change, transformers#43646).
+      # The `eval` extra pins transformers<5; lift when Vectara ships a v5 HHEM.
+      - dependency-name: "transformers"
+        update-types: ["version-update:semver-major"]
     groups:
       uv:
         patterns: ["*"]
