@@ -15,13 +15,27 @@ def _otel_providers():
     tp = TracerProvider()
     tp.add_span_processor(SimpleSpanProcessor(exporter))
     trace.set_tracer_provider(tp)
-    metrics.set_meter_provider(MeterProvider(metric_readers=[InMemoryMetricReader()]))
+    reader = InMemoryMetricReader()
+    metrics.set_meter_provider(MeterProvider(metric_readers=[reader]))
     pytest._otel_exporter = exporter  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_reader = reader  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
     yield
 
 
 def _spans():
     return pytest._otel_exporter.get_finished_spans()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+
+
+def _metric_points(name: str):
+    """Data points for the named metric across the in-memory reader's collection."""
+    data = pytest._otel_reader.get_metrics_data()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    points = []
+    for rm in data.resource_metrics:
+        for sm in rm.scope_metrics:
+            for metric in sm.metrics:
+                if metric.name == name:
+                    points.extend(metric.data.data_points)
+    return points
 
 
 def test_workup_span_emits_invoke_agent_with_attributes() -> None:
@@ -117,6 +131,78 @@ def test_record_workup_metrics_records_profile() -> None:
     s = next(s for s in _spans() if s.name == "invoke_agent")
     assert s.attributes["ariadne.profile"] == "fast-local"
     assert s.attributes["ariadne.profile.egress"] == "none"
+
+
+def _needle_report(*, with_sf: bool = False):
+    from ariadne.evaluation.needle import EvalReport
+
+    return EvalReport(
+        entity="Halberd",
+        recall=1.0,
+        trajectory=0.5,
+        grounded=False,
+        pivot_burden=2.0,
+        queries_run=4,
+        supporting_fact_f1=0.75 if with_sf else None,
+        supporting_fact_precision=0.6 if with_sf else None,
+        supporting_fact_recall=1.0 if with_sf else None,
+    )
+
+
+def test_eval_span_carries_fixture_and_entity() -> None:
+    from ariadne.observability import eval_span
+
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    with eval_span("Halberd", "halberd"):
+        pass
+    s = next(s for s in _spans() if s.name == "evaluate")
+    assert s.attributes["ariadne.fixture"] == "halberd"
+    assert s.attributes["ariadne.entity"] == "Halberd"
+
+
+def test_record_eval_metrics_emits_evaluation_result_events() -> None:
+    from ariadne.observability import eval_span, record_eval_metrics
+
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    with eval_span("Halberd", "halberd"):
+        record_eval_metrics(_needle_report(), fixture="halberd")
+    s = next(s for s in _spans() if s.name == "evaluate")
+    events = {
+        e.attributes["gen_ai.evaluation.name"]: e
+        for e in s.events
+        if e.name == "gen_ai.evaluation.result"
+    }
+    # grounded + recall + trajectory + pivot_burden (no supporting_fact_f1 here)
+    assert set(events) == {"grounded", "recall", "trajectory", "pivot_burden"}
+    assert events["recall"].attributes["gen_ai.evaluation.score.value"] == 1.0
+    assert events["grounded"].attributes["gen_ai.evaluation.score.value"] == 0.0
+    assert events["grounded"].attributes["gen_ai.evaluation.score.label"] == "ungrounded"
+
+
+def test_record_eval_metrics_includes_supporting_fact_f1_when_present() -> None:
+    from ariadne.observability import eval_span, record_eval_metrics
+
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    with eval_span("Halberd", "halberd"):
+        record_eval_metrics(_needle_report(with_sf=True), fixture="halberd")
+    s = next(s for s in _spans() if s.name == "evaluate")
+    names = {
+        e.attributes["gen_ai.evaluation.name"]
+        for e in s.events
+        if e.name == "gen_ai.evaluation.result"
+    }
+    assert "supporting_fact_f1" in names
+
+
+def test_record_eval_metrics_records_score_histogram() -> None:
+    from ariadne.observability import eval_span, record_eval_metrics
+
+    with eval_span("Halberd", "halberd"):
+        record_eval_metrics(_needle_report(), fixture="halberd")
+    points = _metric_points("ariadne.eval.score")
+    recorded = {p.attributes["gen_ai.evaluation.name"] for p in points}
+    assert {"grounded", "recall", "trajectory", "pivot_burden"} <= recorded
+    assert all(p.attributes["ariadne.fixture"] == "halberd" for p in points)
 
 
 def test_setup_telemetry_is_noop_without_endpoint(monkeypatch) -> None:

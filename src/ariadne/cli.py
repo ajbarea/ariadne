@@ -31,7 +31,13 @@ from ariadne.datasets.base import DATASETS
 from ariadne.evaluation.needle import FIXTURES, score_workup_dir
 from ariadne.evaluation.reconcile import RECON_FIXTURES, score_reconciliation_dir
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
-from ariadne.observability import record_workup_metrics, setup_telemetry, workup_span
+from ariadne.observability import (
+    eval_span,
+    record_eval_metrics,
+    record_workup_metrics,
+    setup_telemetry,
+    workup_span,
+)
 from ariadne.provenance.citations import validate_citations
 from ariadne.provenance.governance import audit_read_only
 from ariadne.provenance.hook import make_provenance_hook
@@ -165,6 +171,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
     """Score an existing workup against a planted-needle fixture (no API key needed)."""
     report = score_workup_dir(workup_dir, FIXTURES[fixture_name])
+    with eval_span(report.entity, fixture_name):
+        record_eval_metrics(report, fixture=fixture_name)
     line = (
         f"Eval [{report.entity}/{fixture_name}]: grounded={report.grounded} "
         f"recall={report.recall:.2f} trajectory={report.trajectory:.2f} "

@@ -11,6 +11,16 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 _Nothing in flight._ Pick the next item from
 [ROADMAP](./ROADMAP.md) — open candidates worth grabbing first:
 
+- **Eval-telemetry follow-up** — `ariadne eval` now emits accuracy as OTel
+  (`gen_ai.evaluation.result` events + `ariadne.eval.score`); the
+  *reconciliation* score (`ariadne reconcile`) is the same pattern and is not yet
+  surfaced as telemetry — small, mechanical extension.
+- **Vector/unstructured connector re-research** — the deep-research run only
+  adversarially confirmed the SQL choice; pgvector vs Redis-8 vs a dedicated
+  store still needs its own clean pass before hardening.
+- **Subagent fan-out design pass** — deferred (ADR-0005), not blocked on
+  research; needs the provenance-redesign sketch before any code.
+
 - **Vector/unstructured connector re-research** — the deep-research run only
   adversarially confirmed the SQL choice; pgvector vs Redis-8 vs a dedicated
   store still needs its own clean pass before hardening.

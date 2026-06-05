@@ -386,7 +386,13 @@ items must not be hardened against one answer.
       - *# queries* — already the provenance-ledger `gN` count (`provenance.jsonl`);
         emit per `execute_tool` span + a counter.
       - *accuracy report* — already the eval harness (`recall` / `trajectory` /
-        `grounded` / supporting-fact F1); emit as metrics when a fixture is scored.
+        `grounded` / supporting-fact F1); **emitted when `ariadne eval` scores a
+        fixture (2026-06-05):** an `evaluate` span carrying one standard
+        `gen_ai.evaluation.result` event per dimension (`gen_ai.evaluation.name` +
+        `.score.value` + `.score.label`) plus an `ariadne.eval.score` histogram
+        for dashboards. `# research(2026-06):` OTel standardizes GenAI evaluation
+        as an *event*, not a metric instrument — hence event + Ariadne-namespaced
+        metric.
       - *compliance* — already the citation gate (`uncited` / `unsupported` /
         `dangling`) + ICD-203 tradecraft lint; emit pass/fail + counts as
         span events / metrics.

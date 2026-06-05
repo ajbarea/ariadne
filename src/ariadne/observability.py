@@ -20,6 +20,7 @@ from opentelemetry import metrics, trace
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from ariadne.evaluation.needle import EvalReport
     from ariadne.profiles import Profile
     from ariadne.provenance.citations import CitationReport
     from ariadne.provenance.governance import GovernanceReport
@@ -42,6 +43,11 @@ _failures = _meter.create_counter(
 )
 _gov_violations = _meter.create_counter(
     "ariadne.governance.violations", description="Read-only governance violations per workup."
+)
+_eval_score = _meter.create_histogram(
+    "ariadne.eval.score",
+    unit="1",
+    description="Eval accuracy/efficiency score per dimension (dimension in gen_ai.evaluation.name).",
 )
 
 
@@ -102,6 +108,47 @@ def record_workup_metrics(
     if profile is not None:
         span.set_attribute("ariadne.profile", profile.name)
         span.set_attribute("ariadne.profile.egress", profile.egress)
+
+
+@contextmanager
+def eval_span(entity: str, fixture: str) -> Iterator[trace.Span]:
+    """A span wrapping a fixture scoring run; parents the gen_ai.evaluation.result events."""
+    with _tracer.start_as_current_span(
+        "evaluate",
+        attributes={"ariadne.fixture": fixture, "ariadne.entity": entity},
+    ) as span:
+        yield span
+
+
+def record_eval_metrics(report: EvalReport, *, fixture: str) -> None:
+    """Emit accuracy as OTel telemetry from an already-computed needle report.
+
+    # research(2026-06): OTel standardizes GenAI evaluation as a
+    # `gen_ai.evaluation.result` event (`gen_ai.evaluation.name` + `.score.value` +
+    # `.score.label`), not a metric instrument — so emit that event per dimension
+    # AND an Ariadne-namespaced `ariadne.eval.score` histogram for dashboards,
+    # mirroring this module's `gen_ai.*` attribute + `ariadne.*` metric split.
+    """
+    # (name, value, label) per dimension; a discrete label applies only to the
+    # pass/fail `grounded` gate — continuous scores carry the value alone.
+    dims: list[tuple[str, float, str | None]] = [
+        ("grounded", float(report.grounded), "grounded" if report.grounded else "ungrounded"),
+        ("recall", report.recall, None),
+        ("trajectory", report.trajectory, None),
+        ("pivot_burden", report.pivot_burden, None),
+    ]
+    if report.supporting_fact_f1 is not None:
+        dims.append(("supporting_fact_f1", report.supporting_fact_f1, None))
+    span = trace.get_current_span()
+    for name, value, label in dims:
+        _eval_score.record(value, {"gen_ai.evaluation.name": name, "ariadne.fixture": fixture})
+        attrs: dict[str, str | float] = {
+            "gen_ai.evaluation.name": name,
+            "gen_ai.evaluation.score.value": value,
+        }
+        if label is not None:
+            attrs["gen_ai.evaluation.score.label"] = label
+        span.add_event("gen_ai.evaluation.result", attributes=attrs)
 
 
 def setup_telemetry() -> bool:
