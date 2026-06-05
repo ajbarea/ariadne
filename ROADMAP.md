@@ -120,9 +120,40 @@ items must not be hardened against one answer.
    confidence handling, success metrics, structured-analytic-technique framing.
    The brief frames this as the core challenge: **specification & validation**
    (*"how do you know what works?"*) plus **governance** — uniform quality,
-   security, and data integrity. **Open** — no verified claims this pass; top
-   target for the next research pass. *(Eval-**harness** candidate — Inspect AI —
-   noted in the Phase 4 research-watch below; orthogonal to the rigor substance here.)*
+   security, and data integrity. **Direction set (2026-06).** `# research(2026-06):`
+   the 2026 consensus is a **tiered "eval pyramid"** — a *deterministic floor* on
+   every output (structural checks: citations present, banned phrases, malformed
+   tool calls; microseconds, zero API cost), an *NLI/entailment classifier* on
+   each surviving claim (decompose into atomic claims → entailed / neutral /
+   contradicted), and an *LLM-as-judge* on a sample of survivors. Ariadne already
+   implements the whole stack: the deterministic **citation gate** + **ICD-203
+   tradecraft lint** (floor), **HHEM-2.1 entailment** on each claim (the NLI
+   classifier — Vectara's hallucination-detection family), and the
+   **criterion-separated, anchored LLM-Rubric** ([ADR-0011](./docs/architecture/decisions/0011-llm-rubric-analytic-standards-eval.md))
+   with judge-bias mitigations. This matches the RAG-faithfulness decomposition
+   that Ragas / TruLens / DeepEval / Bedrock / Anthropic converged on (context
+   precision/recall, groundedness/faithfulness, answer relevance,
+   citation/source-attribution). Two **candidate deltas** worth a future
+   increment, neither a hole in the current posture:
+   - **Retrieval-side metrics (context precision/recall).** Ariadne scores
+     answer-side grounding (recall / entailment / supporting-fact F1) but not
+     *retriever* quality — what proportion of retrieved evidence actually
+     contributed vs. was noise. A bounded add to the eval harness.
+   - **Multi-judge averaging (FACTS-style).** DeepMind FACTS Grounding averages
+     three independent judges to cut single-judge bias; Ariadne uses one. The
+     cross-vendor form (Gemini/GPT-4o/Claude) tensions with the air-gapped
+     single-model branch ([ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)),
+     so the on-prem-safe variant is N sampled judgments or N local judges, not N
+     vendors. Pair with the **unfaithful-CoT / judge-gaming** research-watch
+     (agent CoT does not always reflect true reasoning — sample-level human spot
+     checks stay necessary).
+
+   Sources: [Future AGI — deterministic eval floor 2026](https://futureagi.com/blog/deterministic-llm-evaluation-metrics-2026/) ·
+   [DeepMind FACTS framework](https://galileo.ai/blog/deepmind-facts-framework-llm-factual-accuracy) ·
+   [Ragas faithfulness / RAG metrics 2026](https://futureagi.com/blog/rag-evaluation-metrics-2025/) ·
+   [Gaming the Judge — unfaithful CoT (arXiv 2601.14691)](https://arxiv.org/pdf/2601.14691).
+   *(Eval-**harness** candidate — Inspect AI — noted in the Phase 4 research-watch
+   below; orthogonal to the rigor substance here.)*
 6. **Cloud vs. air-gapped fork** — *resolved* (`# research(2026-06):`,
    [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)).
    The fork is a **single seam** — the orchestrator model, swapped at
