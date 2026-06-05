@@ -184,6 +184,7 @@ log_cli = true
 log_cli_level = "WARNING"
 markers = [
     "integration: requires real external boundaries (containers/network/live MCP servers)",
+    "network: needs network access (e.g. HF dataset streaming) but NOT Docker; exempt from the Docker-down skip",
     "slow: slow / heavyweight (multimodal inference, large graph traversals)",
 ]
 

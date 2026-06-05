@@ -26,7 +26,8 @@ from claude_agent_sdk import (
 from dotenv import find_dotenv, load_dotenv
 
 import ariadne.datasets.enron  # side-effect: registers the enron adapter
-import ariadne.datasets.synthetic  # noqa: F401  (registers the synthetic adapter)
+import ariadne.datasets.synthetic
+import ariadne.datasets.worldspeech  # noqa: F401  (registers the worldspeech adapter)
 from ariadne.datasets.base import DATASETS
 from ariadne.evaluation.needle import FIXTURES, score_workup_dir
 from ariadne.evaluation.reconcile import RECON_FIXTURES, score_reconciliation_dir

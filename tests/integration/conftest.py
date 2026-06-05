@@ -44,15 +44,16 @@ _DOCKER_AVAILABLE = _docker_reachable()
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Skip Docker-backed integration tests when no daemon is reachable. Scoped to
-    the ``integration`` marker so unit tests are untouched; the skip is reported in
-    pytest output (visible, never silent) so absent coverage is obvious in CI logs."""
+    the ``integration`` marker, minus ``network`` tests (HF streaming etc. need a
+    network, not Docker), so unit and network-only tests are untouched; the skip is
+    reported in pytest output (visible, never silent)."""
     if _DOCKER_AVAILABLE:
         return
     skip = pytest.mark.skip(
         reason="Docker daemon not reachable; start Colima/Docker to run integration tests."
     )
     for item in items:
-        if item.get_closest_marker("integration"):
+        if item.get_closest_marker("integration") and not item.get_closest_marker("network"):
             item.add_marker(skip)
 
 

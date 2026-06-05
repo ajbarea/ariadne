@@ -9,7 +9,7 @@ pytest.importorskip("datasets")  # skips unless the `data` extra is installed
 from ariadne.datasets.canonical import Document, Entity, Relationship
 from ariadne.datasets.enron import EnronAdapter
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.network]
 
 
 def test_streams_real_corpus_into_canonical_records() -> None:
