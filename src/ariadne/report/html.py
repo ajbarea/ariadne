@@ -20,11 +20,35 @@ import re
 from pathlib import Path
 from typing import Any
 
+from ariadne.evaluation.reconcile import _CONFLICT_CUES, _CORROBORATION_CUES
 from ariadne.provenance.hook import _source_label
 
 _CITE_RE = re.compile(r"\[cite:(g\d+)\]")
 _HEADER_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 _BULLET_RE = re.compile(r"^[-*]\s+(.*)$")
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _extract_reconciliation(note: str) -> dict[str, list[str]]:
+    """Classify note sentences as cross-store corroboration vs conflict.
+
+    Uses the same cue vocabularies as the reconciliation eval (``reconcile.py``)
+    so the panel reflects the scored criterion. Conflict cues win over
+    corroboration when a sentence carries both (flag disagreements).
+    """
+    corroborations: list[str] = []
+    conflicts: list[str] = []
+    text = _CITE_RE.sub("", note).replace("**", "").replace("\n", " ")
+    for raw in _SENTENCE_RE.split(text):
+        s = raw.strip().lstrip("#-* ").strip()
+        if not s:
+            continue
+        low = s.lower()
+        if any(cue in low for cue in _CONFLICT_CUES):
+            conflicts.append(s)
+        elif any(cue in low for cue in _CORROBORATION_CUES):
+            corroborations.append(s)
+    return {"corroborations": corroborations, "conflicts": conflicts}
 
 
 def _load_json(path: Path) -> Any:
@@ -118,6 +142,7 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
         "tradecraft": _load_json(d / "tradecraft.json"),
         "governance": _load_json(d / "governance.json"),
         "subgraph": _load_json(d / "subgraph.json"),
+        "reconciliation": _extract_reconciliation(note),
     }
 
 
@@ -280,6 +305,17 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .scrim{position:fixed;inset:0;background:#0008;opacity:0;pointer-events:none;transition:opacity .3s;z-index:35}
 .scrim.open{opacity:1;pointer-events:auto}
 
+/* Reconciliation */
+.recon{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 22px}
+@media(max-width:760px){.recon{grid-template-columns:1fr}}
+.recol h3{font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:700;margin:0 0 11px}
+.recol.corr h3{color:var(--ok)} .recol.conf h3{color:var(--bad)}
+.rec-item{font-family:var(--serif);font-size:14.5px;color:var(--ink);line-height:1.5;
+  padding:10px 13px;border-radius:9px;background:var(--panel2);margin-bottom:8px;border-left:3px solid var(--line)}
+.recol.corr .rec-item{border-left-color:var(--ok)} .recol.conf .rec-item{border-left-color:var(--bad)}
+.rec-empty{color:var(--muted);font-size:12.5px;font-style:italic}
+
 /* Trajectory */
 .traj{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding:18px 22px}
 .step{min-width:118px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-right:10px;
@@ -331,6 +367,11 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
       <div class="legend" id="legend"></div>
     </section>
   </div>
+
+  <section class="card reveal" id="recon-card" style="margin-top:24px;animation-delay:.22s">
+    <h2>Reconciliation · where the stores agree vs. disagree</h2>
+    <div class="recon" id="recon"></div>
+  </section>
 
   <section class="card reveal" style="margin-top:24px;animation-delay:.24s">
     <h2>Evidence trajectory · the order the agent gathered ground truth</h2>
@@ -541,6 +582,16 @@ $("#traj").innerHTML = DATA.ledger.map(e=>
    <div class="sq">${(e.query||"").replace(/[<&]/g,m=>({"<":"&lt;","&":"&amp;"}[m]))}</div></div>`).join("");
 document.querySelectorAll("#traj .step").forEach(s=>
   s.addEventListener("click",()=>selectEvidence(s.dataset.gid,null)));
+
+// ---- Reconciliation panel ----
+const REC=DATA.reconciliation||{corroborations:[],conflicts:[]};
+const esc=t=>t.replace(/[<&]/g,m=>({"<":"&lt;","&":"&amp;"}[m]));
+function recCol(cls,title,items){
+  const body=items.length?items.map(s=>`<div class="rec-item">${esc(s)}</div>`).join("")
+    :`<div class="rec-empty">None surfaced in this note.</div>`;
+  return `<div class="recol ${cls}"><h3>${title} (${items.length})</h3>${body}</div>`;}
+$("#recon").innerHTML=recCol("corr","✔ Corroborations · stores agree",REC.corroborations)
+  +recCol("conf","⚑ Conflicts · stores disagree",REC.conflicts);
 
 // ---- Light / dark theme toggle (persisted; initial theme set pre-paint in <head>) ----
 const root=document.documentElement, THEME_KEY="ariadne-theme", tgl=$("#theme-toggle");

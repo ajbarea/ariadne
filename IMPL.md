@@ -15,9 +15,10 @@ _Nothing in flight._ Recently shipped: the **interactive workup report**
 a plain-language definition), clickable-provenance note + evidence drawer, an
 **Entity-network view** (real traversed subgraph via deterministic
 neighbourhood query → `subgraph.json`, force-directed, typed+labelled) toggling
-with the Provenance flow, and the trajectory. Verified headlessly (incl. a live
-seeded-Neo4j subgraph). Follow-ons: reconciliation panel; richer entity attrs in
-the node drawer.
+with the Provenance flow, a **Reconciliation panel** (note sentences classified
+corroboration vs conflict using the reconcile-eval cue vocabulary), and the
+trajectory. Verified headlessly (incl. a live seeded-Neo4j subgraph). Follow-ons:
+richer entity attrs in a node-click drawer for the network.
 
 **Multimodal connector slate — shipped 2026-06-05** ([ADR-0018](./docs/architecture/decisions/0018-multimodal-connector-slate.md)):
 `enron` (text) · `worldspeech` (audio) · `lahman` (relational), all on the

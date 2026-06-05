@@ -103,6 +103,24 @@ def test_entity_network_renders_when_subgraph_present(tmp_path: Path) -> None:
     assert "Signals-Cell" in html and "MEMBER_OF" in html  # real entities + relationship
 
 
+def test_reconciliation_panel_classifies_corroboration_and_conflict(tmp_path: Path) -> None:
+    d = tmp_path
+    (d / "note.md").write_text(
+        "## Relationships\n"
+        "Halberd and Wren are consistent across both stores [cite:g1]. "
+        "Talon's location conflicts: the personnel record disagrees with the graph [cite:g2].\n",
+        encoding="utf-8",
+    )
+    (d / "provenance.jsonl").write_text("", encoding="utf-8")
+    (d / "citations.json").write_text(json.dumps({"entity": "Halberd"}), encoding="utf-8")
+    data = extract_report_data(d)
+    rec = data["reconciliation"]
+    assert any("consistent across both" in s.lower() for s in rec["corroborations"])
+    assert any("conflicts" in s.lower() or "disagrees" in s.lower() for s in rec["conflicts"])
+    html = render_report(d)
+    assert "Reconciliation" in html and "corroborat" in html.lower()
+
+
 def test_write_report_emits_report_html(tmp_path: Path) -> None:
     out = write_report(_make_workup(tmp_path))
     assert out == tmp_path / "report.html"
