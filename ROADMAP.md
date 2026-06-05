@@ -105,7 +105,10 @@ items must not be hardened against one answer.
    multi-hop capability, but **hybrid graph+text + agentic correction**
    (HRAG/AGRAG) beats graph-only, and "graph-first" is justified *only* for
    multi-hop/relational queries (it loses on simple fact lookup). Entity
-   resolution across stores remains **open**.
+   resolution across stores — **strategy decided** ([ADR-0016](./docs/architecture/decisions/0016-entity-resolution-across-stores.md)):
+   a tiered, ingestion-first cascade (deterministic key → blocking+normalized →
+   LLM-adjudicated residual), every link auditable, no silent merges. Tier 1
+   (exact `alias` key) shipped; Tiers 2–3 gated on real unstructured ingestion.
 3. **Connector strategy** — `# research(2026-06):` expose each store as an **MCP
    tool family** (`mcp__graph__*`, `mcp__relational__*`, `mcp__vector__*`); a
    lead agent routes by source and reconciles. Default to **agentic search**, add
