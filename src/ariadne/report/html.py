@@ -74,14 +74,23 @@ def _inline(text: str) -> str:
 
 
 def _render_note_html(note: str) -> str:
-    """Minimal, dependency-free Markdown -> HTML for the analytic note."""
-    out: list[str] = []
+    """Minimal, dependency-free Markdown -> HTML, split into collapsible sections.
+
+    Each ``##`` heading becomes a ``<details>`` so the (often very long) note breaks
+    into per-section components the analyst can fold. The verbose "Provenance"
+    section defaults collapsed (it's redundant with the evidence drawer + trajectory).
+    """
+    pre: list[str] = []  # content before the first H2 (the H1 title)
+    sections: list[dict] = []
     in_ul = False
+
+    def buf() -> list[str]:
+        return sections[-1]["body"] if sections else pre
 
     def close_ul() -> None:
         nonlocal in_ul
         if in_ul:
-            out.append("</ul>")
+            buf().append("</ul>")
             in_ul = False
 
     for raw in note.splitlines():
@@ -92,20 +101,33 @@ def _render_note_html(note: str) -> str:
         header = _HEADER_RE.match(line)
         if header:
             close_ul()
-            level = len(header.group(1))
-            out.append(f"<h{level}>{_inline(header.group(2))}</h{level}>")
+            level, txt = len(header.group(1)), header.group(2)
+            if level == 2:  # section boundary
+                sections.append(
+                    {"title": _inline(txt), "collapsed": "provenance" in txt.lower(), "body": []}
+                )
+            else:
+                buf().append(f"<h{level}>{_inline(txt)}</h{level}>")
             continue
         bullet = _BULLET_RE.match(line)
         if bullet:
             if not in_ul:
-                out.append("<ul>")
+                buf().append("<ul>")
                 in_ul = True
-            out.append(f"<li>{_inline(bullet.group(1))}</li>")
+            buf().append(f"<li>{_inline(bullet.group(1))}</li>")
             continue
         close_ul()
-        out.append(f"<p>{_inline(line)}</p>")
+        buf().append(f"<p>{_inline(line)}</p>")
     close_ul()
-    return "\n".join(out)
+
+    html = ["".join(pre)] if any(p.strip() for p in pre) else []
+    for s in sections:
+        op = "" if s["collapsed"] else " open"
+        html.append(
+            f'<details class="nsec"{op}><summary>{s["title"]}</summary>'
+            f'<div class="nbody">{"".join(s["body"])}</div></details>'
+        )
+    return "\n".join(html)
 
 
 def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
@@ -266,6 +288,18 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .note h1,.note h2,.note h3{font-family:var(--serif);color:var(--ink);line-height:1.25;margin:26px 0 8px}
 .note h1{font-size:24px} .note h2{font-size:20px;color:var(--thread)} .note h3{font-size:17px;letter-spacing:.02em}
 .note p{margin:10px 0} .note ul{margin:8px 0 8px 2px;padding-left:20px} .note li{margin:6px 0}
+.nsec{border-top:1px solid var(--line)} .nsec:first-of-type{border-top:none}
+.nsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;
+  font-family:var(--serif);font-size:20px;font-weight:600;color:var(--thread);padding:16px 0 6px}
+.nsec>summary::-webkit-details-marker{display:none}
+.nsec>summary::before{content:"\\25B8";font-size:13px;color:var(--muted);transition:transform .2s;flex:none}
+.nsec[open]>summary::before{transform:rotate(90deg)}
+.nsec>summary:hover{color:var(--ink)} .nsec>summary:hover::before{color:var(--thread)}
+.nbody{padding:2px 0 8px 2px}
+.note-all{float:right;font-family:var(--sans);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  font-weight:700;color:var(--muted);background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:4px 11px;cursor:pointer;transition:all .16s}
+.note-all:hover{color:var(--thread);border-color:var(--thread)}
 .note strong{color:var(--ink);font-weight:700} .note em{color:var(--soft)}
 .note .blk-hot{background:#e0a73c14;box-shadow:inset 3px 0 0 var(--thread);border-radius:4px;
   transition:background .25s}
@@ -364,7 +398,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 
   <div class="grid">
     <section class="card reveal" style="animation-delay:.12s">
-      <h2>Analytic note · click a <span style="color:var(--thread)">cite</span> to trace it</h2>
+      <h2>Analytic note · click a <span style="color:var(--thread)">cite</span> to trace it
+        <button class="note-all" id="note-all">Collapse all</button></h2>
       <div class="note" id="note"></div>
     </section>
     <section class="card reveal" id="graph-card" style="animation-delay:.18s">
@@ -421,6 +456,19 @@ document.querySelectorAll("#note .cite").forEach(b => {
   const id = b.dataset.cite; citeCounts[id] = (citeCounts[id]||0)+1;
   b.addEventListener("click", () => selectEvidence(id, b));
 });
+// Expand / collapse all note sections
+const noteAll=$("#note-all");
+if(noteAll){
+  const secs=()=>document.querySelectorAll("#note .nsec");
+  const sync=()=>{noteAll.textContent=[...secs()].some(d=>!d.open)?"Expand all":"Collapse all";};
+  noteAll.addEventListener("click",()=>{const open=[...secs()].some(d=>!d.open);
+    secs().forEach(d=>{d.open=open;}); sync();});
+  secs().forEach(d=>d.addEventListener("toggle",sync));
+  sync();
+}
+// A cite inside a collapsed section: open it so the highlight is visible
+document.querySelectorAll("#note .cite").forEach(b=>b.addEventListener("click",()=>{
+  const det=b.closest("details.nsec"); if(det&&!det.open) det.open=true;}));
 
 // ---- Dashboard ----
 const c = DATA.citations || {};

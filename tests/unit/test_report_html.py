@@ -78,6 +78,23 @@ def test_render_has_a_light_dark_theme_toggle(tmp_path: Path) -> None:
     assert "localStorage" in html
 
 
+def test_note_splits_into_collapsible_sections(tmp_path: Path) -> None:
+    d = tmp_path
+    (d / "note.md").write_text(
+        "# Analytic note: Halberd\n## Summary\nHalberd leads [cite:g1].\n"
+        "## Provenance\n- g1 — located Halberd.\n",
+        encoding="utf-8",
+    )
+    (d / "provenance.jsonl").write_text("", encoding="utf-8")
+    (d / "citations.json").write_text(json.dumps({"entity": "Halberd"}), encoding="utf-8")
+    note_html = extract_report_data(d)["note_html"]
+    assert '<details class="nsec"' in note_html  # sections are collapsible components
+    assert "<summary>Summary</summary>" in note_html
+    # the verbose Provenance section defaults collapsed (no `open`)
+    assert '<details class="nsec"><summary>Provenance</summary>' in note_html
+    assert '<details class="nsec" open><summary>Summary</summary>' in note_html
+
+
 def test_dashboard_cards_carry_plain_language_definitions(tmp_path: Path) -> None:
     html = render_report(_make_workup(tmp_path))
     assert "statdef" in html  # expandable definition element
