@@ -17,8 +17,19 @@ a plain-language definition), clickable-provenance note + evidence drawer, an
 neighbourhood query → `subgraph.json`, force-directed, typed+labelled) toggling
 with the Provenance flow, a **Reconciliation panel** (note sentences classified
 corroboration vs conflict using the reconcile-eval cue vocabulary), and the
-trajectory. Verified headlessly (incl. a live seeded-Neo4j subgraph). Follow-ons:
-richer entity attrs in a node-click drawer for the network.
+trajectory. Verified headlessly (incl. a live seeded-Neo4j subgraph).
+
+**Entity-network node-click drawer — shipped 2026-06-05.** Clicking a network
+node now opens a detail drawer mirroring the evidence drawer: the entity's **type
+badge** (colored by label), its **attributes** (the node's domain properties), and
+its **relationships** (typed, directional, click-to-pivot to the neighbour). The
+subgraph seam carries node `props` end to end — `fetch_subgraph` maps each Neo4j
+node's properties (minus `name`, already the title), `build_subgraph` passes them
+through, and the report renders them client-side from the data island. Esc/scrim
+close; the two drawers never stack. Verified headlessly (Playwright: open,
+attrs+rels render, pivot, Esc-close, zero JS errors).
+`# research(2026-06): Shneiderman details-on-demand + PatternFly primary-detail
+drawer convention — mirror the existing evidence drawer for interaction consistency.`
 
 **Multimodal connector slate — shipped 2026-06-05** ([ADR-0018](./docs/architecture/decisions/0018-multimodal-connector-slate.md)):
 `enron` (text) · `worldspeech` (audio) · `lahman` (relational), all on the

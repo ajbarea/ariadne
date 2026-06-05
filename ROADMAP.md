@@ -349,11 +349,21 @@ items must not be hardened against one answer.
       excerpt), a radial **provenance-thread graph** (entity → source → evidence,
       node size = times cited), and the **evidence trajectory**. Pure stdlib
       generator (`report/html.py`), hermetically tested; verified rendering +
-      interactivity headlessly. Follow-on: an accurate entity-subgraph view from a
-      structured workup emission; reconciliation panel.
+      interactivity headlessly. Follow-ons (both since shipped): the real
+      entity-subgraph view + the reconciliation panel.
       `# research(2026-06): analyst link-analysis sensemaking (Maltego/Palantir/i2)
       + GraphRAG result viz (XGraphRAG); self-contained single file + embedded JSON
       island + Shneiderman overview→zoom→details.`
+- [x] **Entity-network node-click drawer (2026-06-05):** clicking a network node
+      opens a detail drawer (mirroring the evidence drawer) with the entity's
+      type badge, **attributes** (node `props`), and typed, directional,
+      click-to-pivot **relationships**. The subgraph seam now carries node
+      properties end to end (`fetch_subgraph` maps Neo4j node props minus the
+      title `name`; `build_subgraph` passes them through; report renders from the
+      data island). Pure `report/html.py` + `graph/subgraph.py`; TDD; verified
+      headlessly (Playwright: attrs+rels render, pivot, Esc-close, no JS errors).
+      `# research(2026-06): Shneiderman details-on-demand + PatternFly
+      primary-detail drawer convention — mirror the evidence drawer for consistency.`
 - [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
       runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
       (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the

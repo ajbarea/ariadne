@@ -23,9 +23,11 @@ def build_subgraph(
 ) -> dict[str, list[dict]]:
     """Dedupe nodes/edges and flag the target node.
 
-    Nodes are ``{id, label, name}``; edges ``{src, dst, type}``. Edges whose
-    endpoints are not in the node set are dropped (no dangling links). The node
-    whose ``name`` matches ``target_name`` is flagged ``target: True``.
+    Nodes are ``{id, label, name, props?}``; edges ``{src, dst, type}``. Edges
+    whose endpoints are not in the node set are dropped (no dangling links). The
+    node whose ``name`` matches ``target_name`` is flagged ``target: True``. A
+    node's ``props`` (its domain attributes, for the detail drawer) is carried
+    through verbatim, defaulting to ``{}`` when absent.
     """
     seen_nodes: dict[str, dict] = {}
     for n in nodes:
@@ -37,6 +39,7 @@ def build_subgraph(
                 "label": n.get("label") or "Node",
                 "name": name,
                 "target": target_name is not None and name == target_name,
+                "props": dict(n.get("props") or {}),
             }
     seen_edges: dict[tuple[str, str, str], dict] = {}
     for e in edges:
@@ -66,6 +69,8 @@ def fetch_subgraph(driver: Any, entity: str, *, hops: int = 2, limit: int = 80) 
                 "id": n.element_id,
                 "label": next(iter(n.labels), "Node"),
                 "name": n.get("name") or n.get("id") or next(iter(n.labels), "Node"),
+                # domain attributes for the detail drawer; `name` is already the title
+                "props": {k: v for k, v in n.items() if k != "name"},
             }
             for n in graph.nodes
         ]

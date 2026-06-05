@@ -352,6 +352,23 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .scrim{position:fixed;inset:0;background:#0008;opacity:0;pointer-events:none;transition:opacity .3s;z-index:35}
 .scrim.open{opacity:1;pointer-events:auto}
 
+/* Entity detail drawer (network node -> attributes + relationships) */
+.attr{display:flex;justify-content:space-between;gap:14px;font-size:13px;line-height:1.4;
+  padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--qbg);margin-bottom:7px}
+.attr .ak{color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;flex:none}
+.attr .av{color:var(--ink);text-align:right;word-break:break-word}
+.rel{display:flex;align-items:center;gap:10px;font-size:13px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;background:var(--panel2);margin-bottom:7px;cursor:pointer;
+  transition:border-color .16s,transform .16s;width:100%;text-align:left}
+.rel:hover{border-color:var(--thread);transform:translateX(2px)}
+.rel .rd{color:var(--thread);font-size:15px;flex:none;font-family:var(--mono)}
+.rel .rt{font-family:var(--mono);font-size:10px;color:var(--soft);letter-spacing:.04em}
+.rel .rn{color:var(--ink);font-weight:600}
+.rel .rl{color:var(--muted);font-size:10.5px;margin-left:auto;flex:none;
+  text-transform:uppercase;letter-spacing:.1em}
+.drawer-empty{color:var(--muted);font-size:12.5px;font-style:italic;padding:2px 2px 10px}
+
 /* Reconciliation */
 .recon{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 22px}
 @media(max-width:760px){.recon{grid-template-columns:1fr}}
@@ -438,6 +455,14 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
   <div class="body">
     <div class="lbl">Evidence query</div><div class="qbox" id="d-q"></div>
     <div class="lbl">Returned excerpt</div><div class="exbox" id="d-ex"></div>
+  </div>
+</aside>
+<aside class="drawer" id="edrawer" aria-hidden="true">
+  <div class="dh"><span class="gid" id="e-name"></span><span class="srcbadge" id="e-type"></span>
+    <button class="x" id="e-x" aria-label="Close">×</button></div>
+  <div class="body">
+    <div class="lbl">Attributes</div><div id="e-attrs"></div>
+    <div class="lbl">Relationships</div><div id="e-rels"></div>
   </div>
 </aside>
 
@@ -604,7 +629,8 @@ function renderNet(W,H){
     g.addEventListener("click",()=>{const on=adj[d.id];
       gsvg.querySelectorAll(".node").forEach(o=>o.classList.toggle("dim",!on.has(o.dataset.node)));
       gsvg.querySelectorAll(".edge").forEach(p=>{const[s,t2]=p.dataset.pair.split("|");
-        p.classList.toggle("hot",s===d.id||t2===d.id); p.classList.toggle("dim",!(on.has(s)&&on.has(t2)));});});
+        p.classList.toggle("hot",s===d.id||t2===d.id); p.classList.toggle("dim",!(on.has(s)&&on.has(t2)));});
+      selectEntity(d.id);});  // details-on-demand: open the entity drawer for this node
     gsvg.appendChild(g);});
   gsvg.onclick=ev=>{if(ev.target===gsvg){
     gsvg.querySelectorAll(".dim").forEach(o=>o.classList.remove("dim"));
@@ -646,6 +672,7 @@ function selectEvidence(id, chip){
   $("#d-gid").textContent=id;
   const sb=$("#d-src"); sb.textContent=e.source; sb.className="srcbadge bgs-"+e.source;
   $("#d-q").textContent=e.query||"—"; $("#d-ex").textContent=e.excerpt||"—";
+  closeEntity();  // never stack the evidence + entity drawers
   $("#drawer").classList.add("open"); $("#scrim").classList.add("open");
   $("#drawer").setAttribute("aria-hidden","false");
   // cross-highlight: chips, note blocks, graph
@@ -666,8 +693,8 @@ function closeDrawer(){
   document.querySelectorAll(".edge.hot").forEach(n=>n.classList.remove("hot"));
 }
 $("#d-x").addEventListener("click",closeDrawer);
-$("#scrim").addEventListener("click",closeDrawer);
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+$("#scrim").addEventListener("click",()=>{closeDrawer();closeEntity();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeDrawer();closeEntity();}});
 
 // ---- Trajectory ----
 $("#traj").innerHTML = DATA.ledger.map(e=>
@@ -686,6 +713,40 @@ function recCol(cls,title,items){
   return `<div class="recol ${cls}"><h3>${title} (${items.length})</h3>${body}</div>`;}
 $("#recon").innerHTML=recCol("corr","✔ Corroborations · stores agree",REC.corroborations)
   +recCol("conf","⚑ Conflicts · stores disagree",REC.conflicts);
+
+// ---- Entity detail drawer: click a network node -> its attributes + relationships ----
+const SG=DATA.subgraph||{nodes:[],edges:[]};
+const sgById=Object.fromEntries((SG.nodes||[]).map(n=>[n.id,n]));
+function netFocus(id){  // replay a node's in-graph focus highlight from outside the graph
+  const sel='#netgraph .node[data-node="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]';
+  const g=document.querySelector(sel); if(g) g.dispatchEvent(new Event("click"));  // re-uses node-click (focus + drawer)
+}
+function selectEntity(id){
+  const node=sgById[id]; if(!node) return;
+  $("#e-name").textContent=node.name||id;
+  const badge=$("#e-type"),col=netColor(node.label);
+  badge.textContent=node.label||"Node"; badge.className="srcbadge";
+  badge.style.background=col+"22"; badge.style.color=col;
+  const props=node.props||{},keys=Object.keys(props);
+  $("#e-attrs").innerHTML=keys.length
+    ? keys.map(k=>`<div class="attr"><span class="ak">${esc(k)}</span><span class="av">${esc(String(props[k]))}</span></div>`).join("")
+    : `<div class="drawer-empty">No additional attributes recorded for this entity.</div>`;
+  const rels=[];
+  (SG.edges||[]).forEach(e=>{
+    if(e.src===id&&sgById[e.dst]) rels.push({dir:"→",type:e.type,o:sgById[e.dst]});
+    else if(e.dst===id&&sgById[e.src]) rels.push({dir:"←",type:e.type,o:sgById[e.src]});});
+  $("#e-rels").innerHTML=rels.length
+    ? rels.map(r=>`<button class="rel" data-go="${esc(r.o.id)}"><span class="rd">${r.dir}</span>`
+        +`<span class="rt">${esc(r.type)}</span><span class="rn">${esc(r.o.name)}</span>`
+        +`<span class="rl">${esc(r.o.label)}</span></button>`).join("")
+    : `<div class="drawer-empty">No relationships in the traversed neighbourhood.</div>`;
+  $("#e-rels").querySelectorAll(".rel").forEach(b=>b.addEventListener("click",()=>netFocus(b.dataset.go)));
+  closeDrawer();  // never stack the evidence + entity drawers
+  $("#edrawer").classList.add("open"); $("#scrim").classList.add("open");
+  $("#edrawer").setAttribute("aria-hidden","false");
+}
+function closeEntity(){$("#edrawer").classList.remove("open");$("#edrawer").setAttribute("aria-hidden","true");}
+$("#e-x").addEventListener("click",()=>{closeEntity();$("#scrim").classList.remove("open");});
 
 // ---- Light / dark theme toggle (persisted; initial theme set pre-paint in <head>) ----
 const root=document.documentElement, THEME_KEY="ariadne-theme", tgl=$("#theme-toggle");

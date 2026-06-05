@@ -123,6 +123,34 @@ def test_entity_network_renders_when_subgraph_present(tmp_path: Path) -> None:
     assert "Signals-Cell" in html and "MEMBER_OF" in html  # real entities + relationship
 
 
+def test_entity_network_node_has_a_detail_drawer(tmp_path: Path) -> None:
+    d = _make_workup(tmp_path)
+    (d / "subgraph.json").write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {
+                        "id": "n1",
+                        "label": "Person",
+                        "name": "Halberd",
+                        "target": True,
+                        "props": {"role": "cell lead", "clearance": "TS"},
+                    },
+                    {"id": "n2", "label": "Unit", "name": "Signals-Cell", "target": False},
+                ],
+                "edges": [{"src": "n1", "dst": "n2", "type": "MEMBER_OF"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    html = render_report(d)
+    # a dedicated entity-detail drawer mirroring the evidence drawer, plus its handler
+    assert 'id="edrawer"' in html
+    assert "selectEntity" in html
+    # node attributes survive into the data island so the drawer can render them
+    assert "clearance" in html and "cell lead" in html
+
+
 def test_reconciliation_panel_classifies_corroboration_and_conflict(tmp_path: Path) -> None:
     d = tmp_path
     (d / "note.md").write_text(
