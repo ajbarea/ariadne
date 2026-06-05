@@ -511,10 +511,13 @@ async def run_workup(
             governance=governance,
             profile=prof,
         )
-        # Additive: render the self-contained interactive report alongside the
-        # existing artifacts (ADR-0017); never replaces note.md or the JSON.
+        # Additive: persist the traversed entity neighborhood (for the report's
+        # network view) + render the self-contained interactive report alongside
+        # the existing artifacts (ADR-0017); never replaces note.md or the JSON.
+        from ariadne.graph.subgraph import write_subgraph
         from ariadne.report.html import write_report
 
+        write_subgraph(out_dir, entity, os.environ)
         write_report(out_dir)
 
     print(

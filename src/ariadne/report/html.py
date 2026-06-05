@@ -117,6 +117,7 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
         "ledger": ledger,
         "tradecraft": _load_json(d / "tradecraft.json"),
         "governance": _load_json(d / "governance.json"),
+        "subgraph": _load_json(d / "subgraph.json"),
     }
 
 
@@ -203,6 +204,13 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .stat .k{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .stat .v{font-family:var(--serif);font-size:30px;margin-top:8px;line-height:1}
 .stat .sub{font-size:11.5px;color:var(--soft);margin-top:6px}
+.stat{cursor:pointer} .stat:hover{border-color:var(--muted)}
+.stat .info{color:var(--muted);font-size:10px;vertical-align:middle}
+.stat:hover .info{color:var(--thread)}
+.statdef{font-size:11.5px;color:var(--soft);line-height:1.5;margin-top:0;max-height:0;overflow:hidden;
+  opacity:0;transition:max-height .3s ease,opacity .3s,margin-top .3s}
+.stat.open .statdef{max-height:200px;opacity:1;margin-top:11px}
+.stat.open{border-color:var(--thread)}
 .stat .rail{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--thread)}
 .stat.ok .rail{background:var(--ok)} .stat.bad .rail{background:var(--bad)}
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
@@ -231,8 +239,15 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
   box-shadow:0 0 0 3px #e0a73c33}
 
 /* Graph */
+.gtabs{float:right;display:inline-flex;gap:6px}
+.gtab{font-family:var(--sans);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;
+  padding:4px 11px;cursor:pointer;transition:all .16s}
+.gtab:hover{color:var(--ink)} .gtab.on{color:var(--thread);border-color:var(--thread);background:#e0a73c14}
 .graphwrap{padding:10px 14px 18px}
-#graph{width:100%;height:auto;display:block}
+#graph,#netgraph{width:100%;height:auto;display:block}
+.nlabel{font-family:var(--sans);font-size:10px;fill:var(--ink)}
+.elabel{font-family:var(--mono);font-size:8.5px;fill:var(--muted);letter-spacing:.04em}
 .legend{display:flex;gap:16px;flex-wrap:wrap;padding:0 22px 16px;font-size:11px;color:var(--soft)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .node{cursor:pointer}
@@ -303,8 +318,16 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
       <div class="note" id="note"></div>
     </section>
     <section class="card reveal" style="animation-delay:.18s">
-      <h2>Provenance thread · entity → source → evidence</h2>
-      <div class="graphwrap"><svg id="graph" viewBox="0 0 600 430" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <h2>Graph
+        <span class="gtabs" id="gtabs">
+          <button class="gtab" data-view="net">Entity network</button>
+          <button class="gtab" data-view="prov">Provenance</button>
+        </span>
+      </h2>
+      <div class="graphwrap">
+        <svg id="netgraph" preserveAspectRatio="xMidYMid meet"></svg>
+        <svg id="graph" preserveAspectRatio="xMidYMid meet" style="display:none"></svg>
+      </div>
       <div class="legend" id="legend"></div>
     </section>
   </div>
@@ -348,17 +371,32 @@ const nCited=(c.cited||[]).length, nUncited=(c.uncited||[]).length,
       nDangling=(c.dangling||[]).length, nUnsup=(c.unsupported||[]).length;
 const gov = DATA.governance || null, tc = DATA.tradecraft || null;
 const govOk = gov ? gov.ok !== false : null;
-function stat(cls, k, v, sub){return `<div class="stat ${cls}"><div class="rail"></div>
-  <div class="k">${k}</div><div class="v">${v}</div><div class="sub">${sub}</div></div>`;}
+function stat(cls, k, v, sub, def){return `<div class="stat ${cls}" tabindex="0" role="button"
+  aria-label="${k} — click for definition"><div class="rail"></div>
+  <div class="k">${k} <span class="info">&#9432;</span></div><div class="v">${v}</div>
+  <div class="sub">${sub}</div><div class="statdef">${def}</div></div>`;}
 $("#dash").innerHTML = [
   stat(c.ok?"ok":"bad","Citation gate", c.ok?'<span class="pill ok">PASS</span>':'<span class="pill bad">FAIL</span>',
-       `${nCited} cited · ${nUncited} uncited · ${nDangling} dangling`),
-  stat("","Evidence calls", DATA.ledger.length, `${new Set(DATA.ledger.map(e=>e.source)).size} source(s) engaged`),
+       `${nCited} cited · ${nUncited} uncited · ${nDangling} dangling`,
+       "Does every claim in the note carry a [cite] that resolves to real retrieved evidence? "
+       +"FAIL = a claim is uncited, or cites evidence that isn't in the ledger (dangling)."),
+  stat("","Evidence calls", DATA.ledger.length, `${new Set(DATA.ledger.map(e=>e.source)).size} source(s) engaged`,
+       "How many times the agent queried an evidence store (graph / relational / text) to ground "
+       +"the note. More sources engaged = more cross-checking across the data."),
   gov!==null ? stat(govOk?"ok":"bad","Read-only contract", govOk?'<span class="pill ok">UPHELD</span>':'<span class="pill bad">VIOLATED</span>',
-       `${(gov.write_attempts||[]).length} write attempt(s)`) : "",
+       `${(gov.write_attempts||[]).length} write attempt(s)`,
+       "Did the agent only READ from the evidence stores? UPHELD = it never tried to modify the "
+       +"data — the guarantee that an analysis can't tamper with its own sources.") : "",
   tc!==null ? stat("","ICD-203 tradecraft", (tc.standard_terms||[]).length,
-       `${(tc.nonstandard_terms||[]).length} non-standard · confidence ${tc.has_confidence_statement?"stated":"—"}`) : "",
+       `${(tc.nonstandard_terms||[]).length} non-standard · confidence ${tc.has_confidence_statement?"stated":"—"}`,
+       "Use of the Intelligence Community's standard estimative language (ICD-203: 'likely', "
+       +"'probable', 'almost certain'…). Counts standard terms; flags vague hedges ('maybe') and "
+       +"whether the note states its analytic confidence.") : "",
 ].join("");
+document.querySelectorAll("#dash .stat").forEach(card=>{
+  card.addEventListener("click",()=>card.classList.toggle("open"));
+  card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();card.classList.toggle("open");}});
+});
 
 // ---- Provenance flow: entity -> source(s) -> evidence (tiered, always legible) ----
 const SRC_COLORS={graph:"#69b6d6",relational:"#b58ce0",text:"#76d3a4",evidence:"#7c8190"};
@@ -398,8 +436,74 @@ sources.forEach(s=>node("src:"+s,pos["src:"+s].x,pos["src:"+s].y,11,SRC_COLORS[s
 DATA.ledger.forEach(e=>{const n=citeCounts[e.id]||0,r=Math.min(4+n*1.5,9);
   node(e.id,pos[e.id].x,pos[e.id].y,r,SRC_COLORS[e.source]||"#7c8190",
     e.id+(n?" · "+n+"×":""),()=>selectEvidence(e.id,null));});
-$("#legend").innerHTML=sources.map(s=>`<span><i style="background:${SRC_COLORS[s]}"></i>${s}</span>`).join("")
+const PROV_LEGEND=sources.map(s=>`<span><i style="background:${SRC_COLORS[s]}"></i>${s}</span>`).join("")
   + `<span><i style="background:#e0a73c"></i>entity</span><span style="color:var(--muted)">size = times cited · click any node</span>`;
+
+// ---- Entity network: the real traversed subgraph (force-directed) ----
+const NET_COLORS={Person:"#69b6d6",person:"#69b6d6",Unit:"#e0a73c",unit:"#e0a73c",
+  Site:"#76d3a4",site:"#76d3a4",Org:"#b58ce0",org:"#b58ce0",team:"#b58ce0",Topic:"#e0746e"};
+const netColor=l=>NET_COLORS[l]||"#9aa0ad";
+let NET_LEGEND="", hasNet=false;
+function renderNet(){
+  const sg=DATA.subgraph;
+  if(!sg||!sg.nodes||!sg.nodes.length) return false;
+  const gsvg=$("#netgraph"), Wn=600, Hn=Math.max(360,Math.min(560,140+sg.nodes.length*26));
+  gsvg.setAttribute("viewBox",`0 0 ${Wn} ${Hn}`);
+  const nodes=sg.nodes.map((n,i)=>{const a=i/sg.nodes.length*2*Math.PI;
+    return {...n,x:Wn/2+Math.cos(a)*120,y:Hn/2+Math.sin(a)*120,vx:0,vy:0};});
+  const ix=Object.fromEntries(nodes.map((n,i)=>[n.id,i]));
+  const links=sg.edges.filter(e=>ix[e.src]!=null&&ix[e.dst]!=null);
+  for(let it=0;it<320;it++){
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      let dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d2=dx*dx+dy*dy+.01,d=Math.sqrt(d2),f=2600/d2;
+      nodes[i].vx+=f*dx/d;nodes[i].vy+=f*dy/d;nodes[j].vx-=f*dx/d;nodes[j].vy-=f*dy/d;}
+    links.forEach(l=>{let a=nodes[ix[l.src]],b=nodes[ix[l.dst]],dx=b.x-a.x,dy=b.y-a.y,
+      d=Math.sqrt(dx*dx+dy*dy)+.01,f=(d-118)*0.018,fx=f*dx/d,fy=f*dy/d;
+      a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;});
+    nodes.forEach(n=>{n.vx+=(Wn/2-n.x)*0.005;n.vy+=(Hn/2-n.y)*0.005;
+      n.x+=n.vx*0.8;n.y+=n.vy*0.8;n.vx*=0.82;n.vy*=0.82;
+      n.x=Math.max(34,Math.min(Wn-34,n.x));n.y=Math.max(28,Math.min(Hn-28,n.y));});}
+  const NS2="http://www.w3.org/2000/svg";
+  const mk=(t,a)=>{const n=document.createElementNS(NS2,t);for(const k in a)n.setAttribute(k,a[k]);return n;};
+  const adj={}; nodes.forEach(n=>adj[n.id]=new Set([n.id]));
+  links.forEach(l=>{adj[l.src].add(l.dst);adj[l.dst].add(l.src);
+    const a=nodes[ix[l.src]],b=nodes[ix[l.dst]];
+    gsvg.appendChild(mk("path",{class:"edge",d:`M${a.x},${a.y} L${b.x},${b.y}`,"data-pair":l.src+"|"+l.dst}));
+    const t=mk("text",{class:"elabel",x:(a.x+b.x)/2,y:(a.y+b.y)/2-3,"text-anchor":"middle"});
+    t.textContent=l.type; gsvg.appendChild(t);});
+  nodes.forEach(n=>{const g=mk("g",{class:"node","data-node":n.id,transform:`translate(${n.x},${n.y})`});
+    const r=n.target?15:10;
+    if(n.target) g.appendChild(mk("circle",{r:r+5,fill:"none",stroke:"#e0a73c",
+      "stroke-width":1.5,"stroke-dasharray":"3 3",opacity:.8}));
+    g.appendChild(mk("circle",{r,fill:netColor(n.label)+"33",stroke:netColor(n.label),"stroke-width":1.8}));
+    const lab=mk("text",{class:"nlabel",y:r+13,"text-anchor":"middle"}); lab.textContent=n.name; g.appendChild(lab);
+    g.style.cursor="pointer";
+    g.addEventListener("click",()=>{const on=adj[n.id];
+      gsvg.querySelectorAll(".node").forEach(o=>o.classList.toggle("dim",!on.has(o.dataset.node)));
+      gsvg.querySelectorAll(".edge").forEach(p=>{const[s,d]=p.dataset.pair.split("|");
+        p.classList.toggle("hot",s===n.id||d===n.id); p.classList.toggle("dim",!(on.has(s)&&on.has(d)));});});
+    gsvg.appendChild(g);});
+  gsvg.addEventListener("click",ev=>{if(ev.target===gsvg){
+    gsvg.querySelectorAll(".dim").forEach(o=>o.classList.remove("dim"));
+    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));}});
+  const labels=[...new Set(nodes.map(n=>n.label))];
+  NET_LEGEND=labels.map(l=>`<span><i style="background:${netColor(l)}"></i>${l}</span>`).join("")
+    +`<span style="color:var(--muted)">${nodes.length} entities · ${links.length} links · click a node to focus</span>`;
+  return true;
+}
+hasNet=renderNet();
+
+// ---- Graph view tabs ----
+function showView(v){
+  const net=v==="net"&&hasNet;
+  $("#netgraph").style.display=net?"block":"none";
+  $("#graph").style.display=net?"none":"block";
+  $("#legend").innerHTML=net?NET_LEGEND:PROV_LEGEND;
+  document.querySelectorAll(".gtab").forEach(b=>b.classList.toggle("on",b.dataset.view===(net?"net":"prov")));
+}
+document.querySelectorAll(".gtab").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+if(!hasNet){const t=document.querySelector('.gtab[data-view=net]'); if(t)t.style.display="none";}
+showView(hasNet?"net":"prov");
 
 // ---- Evidence drawer (details-on-demand) ----
 function selectEvidence(id, chip){

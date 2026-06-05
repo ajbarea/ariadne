@@ -8,13 +8,16 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-_Nothing in flight._ Recently shipped: the **interactive workup report v1**
+_Nothing in flight._ Recently shipped: the **interactive workup report**
 ([ADR-0017](./docs/architecture/decisions/0017-interactive-workup-report.md)) —
-`ariadne report <dir>` → self-contained `report.html` (dashboard + clickable-
-provenance note + evidence drawer + radial provenance graph + trajectory),
-verified headlessly. Follow-ons: accurate entity-subgraph view from a structured
-workup emission; reconciliation panel; consider rendering the report at the end
-of `ariadne workup` automatically.
+`ariadne report <dir>` + auto-render at end of `ariadne workup` → self-contained
+`report.html`: light/dark toggle, **self-explaining dashboard** (click a stat for
+a plain-language definition), clickable-provenance note + evidence drawer, an
+**Entity-network view** (real traversed subgraph via deterministic
+neighbourhood query → `subgraph.json`, force-directed, typed+labelled) toggling
+with the Provenance flow, and the trajectory. Verified headlessly (incl. a live
+seeded-Neo4j subgraph). Follow-ons: reconciliation panel; richer entity attrs in
+the node drawer.
 
 **Multimodal connector slate — shipped 2026-06-05** ([ADR-0018](./docs/architecture/decisions/0018-multimodal-connector-slate.md)):
 `enron` (text) · `worldspeech` (audio) · `lahman` (relational), all on the

@@ -78,6 +78,31 @@ def test_render_has_a_light_dark_theme_toggle(tmp_path: Path) -> None:
     assert "localStorage" in html
 
 
+def test_dashboard_cards_carry_plain_language_definitions(tmp_path: Path) -> None:
+    html = render_report(_make_workup(tmp_path))
+    assert "statdef" in html  # expandable definition element
+    assert "estimative language" in html  # the ICD-203 explanation in analyst terms
+
+
+def test_entity_network_renders_when_subgraph_present(tmp_path: Path) -> None:
+    d = _make_workup(tmp_path)
+    (d / "subgraph.json").write_text(
+        json.dumps(
+            {
+                "nodes": [
+                    {"id": "n1", "label": "Person", "name": "Halberd", "target": True},
+                    {"id": "n2", "label": "Unit", "name": "Signals-Cell", "target": False},
+                ],
+                "edges": [{"src": "n1", "dst": "n2", "type": "MEMBER_OF"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    html = render_report(d)
+    assert "Entity network" in html  # the tab
+    assert "Signals-Cell" in html and "MEMBER_OF" in html  # real entities + relationship
+
+
 def test_write_report_emits_report_html(tmp_path: Path) -> None:
     out = write_report(_make_workup(tmp_path))
     assert out == tmp_path / "report.html"
