@@ -25,6 +25,37 @@ if not _DEFAULT_SOCK.exists() and _COLIMA_SOCK.exists():
 os.environ.setdefault("TESTCONTAINERS_RYUK_DISABLED", "true")
 
 
+def _docker_reachable() -> bool:
+    # research(2026-06): testcontainers-python's recommended availability guard is
+    # docker.from_env().ping(). Run it AFTER the DOCKER_HOST wiring above so the
+    # Colima socket is honored. Lets integration tests SKIP with a clear reason
+    # when no daemon is up, instead of erroring at container creation.
+    try:
+        import docker
+
+        docker.from_env().ping()
+    except Exception:
+        return False
+    return True
+
+
+_DOCKER_AVAILABLE = _docker_reachable()
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Skip Docker-backed integration tests when no daemon is reachable. Scoped to
+    the ``integration`` marker so unit tests are untouched; the skip is reported in
+    pytest output (visible, never silent) so absent coverage is obvious in CI logs."""
+    if _DOCKER_AVAILABLE:
+        return
+    skip = pytest.mark.skip(
+        reason="Docker daemon not reachable; start Colima/Docker to run integration tests."
+    )
+    for item in items:
+        if item.get_closest_marker("integration"):
+            item.add_marker(skip)
+
+
 def _statements(cypher: str) -> list[str]:
     lines = [ln for ln in cypher.splitlines() if not ln.strip().startswith("//")]
     return [s.strip() for s in "\n".join(lines).split(";") if s.strip()]
