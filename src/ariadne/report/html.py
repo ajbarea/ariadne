@@ -501,54 +501,65 @@ const NET_COLORS={Person:"#69b6d6",person:"#69b6d6",Unit:"#e0a73c",unit:"#e0a73c
   Site:"#76d3a4",site:"#76d3a4",Org:"#b58ce0",org:"#b58ce0",team:"#b58ce0",Topic:"#e0746e"};
 const netColor=l=>NET_COLORS[l]||"#9aa0ad";
 let NET_LEGEND="", hasNet=false;
-function renderNet(){
+// Fruchterman-Reingold layout — ideal spacing scales with the canvas, so the
+// network fills whatever size it's drawn at (panel or fullscreen). Re-callable.
+function renderNet(W,H){
   const sg=DATA.subgraph;
   if(!sg||!sg.nodes||!sg.nodes.length) return false;
-  const gsvg=$("#netgraph"), Wn=600, Hn=Math.max(360,Math.min(560,140+sg.nodes.length*26));
-  gsvg.setAttribute("viewBox",`0 0 ${Wn} ${Hn}`);
-  const nodes=sg.nodes.map((n,i)=>{const a=i/sg.nodes.length*2*Math.PI;
-    return {...n,x:Wn/2+Math.cos(a)*120,y:Hn/2+Math.sin(a)*120,vx:0,vy:0};});
-  const ix=Object.fromEntries(nodes.map((n,i)=>[n.id,i]));
+  const gsvg=$("#netgraph"); gsvg.innerHTML="";
+  gsvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const n=sg.nodes.length;
+  const nodes=sg.nodes.map((d,i)=>{const a=i/n*2*Math.PI, R=Math.min(W,H)*0.33;
+    return {...d,x:W/2+Math.cos(a)*R,y:H/2+Math.sin(a)*R};});
+  nodes.forEach(d=>{d.vx=0;d.vy=0;});
+  const ix=Object.fromEntries(nodes.map((d,i)=>[d.id,i]));
   const links=sg.edges.filter(e=>ix[e.src]!=null&&ix[e.dst]!=null);
-  for(let it=0;it<320;it++){
-    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
-      let dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d2=dx*dx+dy*dy+.01,d=Math.sqrt(d2),f=2600/d2;
+  // Edge rest length (and matching repulsion) scale with the canvas, so the same
+  // graph spreads to fill a bigger fullscreen while staying readable in the panel.
+  const REST=Math.max(118,Math.min(W,H)*0.30), REP=REST*REST*0.95;
+  for(let it=0;it<360;it++){
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+      let dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d2=dx*dx+dy*dy+.01,d=Math.sqrt(d2),f=REP/d2;
       nodes[i].vx+=f*dx/d;nodes[i].vy+=f*dy/d;nodes[j].vx-=f*dx/d;nodes[j].vy-=f*dy/d;}
     links.forEach(l=>{let a=nodes[ix[l.src]],b=nodes[ix[l.dst]],dx=b.x-a.x,dy=b.y-a.y,
-      d=Math.sqrt(dx*dx+dy*dy)+.01,f=(d-118)*0.018,fx=f*dx/d,fy=f*dy/d;
+      d=Math.sqrt(dx*dx+dy*dy)+.01,f=(d-REST)*0.02,fx=f*dx/d,fy=f*dy/d;
       a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;});
-    nodes.forEach(n=>{n.vx+=(Wn/2-n.x)*0.005;n.vy+=(Hn/2-n.y)*0.005;
-      n.x+=n.vx*0.8;n.y+=n.vy*0.8;n.vx*=0.82;n.vy*=0.82;
-      n.x=Math.max(34,Math.min(Wn-34,n.x));n.y=Math.max(28,Math.min(Hn-28,n.y));});}
+    nodes.forEach(nd=>{nd.vx+=(W/2-nd.x)*0.004;nd.vy+=(H/2-nd.y)*0.004;
+      nd.x+=nd.vx*0.8;nd.y+=nd.vy*0.8;nd.vx*=0.82;nd.vy*=0.82;
+      nd.x=Math.max(44,Math.min(W-44,nd.x));nd.y=Math.max(36,Math.min(H-36,nd.y));});
+  }
   const NS2="http://www.w3.org/2000/svg";
-  const mk=(t,a)=>{const n=document.createElementNS(NS2,t);for(const k in a)n.setAttribute(k,a[k]);return n;};
-  const adj={}; nodes.forEach(n=>adj[n.id]=new Set([n.id]));
+  const mk=(t,a)=>{const e=document.createElementNS(NS2,t);for(const kk in a)e.setAttribute(kk,a[kk]);return e;};
+  const adj={}; nodes.forEach(d=>adj[d.id]=new Set([d.id]));
   links.forEach(l=>{adj[l.src].add(l.dst);adj[l.dst].add(l.src);
     const a=nodes[ix[l.src]],b=nodes[ix[l.dst]];
     gsvg.appendChild(mk("path",{class:"edge",d:`M${a.x},${a.y} L${b.x},${b.y}`,"data-pair":l.src+"|"+l.dst}));
     const t=mk("text",{class:"elabel",x:(a.x+b.x)/2,y:(a.y+b.y)/2-3,"text-anchor":"middle"});
     t.textContent=l.type; gsvg.appendChild(t);});
-  nodes.forEach(n=>{const g=mk("g",{class:"node","data-node":n.id,transform:`translate(${n.x},${n.y})`});
-    const r=n.target?15:10;
-    if(n.target) g.appendChild(mk("circle",{r:r+5,fill:"none",stroke:"#e0a73c",
+  nodes.forEach(d=>{const g=mk("g",{class:"node","data-node":d.id,transform:`translate(${d.x},${d.y})`});
+    const r=d.target?15:10;
+    if(d.target) g.appendChild(mk("circle",{r:r+5,fill:"none",stroke:"#e0a73c",
       "stroke-width":1.5,"stroke-dasharray":"3 3",opacity:.8}));
-    g.appendChild(mk("circle",{r,fill:netColor(n.label)+"33",stroke:netColor(n.label),"stroke-width":1.8}));
-    const lab=mk("text",{class:"nlabel",y:r+13,"text-anchor":"middle"}); lab.textContent=n.name; g.appendChild(lab);
+    g.appendChild(mk("circle",{r,fill:netColor(d.label)+"33",stroke:netColor(d.label),"stroke-width":1.8}));
+    const lab=mk("text",{class:"nlabel",y:r+13,"text-anchor":"middle"}); lab.textContent=d.name; g.appendChild(lab);
     g.style.cursor="pointer";
-    g.addEventListener("click",()=>{const on=adj[n.id];
+    g.addEventListener("click",()=>{const on=adj[d.id];
       gsvg.querySelectorAll(".node").forEach(o=>o.classList.toggle("dim",!on.has(o.dataset.node)));
-      gsvg.querySelectorAll(".edge").forEach(p=>{const[s,d]=p.dataset.pair.split("|");
-        p.classList.toggle("hot",s===n.id||d===n.id); p.classList.toggle("dim",!(on.has(s)&&on.has(d)));});});
+      gsvg.querySelectorAll(".edge").forEach(p=>{const[s,t2]=p.dataset.pair.split("|");
+        p.classList.toggle("hot",s===d.id||t2===d.id); p.classList.toggle("dim",!(on.has(s)&&on.has(t2)));});});
     gsvg.appendChild(g);});
-  gsvg.addEventListener("click",ev=>{if(ev.target===gsvg){
+  gsvg.onclick=ev=>{if(ev.target===gsvg){
     gsvg.querySelectorAll(".dim").forEach(o=>o.classList.remove("dim"));
-    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));}});
-  const labels=[...new Set(nodes.map(n=>n.label))];
+    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));}};
+  const labels=[...new Set(nodes.map(d=>d.label))];
   NET_LEGEND=labels.map(l=>`<span><i style="background:${netColor(l)}"></i>${l}</span>`).join("")
-    +`<span style="color:var(--muted)">${nodes.length} entities · ${links.length} links · click a node to focus</span>`;
+    +`<span style="color:var(--muted)">${n} entities · ${links.length} links · click a node to focus</span>`;
   return true;
 }
-hasNet=renderNet();
+const SG_N=(DATA.subgraph&&DATA.subgraph.nodes)?DATA.subgraph.nodes.length:0;
+function panelDims(){return [620, Math.max(360,Math.min(560,150+SG_N*26))];}
+function netDims(fs){return fs?[Math.min(1500,innerWidth-90),Math.min(840,innerHeight-200)]:panelDims();}
+hasNet=renderNet(...panelDims());
 
 // ---- Graph view tabs ----
 function showView(v){
@@ -565,7 +576,8 @@ showView(hasNet?"net":"prov");
 // ---- Fullscreen graph toggle ----
 const gcard=$("#graph-card"), gscrim=$("#gscrim"), fsb=$("#fs-btn");
 function setFs(on){gcard.classList.toggle("fs",on); gscrim.classList.toggle("open",on);
-  fsb.innerHTML=on?"&#10005;":"&#9974;"; fsb.title=on?"Exit fullscreen (Esc)":"Fullscreen (Esc to exit)";}
+  fsb.innerHTML=on?"&#10005;":"&#9974;"; fsb.title=on?"Exit fullscreen (Esc)":"Fullscreen (Esc to exit)";
+  if(hasNet) requestAnimationFrame(()=>renderNet(...netDims(on)));}  // re-layout to fill the new size
 fsb.addEventListener("click",()=>setFs(!gcard.classList.contains("fs")));
 gscrim.addEventListener("click",()=>setFs(false));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&gcard.classList.contains("fs"))setFs(false);});
