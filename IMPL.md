@@ -28,6 +28,15 @@ node's properties (minus `name`, already the title), `build_subgraph` passes the
 through, and the report renders them client-side from the data island. Esc/scrim
 close; the two drawers never stack. Verified headlessly (Playwright: open,
 attrs+rels render, pivot, Esc-close, zero JS errors).
+
+**Analytic-evaluation panel — shipped 2026-06-05.** The fixture-scored eval
+metrics no longer live only on stdout: `ariadne eval` persists `eval.json` and
+`ariadne rubric` persists `rubric.json`, and the report renders an **Analytic
+evaluation** panel (present only when scored) — the planted-needle scores
+(grounded / recall / trajectory / supporting-fact F1 / context-utilization /
+queries / pivot-burden / reconciliation) as a stat grid, and the ICD-203 rubric
+as scored dimensions with bars + the judge's rationales. Degrades cleanly on a
+live workup with no fixture/judge run. TDD; headless-verified.
 `# research(2026-06): Shneiderman details-on-demand + PatternFly primary-detail
 drawer convention — mirror the existing evidence drawer for interaction consistency.`
 

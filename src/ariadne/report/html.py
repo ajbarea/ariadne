@@ -167,6 +167,9 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
         "subgraph": _load_json(d / "subgraph.json"),
         "reconciliation": _extract_reconciliation(note),
         "utilization": context_utilization(note, ledger),
+        # Optional, present only when `ariadne eval` / `ariadne rubric` were run.
+        "evaluation": _load_json(d / "eval.json"),
+        "rubric": _load_json(d / "rubric.json"),
     }
 
 
@@ -382,6 +385,25 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .recol.corr .rec-item{border-left-color:var(--ok)} .recol.conf .rec-item{border-left-color:var(--bad)}
 .rec-empty{color:var(--muted);font-size:12.5px;font-style:italic}
 
+/* Analytic evaluation panel (eval.json + rubric.json, present only when scored) */
+.evsub{font-family:var(--sans);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;padding:16px 22px 0}
+.evgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:12px;padding:11px 22px 4px}
+.evm{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+.evm .ek{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.evm .ev{font-family:var(--serif);font-size:21px;margin-top:6px;line-height:1}
+.evm .ev .pill{font-size:11px;vertical-align:middle}
+.rubricw{padding:6px 22px 20px}
+.rov{font-family:var(--serif);font-size:15px;color:var(--soft);margin:4px 0 14px}
+.rov b{color:var(--thread);font-size:22px}
+.rdim{border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:9px;background:var(--panel2)}
+.rdim .rh{display:flex;align-items:center;gap:10px}
+.rdim .rk{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:capitalize}
+.rdim .rs{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--thread);font-weight:700}
+.rdim .rr{font-size:12.5px;color:var(--soft);line-height:1.5;margin-top:7px}
+.rbar{height:5px;border-radius:3px;background:var(--line);margin-top:9px;overflow:hidden}
+.rbar i{display:block;height:100%;background:var(--thread)}
+
 /* Trajectory */
 .traj{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding:18px 22px}
 .step{min-width:118px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-right:10px;
@@ -439,6 +461,11 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
   <section class="card reveal" id="recon-card" style="margin-top:24px;animation-delay:.22s">
     <h2>Reconciliation · where the stores agree vs. disagree</h2>
     <div class="recon" id="recon"></div>
+  </section>
+
+  <section class="card reveal" id="eval-card" style="margin-top:24px;display:none">
+    <h2>Analytic evaluation · scored against ground truth</h2>
+    <div id="eval-body"></div>
   </section>
 
   <section class="card reveal" style="margin-top:24px;animation-delay:.24s">
@@ -754,6 +781,39 @@ function selectEntity(id){
 }
 function closeEntity(){$("#edrawer").classList.remove("open");$("#edrawer").setAttribute("aria-hidden","true");}
 $("#e-x").addEventListener("click",()=>{closeEntity();$("#scrim").classList.remove("open");});
+
+// ---- Analytic evaluation panel (eval.json + rubric.json; present only when scored) ----
+const EV=DATA.evaluation, RB=DATA.rubric;
+if(EV||RB){
+  $("#eval-card").style.display="";
+  const fx=v=>v==null?"—":(typeof v==="number"?v.toFixed(2):esc(String(v)));
+  const pct=v=>v==null?"—":Math.round(v*100)+"%";
+  const m=(k,v)=>`<div class="evm"><div class="ek">${k}</div><div class="ev">${v}</div></div>`;
+  let body="";
+  if(EV){
+    const cells=[
+      m("Grounded", EV.grounded?'<span class="pill ok">YES</span>':'<span class="pill bad">NO</span>'),
+      m("Recall", pct(EV.recall)), m("Trajectory", pct(EV.trajectory))];
+    if(EV.supporting_fact_f1!=null) cells.push(m("Supporting-fact F1", fx(EV.supporting_fact_f1)));
+    if(EV.context_utilization!=null) cells.push(m("Context utilization", pct(EV.context_utilization)));
+    cells.push(m("Queries", EV.queries_run!=null?EV.queries_run:"—"));
+    cells.push(m("Pivot burden", fx(EV.pivot_burden)));
+    if(EV.reconciliation){const R=EV.reconciliation;
+      cells.push(m("Reconciliation", pct(R.reconciliation)
+        +(R.total!=null?` <span style="font-size:11px;color:var(--muted)">${R.handled}/${R.total}</span>`:"")));}
+    body+=`<div class="evsub">Planted-needle eval · fixture ${esc(EV.fixture||"—")}</div>`
+      +`<div class="evgrid">${cells.join("")}</div>`;
+  }
+  if(RB){
+    const dims=(RB.dimensions||[]).map(d=>`<div class="rdim"><div class="rh">`
+      +`<span class="rk">${esc(d.key)}</span><span class="rs">${esc(String(d.score))}/5</span></div>`
+      +`<div class="rbar"><i style="width:${d.score/5*100}%"></i></div>`
+      +`<div class="rr">${esc(d.rationale||"")}</div></div>`).join("");
+    body+=`<div class="evsub">ICD-203 analytic-standards rubric · LLM-judged</div>`
+      +`<div class="rubricw"><div class="rov">Overall <b>${fx(RB.overall)}</b> / 5</div>${dims}</div>`;
+  }
+  $("#eval-body").innerHTML=body;
+}
 
 // ---- Light / dark theme toggle (persisted; initial theme set pre-paint in <head>) ----
 const root=document.documentElement, THEME_KEY="ariadne-theme", tgl=$("#theme-toggle");

@@ -30,7 +30,7 @@ import ariadne.datasets.lahman
 import ariadne.datasets.synthetic
 import ariadne.datasets.worldspeech  # noqa: F401  (registers the worldspeech adapter)
 from ariadne.datasets.base import DATASETS
-from ariadne.evaluation.needle import FIXTURES, score_workup_dir
+from ariadne.evaluation.needle import FIXTURES, score_workup_dir, write_eval_json
 from ariadne.evaluation.reconcile import RECON_FIXTURES, score_reconciliation_dir
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
 from ariadne.observability import (
@@ -193,6 +193,7 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
         if reconcile is not None:
             rec = score_reconciliation_dir(workup_dir, RECON_FIXTURES[reconcile])
             record_reconciliation_metrics(rec, fixture=reconcile)
+    write_eval_json(workup_dir, report, fixture_name, reconciliation=rec)  # surfaced in the report
     line = (
         f"Eval [{report.entity}/{fixture_name}]: grounded={report.grounded} "
         f"recall={report.recall:.2f} trajectory={report.trajectory:.2f} "
@@ -246,9 +247,10 @@ def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
     ``--min`` it becomes a CI-gateable pass/fail on the overall score.
     """
     from ariadne.evaluation.judge import ClaudeAnalyticJudge
-    from ariadne.evaluation.rubric import score_note_dir
+    from ariadne.evaluation.rubric import score_note_dir, write_rubric_json
 
     report = score_note_dir(workup_dir, ClaudeAnalyticJudge())
+    write_rubric_json(workup_dir, report)  # surfaced in the report
     print(f"Rubric (ICD-203) overall={report.overall:.2f}/5")
     for s in report.dimensions:
         print(f"  {s.key:<14} {s.score}/5  {s.rationale}")

@@ -29,7 +29,8 @@ pure and hermetic — the real model lives in ``evaluation.judge`` behind the
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Protocol
 
@@ -153,3 +154,14 @@ def score_note_dir(
     """Read ``note.md`` from a workup dir and score it."""
     note = (Path(out_dir) / "note.md").read_text(encoding="utf-8")
     return score_note(note, judge, rubric)
+
+
+def write_rubric_json(out_dir: str | Path, report: RubricReport) -> Path:
+    """Persist a rubric ``report`` to ``rubric.json`` so the HTML report can show it."""
+    payload = {
+        "overall": report.overall,
+        "dimensions": [asdict(d) for d in report.dimensions],
+    }
+    path = Path(out_dir) / "rubric.json"
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path

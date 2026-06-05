@@ -20,8 +20,13 @@ workup against the brief's four success criteria without a human in the loop:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ariadne.evaluation.reconcile import ReconciliationReport
 
 from ariadne.evaluation._text import all_present, fraction_present, statement_text
 from ariadne.evaluation.utilization import context_utilization
@@ -165,3 +170,23 @@ def score_workup_dir(out_dir: str | Path, fixture: NeedleFixture) -> EvalReport:
     note = (out_dir / "note.md").read_text(encoding="utf-8")
     entries = ProvenanceLedger.read_jsonl(out_dir / "provenance.jsonl")
     return score_workup(note, entries, fixture)
+
+
+def write_eval_json(
+    out_dir: str | Path,
+    report: EvalReport,
+    fixture_name: str,
+    reconciliation: ReconciliationReport | None = None,
+) -> Path:
+    """Persist an eval ``report`` to ``eval.json`` so the HTML report can surface it.
+
+    The scores otherwise only print to stdout. Includes the ``fixture`` it was
+    scored against, and the cross-store reconciliation score when one was run.
+    """
+    payload = asdict(report)
+    payload["fixture"] = fixture_name
+    if reconciliation is not None:
+        payload["reconciliation"] = asdict(reconciliation)
+    path = Path(out_dir) / "eval.json"
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path

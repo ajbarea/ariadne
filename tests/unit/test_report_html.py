@@ -123,6 +123,58 @@ def test_entity_network_renders_when_subgraph_present(tmp_path: Path) -> None:
     assert "Signals-Cell" in html and "MEMBER_OF" in html  # real entities + relationship
 
 
+def test_report_renders_evaluation_panel_when_scored(tmp_path: Path) -> None:
+    d = _make_workup(tmp_path)
+    (d / "eval.json").write_text(
+        json.dumps(
+            {
+                "fixture": "halberd",
+                "entity": "Halberd",
+                "recall": 1.0,
+                "trajectory": 1.0,
+                "grounded": True,
+                "pivot_burden": 1.0,
+                "queries_run": 3,
+                "supporting_fact_precision": 1.0,
+                "supporting_fact_recall": 0.33,
+                "supporting_fact_f1": 0.5,
+                "context_utilization": 0.67,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (d / "rubric.json").write_text(
+        json.dumps(
+            {
+                "overall": 4.5,
+                "dimensions": [
+                    {
+                        "key": "alternatives",
+                        "score": 5,
+                        "rationale": "ACH on the decisive finding.",
+                    },
+                    {"key": "argumentation", "score": 4, "rationale": "Logic mostly sound."},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    data = extract_report_data(d)
+    assert data["evaluation"]["grounded"] is True
+    assert data["rubric"]["overall"] == 4.5
+    html = render_report(d)
+    assert "Analytic evaluation" in html  # the panel heading
+    assert "ACH on the decisive finding" in html  # a rubric rationale is shown
+    assert "halberd" in html  # the fixture is named
+
+
+def test_report_omits_evaluation_data_when_not_scored(tmp_path: Path) -> None:
+    # Most live workups have no fixture/judge run — the panel must degrade cleanly.
+    data = extract_report_data(_make_workup(tmp_path))
+    assert data["evaluation"] is None
+    assert data["rubric"] is None
+
+
 def test_report_surfaces_context_utilization(tmp_path: Path) -> None:
     # ADR-0019: a descriptive retrieval-side stat — fraction of retrieved evidence
     # that grounded a cited claim — reported as a dashboard card, never gated.

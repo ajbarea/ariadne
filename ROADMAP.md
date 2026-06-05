@@ -407,6 +407,15 @@ items must not be hardened against one answer.
       headlessly (Playwright: attrs+rels render, pivot, Esc-close, no JS errors).
       `# research(2026-06): Shneiderman details-on-demand + PatternFly
       primary-detail drawer convention — mirror the evidence drawer for consistency.`
+- [x] **Analytic-evaluation panel in the report (2026-06-05):** the fixture-scored
+      eval + ICD-203 rubric metrics — previously stdout-only — are persisted
+      (`ariadne eval` → `eval.json`, `ariadne rubric` → `rubric.json`) and rendered
+      as an **Analytic evaluation** panel (present only when scored): planted-needle
+      scores (grounded / recall / trajectory / supporting-fact F1 / context-
+      utilization / queries / pivot-burden / reconciliation) as a stat grid + the
+      ICD-203 rubric dimensions with bars and the judge's rationales. Makes the
+      verifiable-reward signal legible in the human-facing product (groundwork for
+      the audited self-improvement loop). TDD; headless-verified.
 - [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
       runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
       (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the
