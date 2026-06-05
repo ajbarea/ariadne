@@ -123,6 +123,45 @@ def test_entity_network_renders_when_subgraph_present(tmp_path: Path) -> None:
     assert "Signals-Cell" in html and "MEMBER_OF" in html  # real entities + relationship
 
 
+def test_uncited_claim_is_spotlighted_in_the_note(tmp_path: Path) -> None:
+    d = tmp_path
+    (d / "note.md").write_text(
+        "## Summary\nHalberd leads the Signals-Cell [cite:g1].\n"
+        "Decisive finding: the coordination is deliberate.\n",
+        encoding="utf-8",
+    )
+    (d / "provenance.jsonl").write_text(
+        json.dumps(
+            {
+                "id": "g1",
+                "tool": "mcp__neo4j__read_neo4j_cypher",
+                "tool_input": {"query": "x"},
+                "response_excerpt": "y",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (d / "citations.json").write_text(
+        json.dumps(
+            {
+                "entity": "Halberd",
+                "ok": False,
+                "cited": ["g1"],
+                "dangling": [],
+                "unused": [],
+                "uncited": ["Decisive finding: the coordination is deliberate."],
+            }
+        ),
+        encoding="utf-8",
+    )
+    html = render_report(d)
+    # the uncited claim text reaches the data island so the JS can locate it
+    assert "Decisive finding: the coordination is deliberate." in html
+    # the spotlight class + the wiring that reads the uncited list both exist
+    assert "uncited-claim" in html
+    assert "DATA.citations.uncited" in html or "citations.uncited" in html
+
+
 def test_report_renders_evaluation_panel_when_scored(tmp_path: Path) -> None:
     d = _make_workup(tmp_path)
     (d / "eval.json").write_text(

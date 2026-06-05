@@ -306,6 +306,19 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .note strong{color:var(--ink);font-weight:700} .note em{color:var(--soft)}
 .note .blk-hot{background:#e0a73c14;box-shadow:inset 3px 0 0 var(--thread);border-radius:4px;
   transition:background .25s}
+/* Uncited-claim spotlight — the citation gate flagged these. WCAG 1.4.1: never
+   colour alone — red rail + a ⚠ tag + a title, all grayscale-legible; the pulse
+   runs a few times then settles, and only when motion is allowed. */
+.note .uncited-claim{background:#e8746e14;box-shadow:inset 3px 0 0 var(--bad);
+  border-radius:5px;padding:4px 12px;margin:8px -12px}
+.note .uncited-tag{display:inline-block;font-family:var(--sans);font-size:9px;font-weight:800;
+  letter-spacing:.13em;color:var(--bad);border:1px solid var(--bad);border-radius:999px;
+  padding:1px 8px;margin-right:9px;vertical-align:middle;text-transform:uppercase;white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){
+  .note .uncited-claim{animation:uncitedPulse 2.4s ease-in-out 3}
+  @keyframes uncitedPulse{0%,100%{box-shadow:inset 3px 0 0 var(--bad),0 0 0 0 #e8746e00}
+    50%{box-shadow:inset 3px 0 0 var(--bad),0 0 16px 1px #e8746e66}}
+}
 
 /* Cite chips */
 .cite{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--thread);
@@ -523,6 +536,22 @@ if(noteAll){
 document.querySelectorAll("#note .cite").forEach(b=>b.addEventListener("click",()=>{
   const det=b.closest("details.nsec"); if(det&&!det.open) det.open=true;}));
 
+// ---- Spotlight uncited claims so the analyst sees WHICH claim the gate flagged ----
+(function(){
+  const uncited=(DATA.citations&&DATA.citations.uncited)||[];
+  if(!uncited.length) return;
+  const norm=s=>(s||"").toLowerCase().replace(/\[cite:g\d+\]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+  const targets=uncited.map(norm).filter(t=>t.length>8);
+  document.querySelectorAll("#note p, #note li, #note h1, #note h2, #note h3").forEach(el=>{
+    if(!targets.some(u=>norm(el.textContent).includes(u))) return;
+    el.classList.add("uncited-claim");
+    el.setAttribute("title","No [cite] resolves this claim — flagged by the citation gate.");
+    const tag=document.createElement("span"); tag.className="uncited-tag"; tag.textContent="⚠ Uncited";
+    el.insertBefore(tag, el.firstChild);
+    const det=el.closest("details.nsec"); if(det&&!det.open) det.open=true;  // reveal if collapsed
+  });
+})();
+
 // ---- Dashboard ----
 const c = DATA.citations || {};
 const nCited=(c.cited||[]).length, nUncited=(c.uncited||[]).length,
@@ -666,9 +695,10 @@ function renderNet(W,H){
         p.classList.toggle("hot",s===d.id||t2===d.id); p.classList.toggle("dim",!(on.has(s)&&on.has(t2)));});
       selectEntity(d.id);});  // details-on-demand: open the entity drawer for this node
     gsvg.appendChild(g);});
-  gsvg.onclick=ev=>{if(ev.target===gsvg){
+  gsvg.onclick=ev=>{if(ev.target===gsvg){  // click empty space = deselect + close panel
     gsvg.querySelectorAll(".dim").forEach(o=>o.classList.remove("dim"));
-    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));}};
+    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));
+    closeEntity();}};
   const labels=[...new Set(nodes.map(d=>d.label))];
   NET_LEGEND=labels.map(l=>`<span><i style="background:${netColor(l)}"></i>${l}</span>`).join("")
     +`<span style="color:var(--muted)">${n} entities · ${links.length} links · click a node to focus</span>`;
@@ -775,12 +805,23 @@ function selectEntity(id){
         +`<span class="rl">${esc(r.o.label)}</span></button>`).join("")
     : `<div class="drawer-empty">No relationships in the traversed neighbourhood.</div>`;
   $("#e-rels").querySelectorAll(".rel").forEach(b=>b.addEventListener("click",()=>netFocus(b.dataset.go)));
-  closeDrawer();  // never stack the evidence + entity drawers
-  $("#edrawer").classList.add("open"); $("#scrim").classList.add("open");
+  // Non-modal: close the modal evidence drawer + its note highlights, but KEEP the
+  // graph trace the node-click just drew. NO scrim — the graph stays lit AND clickable,
+  // so clicking nodes still shows the connection trace (and you can pivot node to node).
+  $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true");
+  $("#scrim").classList.remove("open");
+  document.querySelectorAll("#note .sel").forEach(n=>n.classList.remove("sel"));
+  document.querySelectorAll("#note .blk-hot").forEach(n=>n.classList.remove("blk-hot"));
+  $("#edrawer").classList.add("open");
   $("#edrawer").setAttribute("aria-hidden","false");
 }
-function closeEntity(){$("#edrawer").classList.remove("open");$("#edrawer").setAttribute("aria-hidden","true");}
-$("#e-x").addEventListener("click",()=>{closeEntity();$("#scrim").classList.remove("open");});
+function closeEntity(){
+  $("#edrawer").classList.remove("open"); $("#edrawer").setAttribute("aria-hidden","true");
+  // deselecting clears the graph trace too
+  document.querySelectorAll(".node.dim,.edge.dim").forEach(n=>n.classList.remove("dim"));
+  document.querySelectorAll(".edge.hot").forEach(n=>n.classList.remove("hot"));
+}
+$("#e-x").addEventListener("click",closeEntity);
 
 // ---- Analytic evaluation panel (eval.json + rubric.json; present only when scored) ----
 const EV=DATA.evaluation, RB=DATA.rubric;
