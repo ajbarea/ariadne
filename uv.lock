@@ -253,7 +253,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "pytest-xdist", specifier = ">=3.6" },
     { name = "ruff", specifier = ">=0.15" },
-    { name = "testcontainers", extras = ["neo4j", "postgres"], specifier = ">=4.9" },
+    { name = "testcontainers", extras = ["neo4j", "postgres"], specifier = ">=4.14.2" },
     { name = "ty", specifier = ">=0.0.39,<0.1" },
     { name = "zensical", specifier = ">=0.0.24" },
 ]
