@@ -26,21 +26,36 @@ still-open items as unsettled; don't harden code against one answer.
 4. **Multimodal processing**: extraction tools and cross-modal fusion.
    *(Research: convert imagery/video to structured text, then reason.)*
 5. **Analytic rigor & eval**: provenance, grounding, confidence, success
-   metrics, structured analytic techniques. *(Open, next research pass.)*
-6. **Cloud vs. air-gapped fork**: per-component swap points. *(Partly open.)*
+   metrics, structured analytic techniques. *(Researched and shipped: citation
+   gate, ICD-203 tradecraft lint, planted-needle + rubric eval, governance audit;
+   see the [analytic-rigor research](research/analytic-rigor-eval.md).)*
+6. **Cloud vs. air-gapped fork**: per-component swap points. *(Resolved as a
+   single seam at the orchestrator model; see
+   [ADR-0012](architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md).
+   Remaining work is open-weight validation, not architecture.)*
 
 ## Phased build order
 
-| Phase | Focus | Lands |
-| ----- | ----- | ----- |
-| **0** *(in progress)* | Scaffold & research | toolchain, docs site, captured research |
-| **1** | Single-store vertical slice | graph connector + `entity-workup` skill + provenance hook + CLI (entity → cited note) |
-| **2** | Heterogeneous retrieval | SQL + vector connectors; source-routing + reconciliation; subagent fan-out |
-| **3** | Multimodal fusion | multimodal-to-text extraction; cross-modal evidence fusion |
-| **4** | Rigor, eval & integration | provenance surface, confidence, eval harness, SCADS sibling-tool interfaces |
-| **5** | Deployment hardening | resolve cloud-vs-air-gapped fork per component |
+| Phase | Focus | Status |
+| ----- | ----- | ------ |
+| **0** | Scaffold & research | ✅ complete: toolchain, docs site, captured research |
+| **1** | Single-store vertical slice | ✅ complete: Neo4j connector + `entity-workup` skill + provenance hook + `ariadne workup` (entity → cited note) |
+| **2** | Heterogeneous retrieval | mostly complete: Postgres SQL connector + hybrid (full-text + vector, RRF) wired into the loop; dataset-agnostic seam; subagent fan-out deferred ([ADR-0005](architecture/decisions/0005-defer-subagent-fan-out.md)) |
+| **3** | Multimodal fusion | planned: multimodal-to-text extraction; cross-modal evidence fusion |
+| **4** | Rigor, eval & integration | mostly complete: citation gate, ICD-203 tradecraft lint, planted-needle + rubric eval, reconciliation scoring, read-only governance gate, SCADS integration interfaces |
+| **5** | Deployment hardening | in progress: cloud-vs-air-gapped fork resolved ([ADR-0012](architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)); OpenTelemetry observability; model profiles ([ADR-0013](architecture/decisions/0013-user-selectable-model-profiles.md)); open-weight validation + PyPI publish remain |
 
-## Shipped
+## Recently shipped
 
+- **2026-06-04/05**: LLM-rubric analytic-standards eval, reconciliation scoring,
+  read-only governance hard-fail gate, user-selectable model profiles, SCADS
+  integration interfaces + reusable workflow patterns, OpenTelemetry observability.
+- **2026-06-03**: Dataset-agnostic pipeline (canonical schema + adapters),
+  live indexing + hybrid full-text/semantic retrieval, Enron adapter.
+- **2026-06-02**: Heterogeneous (graph + SQL) retrieval in the live loop;
+  planted-needle eval harness; citation gate v2 (recall + entailment).
 - **2026-06-01**: Repo scaffolded; Claude Agent SDK reference captured;
   best-practice research synthesized; Zensical docs site stood up.
+
+The canonical [`ROADMAP.md`](https://github.com/ajbarea/ariadne/blob/main/ROADMAP.md)
+carries the full per-item ledger with research provenance.

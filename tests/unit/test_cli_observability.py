@@ -27,3 +27,22 @@ def test_run_eval_emits_eval_telemetry(tmp_path, monkeypatch) -> None:
     cli._run_eval(str(tmp_path), "halberd")
     assert captured["fixture"] == "halberd"
     assert captured["entity"] == "Halberd"
+
+
+def test_run_eval_emits_reconciliation_telemetry(tmp_path, monkeypatch) -> None:
+    # The --reconcile branch must surface reconciliation scores as telemetry too.
+    (tmp_path / "note.md").write_text(
+        "Halberd and Wren are both at Compound-Alpha; the personnel records "
+        "corroborate this, consistent across both stores.",
+        encoding="utf-8",
+    )
+    (tmp_path / "provenance.jsonl").write_text(
+        json.dumps({"id": "g1", "tool_input": {"query": "MATCH (n) RETURN n"}}), encoding="utf-8"
+    )
+    captured = {}
+    monkeypatch.setattr(
+        "ariadne.cli.record_reconciliation_metrics",
+        lambda report, *, fixture: captured.update(fixture=fixture),
+    )
+    cli._run_eval(str(tmp_path), "halberd", reconcile="synthetic")
+    assert captured["fixture"] == "synthetic"

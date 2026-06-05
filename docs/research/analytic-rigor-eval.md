@@ -73,7 +73,7 @@ Candidate entailment models, with a *runnable-as-a-CI-gate* verdict:
 | **AlignScore-large** | 355M RoBERTa | open | ✅ fastest (~0.18s/ex) |
 | **LIM-RA** | ~350M DeBERTa | open | ✅ best accuracy/size (SummaC bal-acc 78.5 vs AlignScore 74.0) |
 | Bespoke-MiniCheck-7B | ~8B | commercial-gated | ⚠️ skip for a permissive repo |
-| RAGAS-default / FActScore / ALCE-TRUE-11B | frontier judge |, | ⚠️ integration-tier (key-gated) only |
+| RAGAS-default / FActScore / ALCE-TRUE-11B | frontier judge | (varies) | ⚠️ integration-tier (key-gated) only |
 
 `# research(2026-06): ALCE precision/recall + MiniCheck/HHEM entailment.`
 Lead: **HHEM-2.1-Open** for the hermetic gate, frontier-judge variant key-gated

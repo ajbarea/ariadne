@@ -1,11 +1,14 @@
 # Get Started
 
-!!! note "Scaffold and research phase"
+!!! note "What runs today"
 
-    Ariadne's harness architecture is being defined from
-    [current best practice](research/best-practice-architecture.md) before any
-    connector or library is pinned. The steps below set up the toolchain and run
-    the placeholder CLI, not yet the full analytic workflow.
+    The harness runs end-to-end: `ariadne workup <entity>` drives the live agent
+    loop over the seeded stores and writes a cited analytic note. The live loop
+    needs `ANTHROPIC_API_KEY` and, for the relational/semantic legs, running
+    Neo4j and Postgres. The offline gates (`eval`, `governance`) need neither.
+    Each design choice is grounded in
+    [current best practice](research/best-practice-architecture.md) before it
+    hardens into code.
 
 ## Prerequisites
 
@@ -24,16 +27,17 @@ make setup        # uv sync: installs dependencies + dev group
 
 `make help` lists every target. The common ones:
 
-| Goal                       | Command            |
-| -------------------------- | ------------------ |
-| Install dependencies       | `make setup`       |
-| Auto-fix (format + lint)   | `make fix`         |
-| Lint (CI-equivalent)       | `make lint`        |
-| Unit tests (fast)          | `make test-unit`   |
-| Full test suite            | `make test`        |
-| Pre-push gate              | `make validate`    |
-| Run the (scaffold) CLI     | `uv run ariadne`   |
-| Serve these docs locally   | `make docs`        |
+| Goal                       | Command                          |
+| -------------------------- | -------------------------------- |
+| Install dependencies       | `make setup`                     |
+| Auto-fix (format + lint)   | `make fix`                       |
+| Lint (CI-equivalent)       | `make lint`                      |
+| Unit tests (fast)          | `make test-unit`                 |
+| Full test suite            | `make test`                      |
+| Pre-push gate              | `make validate`                  |
+| Run a workup (live loop)   | `uv run ariadne workup <entity>` |
+| List the CLI subcommands   | `uv run ariadne --help`          |
+| Serve these docs locally   | `make docs`                      |
 
 ## Auditable runs
 
@@ -53,7 +57,7 @@ make docs                        # uv run --with zensical zensical serve
 ```
 
 It deploys automatically to GitHub Pages on every push to `main` that touches
-`docs/`, `overrides/`, or `zensical.toml`.
+`docs/`, `overrides/`, `zensical.toml`, or the docs workflow itself.
 
 ## Project layout
 

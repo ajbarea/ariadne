@@ -54,7 +54,7 @@ which is why they are P0/P1 and not aspirations.
 | Analytic-standards rubric (the axes gates can't see) | C-spec | ICD-203 rubric overall + per-criterion (judged independently) | Shipped (`rubric` extra) | ✅ |
 | Planted-needle eval harness with discriminating power | C-spec | grounded/recall/trajectory; proven to fail a weak model cleanly | Shipped | ✅ |
 | Read-only governance audit over the ledger | C-gov (security/integrity) | `governance.json` write-verb violations = 0 | Shipped | ✅ |
-| Per-product model + egress audit | C-gov (security) | profile name + egress class in `governance.json` + OTel | In design | 🟡 |
+| Per-product model + egress audit | C-gov (security) | profile name + egress class in `governance.json` + OTel | Shipped (ADR-0013) | ✅ |
 | Uniform observability (GenAI OTel) | C-spec, C-gov | spans/metrics on every workup | Shipped (`otel` extra) | ✅ |
 
 ## P2: Generalization & deployment (secondary deliverable + deployment constraint)
@@ -64,7 +64,7 @@ which is why they are P0/P1 and not aspirations.
 | Dataset-agnostic pipeline (write one adapter) | Secondary | Enron adapter runs the same workup+eval unchanged | Shipped (ADR-0006) | ✅ |
 | Hybrid retrieval (full-text + vector, RRF) | SC4, secondary | semantic leg surfaces text-only needles | Shipped (ADR-0007) | ✅ |
 | Cloud ↔ air-gapped on one codebase | Deployment constraint | open-weight model clears the eval bar via the single seam | Validating (ADR-0012) | 🟡 |
-| User-selectable model profiles (governed) | Usability + C-gov | unknown profile rejected; air-gap omits cloud profiles | In design | 🟡 |
+| User-selectable model profiles (governed) | Usability + C-gov | unknown profile rejected; air-gap omits cloud profiles | Shipped (ADR-0013) | ✅ |
 | Distribution as MCP server + plugin | Adoption | installs and runs from any MCP client | Shipped (ADR-0009) | ✅ |
 
 ## P3: Stretch / deferred (YAGNI-gated)
@@ -81,7 +81,7 @@ which is why they are P0/P1 and not aspirations.
 - **P0 and P1 are essentially complete.** The demonstrable-value criteria all have
   passing metrics, and the validation spine that certifies them is shipped. That is
   the deliberate over-investment in C-spec the brief asks for.
-- **The live edges are all P1/P2 governance and deployment** (ADR-0012 validation,
-  model-profile design), exactly where current work sits.
+- **The live edge is P2 deployment validation** (ADR-0012: which open-weight model
+  clears the eval bar), exactly where current work sits.
 - **Nothing in P0/P1 is blocked.** The remaining blocked items (licensed Avocado
   data, PyPI publish) are P2 and gated on access/credentials, not on engineering.

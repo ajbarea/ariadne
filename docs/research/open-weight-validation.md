@@ -54,7 +54,7 @@ stores were queried.
 | Model | Params (active) | Evidence calls | grounded | recall | trajectory | reconciliation | citation gate | rubric (ICD-203) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Claude (cloud baseline)** | frontier | 24 | ✅ True | 1.00 | 1.00 | 1.00 (2/2) | ✅ pass | ~4.50-4.75 / 5 |
-| **qwen3:14b** _(MoE 30B-A3B was queued)_ | 14B | loop ran (multi-turn tool calls) | DNF¹ |, |, |, |, | not reached |
+| **qwen3:14b** _(MoE 30B-A3B was queued)_ | 14B | loop ran (multi-turn tool calls) | DNF¹ | not reached | not reached | not reached | not reached | not reached |
 | **qwen3:0.6b** _(floor)_ | 0.6B | **0** | ❌ False | 0.00 | 0.00 | 0.00 (0/2) | ❌ fail | not scored |
 
 ¹ **DNF = throughput-bound, not a capability failure.** The 14B drove the agent

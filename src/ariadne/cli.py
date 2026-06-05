@@ -34,6 +34,7 @@ from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
 from ariadne.observability import (
     eval_span,
     record_eval_metrics,
+    record_reconciliation_metrics,
     record_workup_metrics,
     setup_telemetry,
     workup_span,
@@ -171,8 +172,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
     """Score an existing workup against a planted-needle fixture (no API key needed)."""
     report = score_workup_dir(workup_dir, FIXTURES[fixture_name])
+    rec = None
     with eval_span(report.entity, fixture_name):
         record_eval_metrics(report, fixture=fixture_name)
+        if reconcile is not None:
+            rec = score_reconciliation_dir(workup_dir, RECON_FIXTURES[reconcile])
+            record_reconciliation_metrics(rec, fixture=reconcile)
     line = (
         f"Eval [{report.entity}/{fixture_name}]: grounded={report.grounded} "
         f"recall={report.recall:.2f} trajectory={report.trajectory:.2f} "
@@ -184,8 +189,7 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
             f"(p={report.supporting_fact_precision:.2f} r={report.supporting_fact_recall:.2f})"
         )
     print(line)
-    if reconcile is not None:
-        rec = score_reconciliation_dir(workup_dir, RECON_FIXTURES[reconcile])
+    if rec is not None:
         print(
             f"Reconciliation [{rec.entity}/{reconcile}]: reconciliation={rec.reconciliation:.2f} "
             f"(corroboration={rec.corroboration:.2f} conflict={rec.conflict:.2f}) "

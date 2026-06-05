@@ -392,7 +392,8 @@ items must not be hardened against one answer.
         `.score.value` + `.score.label`) plus an `ariadne.eval.score` histogram
         for dashboards. `# research(2026-06):` OTel standardizes GenAI evaluation
         as an *event*, not a metric instrument — hence event + Ariadne-namespaced
-        metric.
+        metric. Cross-store **reconciliation** scores (`--reconcile`) emit on the
+        same surface (reconciliation / corroboration / conflict dimensions).
       - *compliance* — already the citation gate (`uncited` / `unsupported` /
         `dangling`) + ICD-203 tradecraft lint; emit pass/fail + counts as
         span events / metrics.

@@ -102,7 +102,7 @@ hide:
     <div class="stat-strip">
       <div class="stat"><span class="stat-num">29</span><span class="stat-label">primary sources researched</span></div>
       <div class="stat"><span class="stat-num">25</span><span class="stat-label">claims adversarially verified</span></div>
-      <div class="stat"><span class="stat-num">12</span><span class="stat-label">decisions recorded as ADRs</span></div>
+      <div class="stat"><span class="stat-num">13</span><span class="stat-label">decisions recorded as ADRs</span></div>
     </div>
     <p class="section-buttons">
       <a class="md-button md-button--primary" href="research/best-practice-architecture/">Architecture</a>

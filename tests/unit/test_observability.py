@@ -205,6 +205,38 @@ def test_record_eval_metrics_records_score_histogram() -> None:
     assert all(p.attributes["ariadne.fixture"] == "halberd" for p in points)
 
 
+def _recon_report():
+    from ariadne.evaluation.reconcile import ReconciliationReport
+
+    return ReconciliationReport(
+        entity="Halberd",
+        corroboration=1.0,
+        conflict=0.5,
+        reconciliation=0.75,
+        handled=3,
+        total=4,
+    )
+
+
+def test_record_reconciliation_metrics_emits_events_and_scores() -> None:
+    from ariadne.observability import eval_span, record_reconciliation_metrics
+
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    with eval_span("Halberd", "synthetic"):
+        record_reconciliation_metrics(_recon_report(), fixture="synthetic")
+    s = next(s for s in _spans() if s.name == "evaluate")
+    events = {
+        e.attributes["gen_ai.evaluation.name"]: e
+        for e in s.events
+        if e.name == "gen_ai.evaluation.result"
+    }
+    assert set(events) == {"reconciliation", "corroboration", "conflict"}
+    assert events["reconciliation"].attributes["gen_ai.evaluation.score.value"] == 0.75
+    points = _metric_points("ariadne.eval.score")
+    recorded = {p.attributes["gen_ai.evaluation.name"] for p in points}
+    assert {"reconciliation", "corroboration", "conflict"} <= recorded
+
+
 def test_setup_telemetry_is_noop_without_endpoint(monkeypatch) -> None:
     from ariadne import observability
 
