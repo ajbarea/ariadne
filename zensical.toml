@@ -44,6 +44,7 @@ nav = [
           { "0012 · Cloud vs. air-gapped fork" = "architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md" },
           { "0013 · User-selectable model profiles" = "architecture/decisions/0013-user-selectable-model-profiles.md" },
           { "0014 · pgvector for the semantic leg" = "architecture/decisions/0014-pgvector-for-the-semantic-leg.md" },
+          { "0015 · Subagent fan-out design" = "architecture/decisions/0015-subagent-fan-out-design.md" },
       ]},
   ]},
   { "Project" = [

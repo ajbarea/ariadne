@@ -41,6 +41,7 @@ ADR is where the *comparison* lives.
 | [0012](0012-cloud-vs-air-gapped-deployment-fork.md) | Cloud vs. air-gapped deployment fork (single seam) | Accepted |
 | [0013](0013-user-selectable-model-profiles.md) | User-selectable model profiles (curated allowlist) | Accepted |
 | [0014](0014-pgvector-for-the-semantic-leg.md) | pgvector for the semantic-leg vector store | Accepted |
+| [0015](0015-subagent-fan-out-design.md) | Subagent fan-out — design specified, implementation gated | Accepted |
 
 ## Template
 

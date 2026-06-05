@@ -11,16 +11,18 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 _Nothing in flight._ Pick the next item from
 [ROADMAP](./ROADMAP.md) — open candidates worth grabbing first:
 
-- **Subagent fan-out design pass** — deferred (ADR-0005), not blocked on
-  research; needs the provenance-redesign sketch before any code (workers return
-  *pre-cited* evidence so the parent `gN` provenance hook stays whole).
 - **Entity resolution across stores** — the foundation research pass left this
   open; reconciliation is scored but cross-store record-linkage strategy is
-  unspecified.
+  unspecified. Likely the next meaty research/design item.
+- **Subagent fan-out implementation** — design now specified
+  ([ADR-0015](./docs/architecture/decisions/0015-subagent-fan-out-design.md));
+  gated on store count ≥4 or a measured latency bottleneck, so not yet. When it
+  fires, owe a smoke test that a worker `mcp__*` call lands in the shared ledger
+  with `agent_id` set.
 
 Recently settled: vector-store engine → [ADR-0014](./docs/architecture/decisions/0014-pgvector-for-the-semantic-leg.md)
-(pgvector ratified vs Qdrant / Redis 8.4 / embedded; in-engine upgrade path
-pgvectorscale·VectorChord).
+(pgvector ratified); subagent fan-out design → [ADR-0015](./docs/architecture/decisions/0015-subagent-fan-out-design.md)
+(provenance blocker dissolved by the SDK; implementation gated on a trigger).
 
 - **Vector/unstructured connector re-research** — the deep-research run only
   adversarially confirmed the SQL choice; pgvector vs Redis-8 vs a dedicated

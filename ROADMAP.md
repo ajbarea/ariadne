@@ -196,16 +196,16 @@ items must not be hardened against one answer.
       ~27 msgs) — ingest text/headers only. Built now, populated when licensed data
       is provided.
 - [ ] Add the vector/unstructured connector.
-- [ ] Subagent fan-out for parallel per-store retrieval — **deferred pending a
-      design pass** (not blocked on research). Naive fan-out conflicts with the
-      slice's two load-bearing properties: cross-store **reconciliation** is a
-      shared-context task (the research doc flags fan-out as *not* generalising to
-      shared-context work), and the parent-side `PostToolUse` `gN` provenance hook
-      never sees a subagent's isolated tool calls (only its summary returns). The
-      correct shape — workers retrieve in parallel and return *pre-cited* evidence,
-      lead reconciles — is a real provenance redesign. YAGNI for a 2-store slice
-      already scoring `grounded=True`; revisit at higher store count / context
-      pressure (fan-out costs ~15× tokens). See IMPL.md.
+- [ ] Subagent fan-out for parallel per-store retrieval — **design specified,
+      implementation gated** ([ADR-0015](./docs/architecture/decisions/0015-subagent-fan-out-design.md),
+      the design pass [ADR-0005](./docs/architecture/decisions/0005-defer-subagent-fan-out.md)
+      called for). The provenance blocker is **largely dissolved**: the Python SDK
+      `PostToolUse` hook now fires *inside* subagents with `agent_id`, so the one
+      registered hook records each worker's evidence call into the shared ledger —
+      `gN` stays globally unique, workers return *pre-cited* evidence, lead
+      reconciles in shared context. Implementation stays **YAGNI** for the 2–3-store
+      slice (already `grounded=True`; fan-out costs ~3–15× tokens); trigger =
+      store count ≥4 or a *measured* latency/context bottleneck.
 
   > **SQL connector — decided.** `# research(2026-06):` use
   > [`crystaldba/postgres-mcp`](https://github.com/crystaldba/postgres-mcp)
