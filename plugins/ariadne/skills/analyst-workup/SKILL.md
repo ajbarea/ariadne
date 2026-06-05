@@ -26,7 +26,7 @@ The server returns a cited analytic note. Every factual claim carries a `[cite:g
 The Ariadne MCP server requires:
 - Neo4j (graph store) reachable at `NEO4J_URI`.
 - PostgreSQL (relational store) if `sql=true`.
-- Qdrant (semantic store) if `semantic=true`.
+- PostgreSQL + `pgvector` (semantic store) if `semantic=true`.
 - `ANTHROPIC_API_KEY` set in the environment.
 
 If the server is unreachable, tell the user to verify the stores are running and the env vars are configured. For a local-checkout install, swap the MCP command in `.mcp.json` to `{"command": "python", "args": ["-m", "ariadne.mcp_server"]}`.

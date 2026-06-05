@@ -237,9 +237,11 @@ items must not be hardened against one answer.
   > layer for long investigations (official
   > [`redis/agent-memory-server`](https://github.com/redis/agent-memory-server)
   > exposes an MCP interface, sub-ms reads); (b) **one** candidate for the open
-  > vector connector below (Redis 8 folds in RediSearch vector search) — but
-  > `pgvector` is the consolidation-friendly rival there, so that fork settles when
-  > we build the connector, not now. Sources:
+  > vector connector below (Redis 8.4 folds in RediSearch vector search + native
+  > `FT.HYBRID`) — but `pgvector` is the consolidation-friendly rival there.
+  > **Settled (2026-06-05) by [ADR-0014](./docs/architecture/decisions/0014-pgvector-for-the-semantic-leg.md):**
+  > pgvector wins on the single-auditable-store driver; Redis stays an additive
+  > memory/session candidate, not the evidence vector store. Sources:
   > [SitePoint](https://www.sitepoint.com/state-management-for-long-running-agents-redis-vs-postgres/) ·
   > [Alongside](https://www.alongside.team/blog/redis-vs-postgresql-agent-memory-session-state) ·
   > [PingCAP](https://www.pingcap.com/compare/best-database-for-ai-agents/) ·
