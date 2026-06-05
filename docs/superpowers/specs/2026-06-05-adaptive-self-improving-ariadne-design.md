@@ -104,8 +104,13 @@ user ontology yet, **no** dynamic MCP yet):
    tables→entity types, which columns→attributes (intrinsic) vs which FKs→edges
    (relational), into the canonical `person/org/site/document` + edge schema.
 3. **Ratify + freeze** — the proposal is written as `mapping.toml`; a human edits/
-   accepts; a deterministic validator checks it against the canonical schema (no
-   unknown entity types, every edge endpoint resolvable) before it is usable.
+   accepts; a deterministic validator checks **structural integrity** before it is
+   usable. The canonical schema's `type` is an open string (it deliberately avoids a
+   "god model"), so the validator checks structure, not a closed type list: every
+   mapped column exists in the introspected summary, each entity declares an `id` +
+   `name` column, and every relationship's endpoint tables are themselves mapped to
+   entities (the loadability check the 2026 schema-mapping work flags — entities that
+   "look right" but can't be loaded because an edge endpoint is unmapped).
 4. **Apply** — a frozen `mapping.toml` drives a `DatasetAdapter` over the live
    Postgres, so the *existing* indexer + workup + eval run unchanged on the user's
    data.
@@ -132,7 +137,8 @@ and hermetic.
   one live integration test (testcontainers Postgres) behind the `integration` marker.
 - Mapper engine tested with a hermetic fake `SchemaMapper`; the real Claude mapper
   behind an extra + a `network`/`integration` test.
-- Validator: golden + adversarial mappings (unknown entity type, dangling edge).
+- Validator: golden + adversarial mappings (column not in the introspected schema,
+  relationship endpoint table unmapped, entity missing its id/name column).
 - A frozen-`mapping.toml` → adapter → indexer → workup → `eval` round-trip on a small
   seeded Postgres, asserting a grounded note (the propose→ratify→freeze loop end to
   end).
