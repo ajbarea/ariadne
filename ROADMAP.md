@@ -146,8 +146,9 @@ items must not be hardened against one answer.
      **context-utilization** descriptive stat (`|distinct cited gN| / |distinct
      retrieved gN|`) — reported, never gated, with the explicit caveat that
      exploratory and negative-confirmation retrieval legitimately lower it.
-     Retrieval-drift + LLM-judge passage-utility are deferred. Implementation
-     (one stat + a dashboard card) is the next eval-harness increment.
+     Retrieval-drift + LLM-judge passage-utility are deferred. **Shipped
+     2026-06-05** (`evaluation/utilization.py`; `ariadne eval` `utilization=…` +
+     report dashboard card; TDD, headless-verified).
      `# research(2026-06): SoK Agentic RAG (arXiv 2603.07379) — trajectory-aware
      retrieval eval: context utilization / cumulative relevance / retrieval drift.`
    - **Multi-judge averaging (FACTS-style).** DeepMind FACTS Grounding averages

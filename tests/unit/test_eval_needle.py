@@ -71,6 +71,20 @@ def test_naming_the_needle_without_traversing_is_a_guess() -> None:
     assert report.grounded is False
 
 
+def test_report_carries_context_utilization_over_the_ledger() -> None:
+    # Fixture-independent descriptive stat (ADR-0019): of the distinct evidence
+    # retrieved, the fraction that grounded a cited claim. g3 is an uncited
+    # exploratory call, so utilization is 2/3 — and never gates `grounded`.
+    note = "Compound-Alpha, co-located [cite:g1]; the tie holds [cite:g2]."
+    entries = [
+        {"id": "g1", "tool_input": {"query": "MEMBER_OF CO_LOCATED"}},
+        {"id": "g2", "tool_input": {"query": "x"}},
+        {"id": "g3", "tool_input": {"query": "negative check"}},
+    ]
+    report = score_workup(note, entries, HALBERD_FIXTURE)
+    assert report.context_utilization == 2 / 3
+
+
 def test_traversal_counts_even_when_the_bridge_node_is_not_named_in_a_query() -> None:
     # The agent reaches the bridge node via relationships (a shortest path / *..4
     # hop) without querying it by name — the relationship types are the evidence

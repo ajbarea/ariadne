@@ -123,6 +123,18 @@ def test_entity_network_renders_when_subgraph_present(tmp_path: Path) -> None:
     assert "Signals-Cell" in html and "MEMBER_OF" in html  # real entities + relationship
 
 
+def test_report_surfaces_context_utilization(tmp_path: Path) -> None:
+    # ADR-0019: a descriptive retrieval-side stat — fraction of retrieved evidence
+    # that grounded a cited claim — reported as a dashboard card, never gated.
+    d = _make_workup(tmp_path)  # note cites g1 + g2; ledger has g1 + g2 → utilization 1.0
+    data = extract_report_data(d)
+    assert data["utilization"] == 1.0
+    html = render_report(d)
+    assert "Context utilization" in html  # the dashboard card label
+    # the plain-language definition names the exploratory-retrieval caveat
+    assert "exploratory" in html.lower()
+
+
 def test_entity_network_node_has_a_detail_drawer(tmp_path: Path) -> None:
     d = _make_workup(tmp_path)
     (d / "subgraph.json").write_text(

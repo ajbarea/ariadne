@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ariadne.evaluation._text import all_present, fraction_present, statement_text
+from ariadne.evaluation.utilization import context_utilization
 from ariadne.provenance.ledger import ProvenanceLedger
 
 
@@ -67,6 +68,10 @@ class EvalReport:
     supporting_fact_precision: float | None = None
     supporting_fact_recall: float | None = None
     supporting_fact_f1: float | None = None
+    # Fixture-independent descriptive retrieval-side signal (ADR-0019): fraction of
+    # distinct retrieved evidence that grounded a cited claim. None when nothing was
+    # retrieved. Reported, never gated — exploratory retrieval legitimately lowers it.
+    context_utilization: float | None = None
 
 
 # The seed's planted length-3 bridge:
@@ -150,6 +155,7 @@ def score_workup(note: str, ledger_entries: list[dict], fixture: NeedleFixture) 
         supporting_fact_precision=sf_precision,
         supporting_fact_recall=sf_recall,
         supporting_fact_f1=sf_f1,
+        context_utilization=context_utilization(note, ledger_entries),
     )
 
 

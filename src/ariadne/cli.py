@@ -203,6 +203,8 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
             f" sf_f1={report.supporting_fact_f1:.2f} "
             f"(p={report.supporting_fact_precision:.2f} r={report.supporting_fact_recall:.2f})"
         )
+    if report.context_utilization is not None:
+        line += f" utilization={report.context_utilization:.2f}"  # descriptive, never gates
     print(line)
     if rec is not None:
         print(

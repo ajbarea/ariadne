@@ -38,18 +38,19 @@ ships text + acceptable license) — HF video download charts are robotics/train
 dominated; per ADR-0008 WorldSpeech already proves the sensory→text thesis.
 HF caching: defaults are best-practice; `HF_HOME`/`HF_TOKEN` optional in `.env`.
 
+**Context-utilization eval stat — shipped 2026-06-05**
+([ADR-0019](./docs/architecture/decisions/0019-retrieval-side-evaluation-for-sensemaking.md)):
+a deterministic, descriptive retrieval-side signal — `|distinct cited gN| /
+|distinct retrieved gN|` (`evaluation/utilization.py`, pure over note × ledger) —
+surfaced in `ariadne eval` (`utilization=…`) and as a report dashboard card,
+**never gated** (a dangling cite is excluded as a citation error; exploratory /
+negative-confirmation retrieval legitimately lowers it). TDD; verified headlessly
+(card renders 67% on a 2/3 fixture; `grounded` unaffected). The June-2026 research
+pass reframed this for the agentic domain: precision@k doesn't apply, retrieval-
+recall is already covered by needle `recall` + supporting-fact F1.
+
 Open candidates after this:
 
-- **Context-utilization eval stat — design decided, ungated, ready
-  ([ADR-0019](./docs/architecture/decisions/0019-retrieval-side-evaluation-for-sensemaking.md)).**
-  A June-2026 research pass reframed "retrieval precision/recall" for the
-  agentic/iterative domain: precision@k doesn't apply (no ranked single-pass
-  lookup), retrieval-recall is already covered (needle `recall` + supporting-fact
-  F1). The one genuine add is a deterministic **context-utilization** stat —
-  `|distinct cited gN| / |distinct retrieved gN|` from `provenance.jsonl` ×
-  `citations.json` — reported in `ariadne eval` + a report dashboard card,
-  **never gated** (exploratory / negative-confirmation retrieval legitimately
-  lowers it). Small, deterministic, TDD-able; the next eval-harness increment.
 - **Entity-resolution implementation** — strategy now specified
   ([ADR-0016](./docs/architecture/decisions/0016-entity-resolution-across-stores.md));
   Tier 1 (exact key) shipped, Tiers 2–3 (blocking+normalized, LLM-adjudicated)

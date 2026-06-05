@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from ariadne.evaluation.reconcile import _CONFLICT_CUES, _CORROBORATION_CUES
+from ariadne.evaluation.utilization import context_utilization
 from ariadne.provenance.hook import _source_label
 
 _CITE_RE = re.compile(r"\[cite:(g\d+)\]")
@@ -165,6 +166,7 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
         "governance": _load_json(d / "governance.json"),
         "subgraph": _load_json(d / "subgraph.json"),
         "reconciliation": _extract_reconciliation(note),
+        "utilization": context_utilization(note, ledger),
     }
 
 
@@ -512,6 +514,11 @@ $("#dash").innerHTML = [
   stat("","Evidence calls", DATA.ledger.length, `${new Set(DATA.ledger.map(e=>e.source)).size} source(s) engaged`,
        "How many times the agent queried an evidence store (graph / relational / text) to ground "
        +"the note. More sources engaged = more cross-checking across the data."),
+  DATA.utilization!=null ? stat("","Context utilization", Math.round(DATA.utilization*100)+"%",
+       "retrieved evidence that grounded a claim",
+       "Of the distinct evidence the agent retrieved, the share that grounded a cited claim. "
+       +"Descriptive, never a pass/fail — exploratory and negative-confirmation retrieval "
+       +"(checking alternatives, establishing an absence) legitimately lower it.") : "",
   gov!==null ? stat(govOk?"ok":"bad","Read-only contract", govOk?'<span class="pill ok">UPHELD</span>':'<span class="pill bad">VIOLATED</span>',
        `${(gov.write_attempts||[]).length} write attempt(s)`,
        "Did the agent only READ from the evidence stores? UPHELD = it never tried to modify the "
