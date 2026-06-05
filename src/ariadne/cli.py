@@ -172,6 +172,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "report", help="Render a self-contained interactive report.html for a workup dir"
     )
     rp.add_argument("workup_dir", help="Workup output dir (reads note.md + the JSON artifacts)")
+    mp = sub.add_parser(
+        "map", help="Introspect a Postgres store and propose a draft mapping.toml (ADR-0020)"
+    )
+    mp.add_argument("--dsn", required=True, help="Read-only Postgres connection string")
+    mp.add_argument("--schema", default="public", help="Schema to introspect (default: public)")
+    mp.add_argument(
+        "--out", default="mapping.toml", help="Draft mapping path (default: mapping.toml)"
+    )
     return parser.parse_args(argv)
 
 
@@ -181,6 +189,31 @@ def _run_report(workup_dir: str) -> int:
 
     out = write_report(workup_dir)
     print(f"Wrote {out}")
+    return 0
+
+
+def _run_map(dsn: str, out: str, schema: str = "public") -> int:
+    """Introspect a Postgres store and write a draft ``mapping.toml`` (no API key).
+
+    The agent does not run here — this is the read-only *propose* step of the
+    propose -> ratify -> freeze loop. A human reviews/edits the draft before it is used.
+    """
+    import psycopg
+
+    from ariadne.mapping.propose import propose_and_write
+
+    with psycopg.connect(dsn) as conn:
+        mapping, errors = propose_and_write(conn, out, schema=schema)
+    print(
+        f"Proposed mapping -> {out}: {len(mapping.entities)} entit(ies), "
+        f"{len(mapping.relationships)} relationship(s) from schema {schema!r}."
+    )
+    if errors:
+        print(f"{len(errors)} validation issue(s) to resolve before use:", file=sys.stderr)
+        for e in errors:
+            print(f"  ! {e}", file=sys.stderr)
+        return 1
+    print(f"Review/edit {out}, then load it with a MappingDrivenAdapter.")
     return 0
 
 
@@ -585,6 +618,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_governance(args.workup_dir)
     if args.command == "report":
         return _run_report(args.workup_dir)
+    if args.command == "map":
+        return _run_map(args.dsn, args.out, args.schema)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

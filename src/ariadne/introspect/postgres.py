@@ -91,3 +91,22 @@ def introspect(conn: Any, schema: str = "public") -> SchemaSummary:
         fk_cols = [d[0] for d in cur.description]
         fk_rows = [dict(zip(fk_cols, row, strict=True)) for row in cur.fetchall()]
     return build_schema_summary(column_rows, fk_rows)
+
+
+def postgres_row_reader(conn: Any, schema: str = "public") -> Any:
+    """Return a ``RowReader`` (table name -> list of dict rows) over ``conn``.
+
+    Read-only ``SELECT *`` per table; identifiers are quoted via ``psycopg.sql`` so a
+    table name from introspection is interpolated safely. Used by
+    ``MappingDrivenAdapter`` to project a user's Postgres onto the canonical schema.
+    """
+    from psycopg import sql
+
+    def read(table: str) -> list[dict]:
+        query = sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(schema), sql.Identifier(table))
+        with conn.cursor() as cur:
+            cur.execute(query)
+            cols = [d[0] for d in cur.description]
+            return [dict(zip(cols, row, strict=True)) for row in cur.fetchall()]
+
+    return read

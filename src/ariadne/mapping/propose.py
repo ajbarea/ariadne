@@ -8,9 +8,16 @@ human ratifies — nothing here is auto-applied.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from ariadne.mapping.schema import EntityMapping, Mapping, RelationshipMapping
+from ariadne.mapping.schema import (
+    EntityMapping,
+    Mapping,
+    RelationshipMapping,
+    dump_mapping_toml,
+    validate_mapping,
+)
 
 if TYPE_CHECKING:
     from ariadne.introspect.postgres import Column, SchemaSummary
@@ -89,3 +96,25 @@ class BaselineMapper:
 
     def propose(self, summary: SchemaSummary) -> Mapping:
         return baseline_mapping(summary)
+
+
+def propose_and_write(
+    conn: Any,
+    out_path: str | Path,
+    *,
+    schema: str = "public",
+    mapper: SchemaMapper | None = None,
+) -> tuple[Mapping, list[str]]:
+    """Introspect ``conn``, propose a mapping, write the draft ``mapping.toml``.
+
+    Returns the proposed mapping and any structural validation errors. The draft is
+    written regardless (a human ratifies/edits it); errors are surfaced so the caller
+    can warn. This is the testable core of the ``ariadne map`` command.
+    """
+    from ariadne.introspect.postgres import introspect
+
+    summary = introspect(conn, schema)
+    mapping = (mapper or BaselineMapper()).propose(summary)
+    errors = validate_mapping(mapping, summary)
+    Path(out_path).write_text(dump_mapping_toml(mapping), encoding="utf-8")
+    return mapping, errors
