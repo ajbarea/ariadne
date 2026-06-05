@@ -265,11 +265,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .pill.ok{color:var(--ok)} .pill.bad{color:var(--bad)}
 
 /* Layout */
-.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:24px;margin-top:24px;align-items:start}
-@media(max-width:980px){.grid{grid-template-columns:1fr}}
-/* graph rides alongside the (usually longer) note instead of stretching to an empty card */
-#graph-card{position:sticky;top:84px}
-@media(max-width:980px){#graph-card{position:static}}
+/* single-column report: full-width bands stack cleanly (no tall-left / blank-right) */
+.grid{display:flex;flex-direction:column;gap:24px;margin-top:24px}
 #graph,#netgraph{max-height:62vh}
 /* fullscreen graph */
 #graph-card.fs{position:fixed;inset:18px;z-index:60;margin:0;max-width:none;overflow:auto;
@@ -284,7 +281,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px}
 .card>h2{font-family:var(--sans);font-size:11px;letter-spacing:.28em;text-transform:uppercase;
   color:var(--muted);font-weight:700;margin:0;padding:16px 22px;border-bottom:1px solid var(--line)}
-.note{padding:6px 26px 26px;font-family:var(--serif);font-size:17px;color:var(--ink);max-height:none}
+.note{padding:6px 26px 26px;font-family:var(--serif);font-size:17px;color:var(--ink);
+  max-width:900px;margin:0 auto}  /* readable measure within the full-width card */
 .note h1,.note h2,.note h3{font-family:var(--serif);color:var(--ink);line-height:1.25;margin:26px 0 8px}
 .note h1{font-size:24px} .note h2{font-size:20px;color:var(--thread)} .note h3{font-size:17px;letter-spacing:.02em}
 .note p{margin:10px 0} .note ul{margin:8px 0 8px 2px;padding-left:20px} .note li{margin:6px 0}
@@ -605,7 +603,7 @@ function renderNet(W,H){
   return true;
 }
 const SG_N=(DATA.subgraph&&DATA.subgraph.nodes)?DATA.subgraph.nodes.length:0;
-function panelDims(){return [620, Math.max(360,Math.min(560,150+SG_N*26))];}
+function panelDims(){return [1080, 400];}  // full-width band; the network spreads across it
 function netDims(fs){return fs?[Math.min(1500,innerWidth-90),Math.min(840,innerHeight-200)]:panelDims();}
 hasNet=renderNet(...panelDims());
 
