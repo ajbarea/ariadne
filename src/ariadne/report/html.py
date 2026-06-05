@@ -292,7 +292,7 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .nsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;
   font-family:var(--serif);font-size:20px;font-weight:600;color:var(--thread);padding:16px 0 6px}
 .nsec>summary::-webkit-details-marker{display:none}
-.nsec>summary::before{content:"\\25B8";font-size:13px;color:var(--muted);transition:transform .2s;flex:none}
+.nsec>summary::before{content:"\25B8";font-size:13px;color:var(--muted);transition:transform .2s;flex:none}
 .nsec[open]>summary::before{transform:rotate(90deg)}
 .nsec>summary:hover{color:var(--ink)} .nsec>summary:hover::before{color:var(--thread)}
 .nbody{padding:2px 0 8px 2px}

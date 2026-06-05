@@ -93,6 +93,9 @@ def test_note_splits_into_collapsible_sections(tmp_path: Path) -> None:
     # the verbose Provenance section defaults collapsed (no `open`)
     assert '<details class="nsec"><summary>Provenance</summary>' in note_html
     assert '<details class="nsec" open><summary>Summary</summary>' in note_html
+    # chevron uses a valid CSS unicode escape (single backslash, not a raw-string double)
+    html = render_report(d)
+    assert 'content:"\\25B8"' in html and 'content:"\\\\25B8"' not in html
 
 
 def test_dashboard_cards_carry_plain_language_definitions(tmp_path: Path) -> None:
