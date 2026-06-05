@@ -160,7 +160,13 @@ body.hero-page .md-content__inner {
   letter-spacing: 0.06em !important;
   text-transform: uppercase;
   white-space: nowrap;
-  text-align: center;
+  /* research(2026-06): inline-flex centering so the leading octicon sits on the
+     label's optical center; text-align alone left the icon ~1px high because it
+     hung on the twemoji vertical-align. gap replaces the markdown icon's space. */
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 

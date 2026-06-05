@@ -118,7 +118,8 @@ items must not be hardened against one answer.
    The brief frames this as the core challenge: **specification & validation**
    (*"how do you know what works?"*) plus **governance** — uniform quality,
    security, and data integrity. **Open** — no verified claims this pass; top
-   target for the next research pass.
+   target for the next research pass. *(Eval-**harness** candidate — Inspect AI —
+   noted in the Phase 4 research-watch below; orthogonal to the rigor substance here.)*
 6. **Cloud vs. air-gapped fork** — *resolved* (`# research(2026-06):`,
    [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)).
    The fork is a **single seam** — the orchestrator model, swapped at
@@ -337,6 +338,26 @@ items must not be hardened against one answer.
       posture governance, the dataset-agnostic seam, injectable-Protocol DI), each
       grounded in real code + ADRs for reuse by future SCADS use cases.
       [docs/patterns.md](./docs/patterns.md) (top-level nav).
+
+  > **Research watch — Inspect AI as an eval harness / SCADS AI-Evaluation seam.**
+  > `# research(2026-06):` [Inspect](https://inspect.aisi.org.uk/) (UK AI Security
+  > Institute + Meridian Labs) is the de-facto agent-eval framework — `Task` =
+  > `Dataset` + `Solver` + `Scorer`, model-graded (LLM-as-judge) scorers, an
+  > eval-log viewer, MCP + built-in tools, multi-provider (incl. local
+  > vLLM/Ollama), and it can drive **external agents including Claude Code / the
+  > Agent SDK**; adopted by METR, Apollo, and peer AISIs. **Fit:** it is a
+  > *harness / runner / standardization* layer, not a metrics library — Ariadne's
+  > domain metrics (planted-needle grounding, supporting-fact F1, reconciliation,
+  > ALCE citation recall + HHEM entailment, ICD-203 LLM-Rubric) would wrap as
+  > custom `Scorer`s. What it adds on top: a shareable eval-log artifact,
+  > systematic many-fixture / many-model runs, and a natural **SCADS
+  > AI-Evaluation** integration seam (the program's overarching validation area).
+  > **Caveat / YAGNI:** the bespoke eval CLI (`ariadne eval` / `rubric`) is already
+  > green and IR-specific — adopt only when we need cross-model/fixture
+  > comparability, the log viewer, or to hand the SCADS eval effort a standard
+  > interface; never as a swap for working metrics. Sources:
+  > [Inspect docs](https://inspect.aisi.org.uk/) ·
+  > [UK AISI Autonomous Systems Evaluation Standard](https://ukgovernmentbeis.github.io/as-evaluation-standard/).
 
 ### Phase 5 — Deployment hardening
 - [x] **Cloud-vs-air-gapped fork resolved + documented (2026-06-04):** the fork
