@@ -511,8 +511,16 @@ async def run_workup(
             governance=governance,
             profile=prof,
         )
+        # Additive: render the self-contained interactive report alongside the
+        # existing artifacts (ADR-0017); never replaces note.md or the JSON.
+        from ariadne.report.html import write_report
 
-    print(f"Wrote {out_dir}/note.md ({len(ledger.entries)} graph calls cited) in {elapsed:.1f}s.")
+        write_report(out_dir)
+
+    print(
+        f"Wrote {out_dir}/note.md + report.html ({len(ledger.entries)} graph calls cited) "
+        f"in {elapsed:.1f}s."
+    )
     if tradecraft.nonstandard_terms:
         print(
             "Tradecraft (advisory): non-standard estimative terms "

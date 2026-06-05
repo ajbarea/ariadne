@@ -142,6 +142,12 @@ _TEMPLATE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ariadne · __ENTITY_TITLE__</title>
+<script>
+/* Set the theme before paint (no flash). Default: saved choice, else OS preference. */
+(function(){try{var t=localStorage.getItem("ariadne-theme")||
+ (matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");
+ document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="dark";}})();
+</script>
 <style>
 :root{
   --bg:#0b0d12; --bg2:#0e1118; --panel:#13161f; --panel2:#171b26;
@@ -151,6 +157,14 @@ _TEMPLATE = r"""<!doctype html>
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
   --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --grain:#fff; --grainOp:.035; --qbg:#0a0c11;
+}
+/* Light theme — warm parchment "dossier in daylight"; same gold thread accent. */
+:root[data-theme=light]{
+  --bg:#f1ece0; --bg2:#faf6ec; --panel:#fcf9f1; --panel2:#f4eee1;
+  --line:#dcd4c2; --ink:#20222b; --soft:#4c4f59; --muted:#6c7079;
+  --thread:#a9741a; --graph:#1f6f93; --relational:#7a4fb0; --text:#1f8a5b;
+  --ok:#1f8a5b; --bad:#bf463e; --grain:#000; --grainOp:.045; --qbg:#fbf7ee;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -162,8 +176,8 @@ body{
   color:var(--ink); font-family:var(--sans); line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.035;z-index:1;
-  background-image:radial-gradient(#fff 1px,transparent 1px);background-size:3px 3px;}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--grainOp);z-index:1;
+  background-image:radial-gradient(var(--grain) 1px,transparent 1px);background-size:3px 3px;}
 a{color:var(--thread)}
 .wrap{max-width:1280px;margin:0 auto;padding:0 28px 80px}
 
@@ -174,6 +188,10 @@ header.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);
 .mark{font-family:var(--serif);font-size:15px;letter-spacing:.42em;text-transform:uppercase;color:var(--thread)}
 .mark b{font-weight:600}
 .crumb{color:var(--muted);font-size:12px;letter-spacing:.22em;text-transform:uppercase}
+.tgl{margin-left:auto;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;
+  color:var(--soft);background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+  padding:6px 14px;cursor:pointer;transition:all .18s}
+.tgl:hover{color:var(--ink);border-color:var(--thread);box-shadow:0 0 0 3px #e0a73c1f}
 h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing:.01em;margin:0}
 .entity small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.32em;
   text-transform:uppercase;color:var(--muted);margin-bottom:4px;font-weight:600}
@@ -197,11 +215,11 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px}
 .card>h2{font-family:var(--sans);font-size:11px;letter-spacing:.28em;text-transform:uppercase;
   color:var(--muted);font-weight:700;margin:0;padding:16px 22px;border-bottom:1px solid var(--line)}
-.note{padding:6px 26px 26px;font-family:var(--serif);font-size:17px;color:#efeada;max-height:none}
+.note{padding:6px 26px 26px;font-family:var(--serif);font-size:17px;color:var(--ink);max-height:none}
 .note h1,.note h2,.note h3{font-family:var(--serif);color:var(--ink);line-height:1.25;margin:26px 0 8px}
 .note h1{font-size:24px} .note h2{font-size:20px;color:var(--thread)} .note h3{font-size:17px;letter-spacing:.02em}
 .note p{margin:10px 0} .note ul{margin:8px 0 8px 2px;padding-left:20px} .note li{margin:6px 0}
-.note strong{color:#fff;font-weight:600} .note em{color:var(--soft)}
+.note strong{color:var(--ink);font-weight:700} .note em{color:var(--soft)}
 .note .blk-hot{background:#e0a73c14;box-shadow:inset 3px 0 0 var(--thread);border-radius:4px;
   transition:background .25s}
 
@@ -214,7 +232,7 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 
 /* Graph */
 .graphwrap{padding:10px 14px 18px}
-#graph{width:100%;height:430px;display:block}
+#graph{width:100%;height:auto;display:block}
 .legend{display:flex;gap:16px;flex-wrap:wrap;padding:0 22px 16px;font-size:11px;color:var(--soft)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .node{cursor:pointer}
@@ -226,7 +244,7 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 
 /* Evidence drawer */
 .drawer{position:fixed;right:0;top:0;bottom:0;width:min(460px,92vw);z-index:40;
-  background:linear-gradient(180deg,#10131c,#0b0d12);border-left:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel),var(--bg2));border-left:1px solid var(--line);
   box-shadow:-30px 0 60px #0009;transform:translateX(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);
   display:flex;flex-direction:column}
 .drawer.open{transform:none}
@@ -240,10 +258,10 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
   padding:3px 9px;border-radius:999px}
 .lbl{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
   font-weight:700;margin:18px 0 7px}
-.qbox{font-family:var(--mono);font-size:12.5px;line-height:1.55;color:#cfe6f2;white-space:pre-wrap;
-  background:#0a0c11;border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto}
+.qbox{font-family:var(--mono);font-size:12.5px;line-height:1.55;color:var(--graph);white-space:pre-wrap;
+  background:var(--qbg);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto}
 .exbox{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--soft);white-space:pre-wrap;
-  background:#0a0c11;border:1px solid var(--line);border-radius:10px;padding:14px;max-height:240px;overflow:auto}
+  background:var(--qbg);border:1px solid var(--line);border-radius:10px;padding:14px;max-height:240px;overflow:auto}
 .scrim{position:fixed;inset:0;background:#0008;opacity:0;pointer-events:none;transition:opacity .3s;z-index:35}
 .scrim.open{opacity:1;pointer-events:auto}
 
@@ -269,6 +287,7 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 <header class="top"><div class="row">
   <span class="mark"><b>ARIADNE</b></span>
   <span class="crumb">analytic workup · provenance-grounded</span>
+  <button id="theme-toggle" class="tgl" aria-pressed="false" title="Toggle light / dark">◑ Light</button>
 </div></header>
 
 <div class="wrap">
@@ -341,52 +360,46 @@ $("#dash").innerHTML = [
        `${(tc.nonstandard_terms||[]).length} non-standard · confidence ${tc.has_confidence_statement?"stated":"—"}`) : "",
 ].join("");
 
-// ---- Radial provenance graph ----
+// ---- Provenance flow: entity -> source(s) -> evidence (tiered, always legible) ----
 const SRC_COLORS={graph:"#69b6d6",relational:"#b58ce0",text:"#76d3a4",evidence:"#7c8190"};
-const W=600,H=430,cx=W/2,cy=H/2+6;
-const sources=[...new Set(DATA.ledger.map(e=>e.source))];
 const svg=$("#graph"); const NS="http://www.w3.org/2000/svg";
 function el(t,a){const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);return n;}
-const pos={}; // id -> {x,y}
-// sources on an inner ring
-sources.forEach((s,i)=>{const a=-Math.PI/2 + i/sources.length*2*Math.PI;
-  pos["src:"+s]={x:cx+Math.cos(a)*92,y:cy+Math.sin(a)*92,a};});
-// evidence on outer ring, grouped near their source angle
-const bySrc={}; DATA.ledger.forEach(e=>{(bySrc[e.source]=bySrc[e.source]||[]).push(e);});
-DATA.ledger.forEach(e=>{
-  const grp=bySrc[e.source], idx=grp.indexOf(e), base=pos["src:"+e.source].a;
-  const spread=Math.min(0.34,(grp.length-1)*0.12), off=grp.length>1? -spread/2+idx/(grp.length-1)*spread:0;
-  const a=base+off; pos[e.id]={x:cx+Math.cos(a)*182,y:cy+Math.sin(a)*182};
-});
-const edges=[];
-sources.forEach(s=>edges.push(["entity","src:"+s,null]));
-DATA.ledger.forEach(e=>edges.push(["src:"+e.source,e.id,e.id]));
-pos["entity"]={x:cx,y:cy};
-// thread edges (curved)
+const sources=[...new Set(DATA.ledger.map(e=>e.source))];
+const bySrc={}; sources.forEach(s=>bySrc[s]=[]); DATA.ledger.forEach(e=>bySrc[e.source].push(e));
+// Three columns: entity | sources | evidence. Evidence is stacked vertically and
+// grouped by source, so labels never collide regardless of how many calls there are.
+const ROWH=26, TOP=30, W=600, H=Math.max(320, DATA.ledger.length*ROWH + TOP*2);
+const xE=66, xS=250, xV=430;
+svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+const pos={}; let row=0;
+sources.forEach(s=>{const ys=[];
+  bySrc[s].forEach(e=>{const y=TOP+row*ROWH; pos[e.id]={x:xV,y}; ys.push(y); row++;});
+  pos["src:"+s]={x:xS,y:ys.reduce((a,b)=>a+b,0)/ys.length};});
+pos["entity"]={x:xE,y:H/2};
 const eEls={};
-edges.forEach(([a,b,gid])=>{const p1=pos[a],p2=pos[b];
-  const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2, dx=p2.x-p1.x,dy=p2.y-p1.y;
-  const cxp=mx-dy*0.12, cyp=my+dx*0.12;
-  const path=el("path",{class:"edge",d:`M${p1.x},${p1.y} Q${cxp},${cyp} ${p2.x},${p2.y}`});
-  if(gid){path.dataset.gid=gid;(eEls[gid]=eEls[gid]||[]).push(path);}
-  svg.appendChild(path);});
-// nodes
-function addNode(id,x,y,r,color,label,onclick){
+function link(a,b,gid){const p1=pos[a],p2=pos[b],mx=(p1.x+p2.x)/2;
+  const path=el("path",{class:"edge",d:`M${p1.x},${p1.y} C${mx},${p1.y} ${mx},${p2.y} ${p2.x},${p2.y}`});
+  if(gid){path.dataset.gid=gid;(eEls[gid]=eEls[gid]||[]).push(path);} svg.appendChild(path);}
+sources.forEach(s=>link("entity","src:"+s,null));
+DATA.ledger.forEach(e=>link("src:"+e.source,e.id,e.id));
+function node(id,x,y,r,color,label,onclick){
   const g=el("g",{class:"node",transform:`translate(${x},${y})`});
-  const circ=el("circle",{r:r,fill:color+"22",stroke:color,"stroke-width":1.6});
-  g.appendChild(circ);
-  if(label!==null){const t=el("text",{"text-anchor":"middle",y:r+13});t.textContent=label;g.appendChild(t);}
-  if(onclick){g.style.cursor="pointer";g.addEventListener("click",onclick);}
-  g.dataset.node=id; svg.appendChild(g); return g;
-}
-addNode("entity",cx,cy,17,"#e0a73c",null,null)
-  .appendChild(Object.assign(el("text",{"text-anchor":"middle",dy:"0.35em",style:"fill:#1a1205;font-weight:700;font-size:11px"}),{textContent:(DATA.entity||"?").slice(0,3).toUpperCase()}));
-sources.forEach(s=>addNode("src:"+s,pos["src:"+s].x,pos["src:"+s].y,11,SRC_COLORS[s]||"#7c8190",s,null));
-DATA.ledger.forEach(e=>{const w=4.5+(citeCounts[e.id]||0)*2.4;
-  addNode(e.id,pos[e.id].x,pos[e.id].y,Math.min(w,12),SRC_COLORS[e.source]||"#7c8190",e.id,
-    ()=>selectEvidence(e.id,null));});
+  g.appendChild(el("circle",{r:r,fill:color+"22",stroke:color,"stroke-width":1.6}));
+  if(label){const t=el("text",{x:r+8,dy:"0.32em","text-anchor":"start"});t.textContent=label;g.appendChild(t);}
+  g.dataset.node=id; if(onclick){g.style.cursor="pointer";g.addEventListener("click",onclick);}
+  svg.appendChild(g); return g;}
+const ent=node("entity",xE,H/2,18,"#e0a73c","",null);
+ent.appendChild(Object.assign(el("text",{"text-anchor":"middle",dy:"0.34em",
+  style:"fill:#1a1205;font-weight:700;font-size:10px"}),{textContent:(DATA.entity||"?").slice(0,3).toUpperCase()}));
+const elbl=el("text",{x:xE,y:H/2+32,"text-anchor":"middle",style:"fill:var(--soft);font-size:10px"});
+elbl.textContent=(DATA.entity||"").slice(0,20); svg.appendChild(elbl);
+sources.forEach(s=>node("src:"+s,pos["src:"+s].x,pos["src:"+s].y,11,SRC_COLORS[s]||"#7c8190",
+  s+" ("+bySrc[s].length+")",null));
+DATA.ledger.forEach(e=>{const n=citeCounts[e.id]||0,r=Math.min(4+n*1.5,9);
+  node(e.id,pos[e.id].x,pos[e.id].y,r,SRC_COLORS[e.source]||"#7c8190",
+    e.id+(n?" · "+n+"×":""),()=>selectEvidence(e.id,null));});
 $("#legend").innerHTML=sources.map(s=>`<span><i style="background:${SRC_COLORS[s]}"></i>${s}</span>`).join("")
-  + `<span><i style="background:#e0a73c"></i>entity</span><span style="color:var(--muted)">node size = times cited</span>`;
+  + `<span><i style="background:#e0a73c"></i>entity</span><span style="color:var(--muted)">size = times cited · click any node</span>`;
 
 // ---- Evidence drawer (details-on-demand) ----
 function selectEvidence(id, chip){
@@ -424,6 +437,16 @@ $("#traj").innerHTML = DATA.ledger.map(e=>
    <div class="sq">${(e.query||"").replace(/[<&]/g,m=>({"<":"&lt;","&":"&amp;"}[m]))}</div></div>`).join("");
 document.querySelectorAll("#traj .step").forEach(s=>
   s.addEventListener("click",()=>selectEvidence(s.dataset.gid,null)));
+
+// ---- Light / dark theme toggle (persisted; initial theme set pre-paint in <head>) ----
+const root=document.documentElement, THEME_KEY="ariadne-theme", tgl=$("#theme-toggle");
+function paintToggle(){const light=root.dataset.theme==="light";
+  tgl.textContent=light?"◐ Dark":"◑ Light"; tgl.setAttribute("aria-pressed",String(light));}
+paintToggle();
+tgl.addEventListener("click",()=>{
+  const next=root.dataset.theme==="light"?"dark":"light";
+  root.dataset.theme=next; try{localStorage.setItem(THEME_KEY,next);}catch(e){} paintToggle();
+});
 </script>
 </body>
 </html>

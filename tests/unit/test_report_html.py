@@ -70,6 +70,14 @@ def test_render_is_self_contained_html_with_data_island(tmp_path: Path) -> None:
     assert "MATCH" in html
 
 
+def test_render_has_a_light_dark_theme_toggle(tmp_path: Path) -> None:
+    html = render_report(_make_workup(tmp_path))
+    # a toggle control + a light-theme override + persistence so the choice sticks
+    assert 'id="theme-toggle"' in html
+    assert "[data-theme=light]" in html or '[data-theme="light"]' in html
+    assert "localStorage" in html
+
+
 def test_write_report_emits_report_html(tmp_path: Path) -> None:
     out = write_report(_make_workup(tmp_path))
     assert out == tmp_path / "report.html"
