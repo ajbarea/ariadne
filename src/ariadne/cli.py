@@ -48,6 +48,7 @@ from ariadne.provenance.ledger import ProvenanceLedger
 from ariadne.provenance.tradecraft import lint_estimative_language
 from ariadne.relational.postgres_server import RELATIONAL_TOOLS, postgres_stdio_config
 from ariadne.report.note import write_outputs
+from ariadne.runs import slug
 
 if TYPE_CHECKING:
     from claude_agent_sdk.types import McpServerConfig
@@ -352,7 +353,7 @@ def _validate_profile(
                 if rc is None:
                     detail = f"exceeded the {timeout:.0f}s budget (throughput-bound)"
                     continue
-                out_dir = str(Path(out_root) / _slug(entity))
+                out_dir = str(Path(out_root) / slug(entity))
                 report = scorer(out_dir) if scorer else score_workup_dir(out_dir, FIXTURES[fixture])
                 detail = f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
                 if report.grounded:
@@ -537,7 +538,7 @@ async def run_workup(
             governance=governance,
             profile=prof,
         )
-        out_dir = Path(out_root) / _slug(entity)
+        out_dir = Path(out_root) / slug(entity)
         write_outputs(
             out_dir,
             entity=entity,
@@ -587,10 +588,6 @@ async def run_workup(
     return workup_exit_code(
         governance=governance, strict=strict, had_error=had_error, citations_ok=report.ok
     )
-
-
-def _slug(entity: str) -> str:
-    return "".join(c if c.isalnum() else "-" for c in entity).strip("-").lower() or "entity"
 
 
 def main(argv: list[str] | None = None) -> int:

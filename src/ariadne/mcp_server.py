@@ -21,6 +21,8 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from ariadne.runs import slug as entity_slug
+
 mcp = FastMCP(
     "ariadne",
     instructions="Rigorous, citation-grounded entity sensemaking over heterogeneous "
@@ -28,10 +30,6 @@ mcp = FastMCP(
 )
 
 _Runner = Callable[..., Awaitable[int]]
-
-
-def _slug(entity: str) -> str:
-    return "".join(c if c.isalnum() else "-" for c in entity).strip("-").lower() or "entity"
 
 
 async def run_workup_tool(
@@ -54,7 +52,7 @@ async def run_workup_tool(
     base_env = dict(os.environ) if env is None else dict(env)
     created_tmp = out_root is None
     out_root = out_root or tempfile.mkdtemp(prefix="ariadne-mcp-")
-    slug = slug or _slug(entity)
+    slug = slug or entity_slug(entity)
     try:
         await runner(
             entity,
