@@ -196,9 +196,9 @@ package = true
 # (~2 GB lighter) CPU-fine install. Ariadne's torch use (sentence-transformers / HHEM
 # embeddings) needs no GPU at this scale, and the GPU open-weight path (ADR-0012) uses
 # Ollama, not Python torch. macOS PyPI torch is already CPU/MPS, so the marker leaves the
-# Mac untouched. See the uv PyTorch integration guide. NOTE: this is *not* a fix for the
-# worldspeech-index exit-134 — that is a torch *core* interpreter-finalization crash
-# (PyGILState_Release), independent of CUDA; see src/ariadne/datasets/worldspeech.py.
+# Mac untouched. See the uv PyTorch integration guide. (The worldspeech-index exit-134
+# was a separate torch *core* finalization crash, fixed by the os._exit guard in
+# ariadne.__main__ — not by this CPU pin; see src/ariadne/datasets/worldspeech.py.)
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"

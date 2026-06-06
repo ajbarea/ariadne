@@ -10,14 +10,13 @@ Rows are 24 kHz parliamentary / broadcaster / institutional speech utterances:
 ``human_transcript`` + ``source`` (the institution) + ``source_url`` +
 ``session_date`` + ``language`` + ``country`` + ``segment_id``.
 
-Known issue (env-specific, cosmetic): ``ariadne index --dataset worldspeech`` exits 134
-on some envs (e.g. Python 3.12 + WSL2). ``datasets`` imports torch to handle the
-audio-schema column at load time, and torch's *core* threading segfaults at interpreter
-finalization (``PyGILState_Release`` — a PEP 788 C-API-finalization class), independent
-of CUDA (CPU-only torch crashes identically) and unfixable by column selection (torch
-loads regardless). The 500 transcript documents index correctly; only the process exit
-code is affected. Verified 2026-06 across datasets ``select_columns``/``columns=``,
-``CUDA_VISIBLE_DEVICES=``, and a CPU-only torch build.
+Torch teardown note: ``datasets`` imports torch to handle the audio-schema column at
+load, and torch's *core* threading segfaults at Python interpreter finalization
+(``PyGILState_Release``, a PEP 788 C-API class) on some envs (e.g. 3.12 + WSL2) —
+independent of CUDA (a CPU-only build crashes too) and of column selection (torch loads
+at ``load_dataset`` regardless). The CLI entry (``ariadne.__main__``) handles it: when
+torch is loaded it flushes and ``os._exit``s after the command's work, so
+``ariadne index --dataset worldspeech`` exits 0 with all 500 transcripts indexed.
 """
 
 from __future__ import annotations
