@@ -16,8 +16,8 @@ venv/
 .env.local
 .env.*.local
 
-# Workup run artifacts (CLI default --out ./workups; analytic notes + provenance)
-/workups/
+# Run artifacts (CLI default --out runs/; immutable per-run dirs + manifest, ADR-0021)
+/runs/
 
 # IDE
 .vscode/
