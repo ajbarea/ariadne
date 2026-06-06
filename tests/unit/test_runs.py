@@ -195,3 +195,11 @@ def test_update_latest_replaces_existing(tmp_path):
     update_latest(entity_dir, "run-a")
     update_latest(entity_dir, "run-b")
     assert (entity_dir / "latest").readlink() == Path("run-b")
+
+
+def test_eval_score_block_shape(tmp_path):
+    write_manifest(tmp_path, _manifest(scores={"eval": None, "rubric": None}))
+    merge_scores(tmp_path, {"eval": {"grounded": True, "recall": 1.0, "trajectory": 0.83}})
+    data = read_manifest(tmp_path)
+    assert data is not None
+    assert set(data["scores"]["eval"]) == {"grounded", "recall", "trajectory"}

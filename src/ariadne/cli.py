@@ -51,6 +51,7 @@ from ariadne.report.note import write_outputs
 from ariadne.runs import (
     build_workup_manifest,
     current_trace_hex,
+    merge_scores,
     run_dir,
     scores_from_reports,
     slug,
@@ -238,6 +239,16 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
             rec = score_reconciliation_dir(workup_dir, RECON_FIXTURES[reconcile])
             record_reconciliation_metrics(rec, fixture=reconcile)
     write_eval_json(workup_dir, report, fixture_name, reconciliation=rec)  # surfaced in the report
+    merge_scores(
+        Path(workup_dir),
+        {
+            "eval": {
+                "grounded": report.grounded,
+                "recall": report.recall,
+                "trajectory": report.trajectory,
+            }
+        },
+    )
     line = (
         f"Eval [{report.entity}/{fixture_name}]: grounded={report.grounded} "
         f"recall={report.recall:.2f} trajectory={report.trajectory:.2f} "
@@ -295,6 +306,7 @@ def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
 
     report = score_note_dir(workup_dir, ClaudeAnalyticJudge())
     write_rubric_json(workup_dir, report)  # surfaced in the report
+    merge_scores(Path(workup_dir), {"rubric": {"score": report.overall}})
     print(f"Rubric (ICD-203) overall={report.overall:.2f}/5")
     for s in report.dimensions:
         print(f"  {s.key:<14} {s.score}/5  {s.rationale}")
