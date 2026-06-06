@@ -17,6 +17,7 @@ from ariadne.runs import (
     run_id,
     scores_from_reports,
     slug,
+    update_latest,
     write_manifest,
 )
 
@@ -176,3 +177,21 @@ def test_build_workup_manifest_assembles_record():
     assert m.run_id == "2026-06-05T18-23-01Z-4bf92f35"
     assert m.otel_trace_id == "4bf92f3577b34da6a3ce929d0e0e4736"
     assert m.created_at.endswith("Z")
+
+
+def test_update_latest_points_at_run(tmp_path):
+    entity_dir = tmp_path / "synthetic" / "halberd"
+    (entity_dir / "run-a").mkdir(parents=True)
+    update_latest(entity_dir, "run-a")
+    link = entity_dir / "latest"
+    assert link.is_symlink()
+    assert link.readlink() == Path("run-a")
+
+
+def test_update_latest_replaces_existing(tmp_path):
+    entity_dir = tmp_path / "synthetic" / "halberd"
+    (entity_dir / "run-a").mkdir(parents=True)
+    (entity_dir / "run-b").mkdir()
+    update_latest(entity_dir, "run-a")
+    update_latest(entity_dir, "run-b")
+    assert (entity_dir / "latest").readlink() == Path("run-b")

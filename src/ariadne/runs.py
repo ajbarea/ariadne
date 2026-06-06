@@ -136,6 +136,13 @@ def merge_scores(run_directory: Path, scores: Mapping) -> None:
     (run_directory / _MANIFEST).write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
+def update_latest(entity_dir: Path, run_id_name: str) -> None:
+    """Atomically point `<entity_dir>/latest` at the run dir `run_id_name` (relative)."""
+    tmp = entity_dir / f".latest.{secrets.token_hex(4)}"
+    tmp.symlink_to(run_id_name, target_is_directory=True)
+    tmp.replace(entity_dir / "latest")  # atomic swap over any existing symlink
+
+
 def _git(*args: str) -> str:
     """Run `git <args>` and return stripped stdout. Inputs are internal literals
     (rev-parse / status), never user data — S603 is suppressed accordingly."""
