@@ -191,3 +191,18 @@ markers = [
 
 [tool.uv]
 package = true
+
+# research(2026-06): pull torch from the CPU wheel index on Linux/Windows — a smaller
+# (~2 GB lighter) CPU-fine install. Ariadne's torch use (sentence-transformers / HHEM
+# embeddings) needs no GPU at this scale, and the GPU open-weight path (ADR-0012) uses
+# Ollama, not Python torch. macOS PyPI torch is already CPU/MPS, so the marker leaves the
+# Mac untouched. See the uv PyTorch integration guide. NOTE: this is *not* a fix for the
+# worldspeech-index exit-134 — that is a torch *core* interpreter-finalization crash
+# (PyGILState_Release), independent of CUDA; see src/ariadne/datasets/worldspeech.py.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'" }]
