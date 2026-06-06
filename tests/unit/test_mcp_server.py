@@ -14,7 +14,7 @@ def test_run_workup_tool_returns_the_note(tmp_path) -> None:
     async def fake_runner(
         entity, out_root, env, *, with_sql, dataset, with_semantic, profile="default"
     ):
-        d = Path(out_root) / "halberd"
+        d = Path(out_root) / dataset / "halberd" / "latest"
         d.mkdir(parents=True, exist_ok=True)
         (d / "note.md").write_text("# Workup\nHalberd is co-located at Compound-Alpha [cite:g1].")
         return 0
@@ -59,7 +59,7 @@ def test_run_workup_tool_cleans_up_its_temp_dir() -> None:
         entity, out_root, env, *, with_sql, dataset, with_semantic, profile="default"
     ):
         seen["out_root"] = out_root
-        d = Path(out_root) / "x"
+        d = Path(out_root) / dataset / "x" / "latest"
         d.mkdir(parents=True, exist_ok=True)
         (d / "note.md").write_text("n")
         return 0
@@ -77,7 +77,7 @@ def test_run_workup_tool_forwards_profile(tmp_path) -> None:
 
     async def fake_runner(entity, out_root, env, **kwargs) -> int:
         seen.update(kwargs)
-        d = Path(out_root) / "x"
+        d = Path(out_root) / kwargs["dataset"] / "x" / "latest"
         d.mkdir(parents=True, exist_ok=True)
         (d / "note.md").write_text("ok")
         return 0

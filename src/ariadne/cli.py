@@ -48,7 +48,15 @@ from ariadne.provenance.ledger import ProvenanceLedger
 from ariadne.provenance.tradecraft import lint_estimative_language
 from ariadne.relational.postgres_server import RELATIONAL_TOOLS, postgres_stdio_config
 from ariadne.report.note import write_outputs
-from ariadne.runs import slug
+from ariadne.runs import (
+    build_workup_manifest,
+    current_trace_hex,
+    run_dir,
+    scores_from_reports,
+    slug,
+    update_latest,
+    write_manifest,
+)
 
 if TYPE_CHECKING:
     from claude_agent_sdk.types import McpServerConfig
@@ -69,7 +77,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     wk = sub.add_parser("workup", help="Work up a target entity or org node")
     wk.add_argument("entity", help="Target entity or organizational node")
     wk.add_argument("--graph", default="neo4j", choices=["neo4j"], help="Graph backend")
-    wk.add_argument("--out", default="./workups", help="Output directory root")
+    wk.add_argument(
+        "--out", default="runs", help="Run-output root: runs/<dataset>/<entity>/<run-id>/"
+    )
     wk.add_argument(
         "--sql",
         action="store_true",
@@ -353,7 +363,7 @@ def _validate_profile(
                 if rc is None:
                     detail = f"exceeded the {timeout:.0f}s budget (throughput-bound)"
                     continue
-                out_dir = str(Path(out_root) / slug(entity))
+                out_dir = str(Path(out_root) / ds / slug(entity) / "latest")
                 report = scorer(out_dir) if scorer else score_workup_dir(out_dir, FIXTURES[fixture])
                 detail = f"recall={report.recall:.2f} trajectory={report.trajectory:.2f}"
                 if report.grounded:
@@ -538,7 +548,8 @@ async def run_workup(
             governance=governance,
             profile=prof,
         )
-        out_dir = Path(out_root) / slug(entity)
+        trace_hex = current_trace_hex()
+        out_dir = run_dir(out_root, dataset, entity, trace_hex=trace_hex)
         write_outputs(
             out_dir,
             entity=entity,
@@ -585,9 +596,31 @@ async def run_workup(
             f"unsupported claims: {len(report.unsupported)}",
             file=sys.stderr,
         )
-    return workup_exit_code(
+    code = workup_exit_code(
         governance=governance, strict=strict, had_error=had_error, citations_ok=report.ok
     )
+    write_manifest(
+        out_dir,
+        build_workup_manifest(
+            run_directory=out_dir,
+            entity=entity,
+            dataset=dataset,
+            model=prof.model,
+            profile=prof.name,
+            params={
+                "sql": with_sql,
+                "semantic": with_semantic,
+                "entail": with_entail,
+                "strict": strict,
+            },
+            duration_s=elapsed,
+            exit_code=code,
+            trace_hex=trace_hex,
+            scores=scores_from_reports(report, tradecraft, governance),
+        ),
+    )
+    update_latest(out_dir.parent, out_dir.name)
+    return code
 
 
 def main(argv: list[str] | None = None) -> int:

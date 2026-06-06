@@ -63,7 +63,7 @@ async def run_workup_tool(
             with_semantic=semantic,
             profile=profile,
         )
-        note = Path(out_root) / slug / "note.md"
+        note = Path(out_root) / dataset / slug / "latest" / "note.md"
         if note.exists():
             return note.read_text(encoding="utf-8")
         return f"Workup for {entity!r} produced no analytic note (check stores / API key)."

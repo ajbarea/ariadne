@@ -17,7 +17,7 @@ def test_parse_args_defaults() -> None:
     assert ns.command == "workup"
     assert ns.entity == "Alpha"
     assert ns.graph == "neo4j"
-    assert ns.out == "./workups"
+    assert ns.out == "runs"
 
 
 def test_parse_args_overrides() -> None:
