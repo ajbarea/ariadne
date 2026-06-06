@@ -99,6 +99,8 @@ def _manifest(**over) -> Manifest:
         "params": {},
         "duration_s": 1.0,
         "exit_code": 0,
+        "cost_usd": None,
+        "usage": None,
         "scores": {"eval": None},
     }
     base.update(over)
@@ -172,11 +174,15 @@ def test_build_workup_manifest_assembles_record():
         duration_s=42.7,
         exit_code=0,
         trace_hex="4bf92f3577b34da6a3ce929d0e0e4736",
+        cost_usd=0.42,
+        usage={"input_tokens": 100, "output_tokens": 50},
         scores={"citations": {"ok": True}, "eval": None, "rubric": None},
     )
     assert m.run_id == "2026-06-05T18-23-01Z-4bf92f35"
     assert m.otel_trace_id == "4bf92f3577b34da6a3ce929d0e0e4736"
     assert m.created_at.endswith("Z")
+    assert m.cost_usd == 0.42
+    assert m.usage == {"input_tokens": 100, "output_tokens": 50}
 
 
 def test_update_latest_points_at_run(tmp_path):

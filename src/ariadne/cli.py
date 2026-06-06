@@ -535,6 +535,9 @@ async def run_workup(
     note_parts: list[str] = []
     result_text: str | None = None
     had_error: bool = False
+    result_cost: float | None = None
+    result_usage: dict | None = None
+    result_model_usage: dict | None = None
     with workup_span(entity, dataset, semantic=with_semantic, sql=with_sql):
         started = time.monotonic()
         async for message in query(prompt=prompt, options=options):
@@ -545,6 +548,9 @@ async def run_workup(
             elif isinstance(message, ResultMessage):
                 result_text = message.result
                 had_error = bool(getattr(message, "is_error", False))
+                result_cost = message.total_cost_usd
+                result_usage = message.usage
+                result_model_usage = message.model_usage
         elapsed = time.monotonic() - started
         note = (result_text or "\n".join(note_parts)).strip()
         report = validate_citations(note, ledger, verifier=verifier)
@@ -617,7 +623,7 @@ async def run_workup(
             run_directory=out_dir,
             entity=entity,
             dataset=dataset,
-            model=prof.model,
+            model=", ".join(sorted(result_model_usage)) if result_model_usage else prof.model,
             profile=prof.name,
             params={
                 "sql": with_sql,
@@ -628,6 +634,8 @@ async def run_workup(
             duration_s=elapsed,
             exit_code=code,
             trace_hex=trace_hex,
+            cost_usd=result_cost,
+            usage=result_usage,
             scores=scores_from_reports(report, tradecraft, governance),
         ),
     )

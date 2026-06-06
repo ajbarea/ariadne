@@ -98,6 +98,8 @@ class Manifest:
     params: dict
     duration_s: float
     exit_code: int
+    cost_usd: float | None
+    usage: dict | None
     scores: dict
 
     def to_dict(self) -> dict:
@@ -173,6 +175,8 @@ def build_workup_manifest(
     exit_code: int,
     trace_hex: str,
     scores: dict,
+    cost_usd: float | None = None,
+    usage: dict | None = None,
 ) -> Manifest:
     """Assemble the run record from what `run_workup` knows at the return."""
     sha, dirty = git_provenance()
@@ -190,5 +194,7 @@ def build_workup_manifest(
         params=params,
         duration_s=duration_s,
         exit_code=exit_code,
+        cost_usd=cost_usd,
+        usage=usage,
         scores=scores,
     )
