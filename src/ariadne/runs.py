@@ -6,11 +6,23 @@ module is the single owner of how that directory is named, recorded, and pointed
 
 from __future__ import annotations
 
+import json
 import secrets
+import subprocess
+import sys
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from opentelemetry import trace
+
+from ariadne import __version__
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+_MANIFEST = "manifest.json"
 
 
 def slug(entity: str) -> str:
@@ -46,3 +58,130 @@ def run_dir(
     """Pure path: `<out_root>/<dataset>/<slug>/<run-id>/`. Does not touch the disk."""
     now = now or datetime.now(UTC)
     return Path(out_root) / dataset / slug(entity) / run_id(now, trace_hex)
+
+
+def scores_from_reports(citations, tradecraft, governance) -> dict:
+    """The manifest `scores` block at workup time; eval/rubric are filled in later."""
+    return {
+        "citations": {
+            "ok": citations.ok,
+            "uncited": len(citations.uncited),
+            "dangling": len(citations.dangling),
+            "unsupported": len(citations.unsupported),
+        },
+        "tradecraft": {"nonstandard_terms": sorted(set(tradecraft.nonstandard_terms))},
+        "governance": {"ok": governance.ok},
+        "eval": None,
+        "rubric": None,
+    }
+
+
+@dataclass(frozen=True)
+class Manifest:
+    """The per-run reproducibility record (ADR-0021). One file = the whole run.
+
+    research(2026-06): a deliberately lightweight run-card, not OpenLineage (the 2026
+    cross-tool lineage standard) — that targets warehouse/orchestrator federation,
+    YAGNI for a single-binary CLI. We borrow its run-metadata vocabulary only.
+    """
+
+    run_id: str
+    entity: str
+    dataset: str
+    created_at: str
+    otel_trace_id: str | None
+    ariadne_version: str
+    git_sha: str
+    git_dirty: bool
+    model: str | None
+    profile: str
+    params: dict
+    duration_s: float
+    exit_code: int
+    scores: dict
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Mapping) -> Manifest:
+        return cls(**data)
+
+
+def write_manifest(run_directory: Path, manifest: Manifest) -> None:
+    run_directory.mkdir(parents=True, exist_ok=True)
+    (run_directory / _MANIFEST).write_text(
+        json.dumps(manifest.to_dict(), indent=2), encoding="utf-8"
+    )
+
+
+def read_manifest(run_directory: Path) -> dict | None:
+    path = run_directory / _MANIFEST
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def merge_scores(run_directory: Path, scores: Mapping) -> None:
+    """Merge a score block (e.g. {"eval": {...}}) into an existing manifest's scores.
+
+    No-op (with a stderr warning) when there is no manifest — e.g. a foreign or legacy
+    dir — so eval/rubric never crash on a run they did not write.
+    """
+    data = read_manifest(run_directory)
+    if data is None:
+        print(f"No manifest at {run_directory}; skipping merge.", file=sys.stderr)  # noqa: T201
+        return
+    data.setdefault("scores", {}).update(scores)
+    (run_directory / _MANIFEST).write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _git(*args: str) -> str:
+    """Run `git <args>` and return stripped stdout. Inputs are internal literals
+    (rev-parse / status), never user data — S603 is suppressed accordingly."""
+    cmd = ["git", *args]
+    proc = subprocess.run(cmd, capture_output=True, text=True, check=True)  # noqa: S603
+    return proc.stdout.strip()
+
+
+def git_provenance() -> tuple[str, bool]:
+    """`(short_sha, dirty)`; `("unknown", False)` when git is unavailable."""
+    try:
+        sha = _git("rev-parse", "--short", "HEAD")
+        dirty = bool(_git("status", "--porcelain"))
+        return sha or "unknown", dirty
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown", False
+
+
+def build_workup_manifest(
+    *,
+    run_directory: Path,
+    entity: str,
+    dataset: str,
+    model: str | None,
+    profile: str,
+    params: dict,
+    duration_s: float,
+    exit_code: int,
+    trace_hex: str,
+    scores: dict,
+) -> Manifest:
+    """Assemble the run record from what `run_workup` knows at the return."""
+    sha, dirty = git_provenance()
+    return Manifest(
+        run_id=run_directory.name,
+        entity=entity,
+        dataset=dataset,
+        created_at=f"{datetime.now(UTC):%Y-%m-%dT%H:%M:%S}Z",
+        otel_trace_id=trace_hex or None,
+        ariadne_version=__version__,
+        git_sha=sha,
+        git_dirty=dirty,
+        model=model,
+        profile=profile,
+        params=params,
+        duration_s=duration_s,
+        exit_code=exit_code,
+        scores=scores,
+    )
