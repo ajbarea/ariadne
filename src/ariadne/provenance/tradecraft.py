@@ -135,8 +135,9 @@ def is_analytic_judgment(text: str) -> bool:
 
 
 # Statements of evidential LIMIT / insufficiency — what the evidence does NOT
-# establish. Like estimative hedges, these are analytic-confidence calibration, not
-# evidence claims, so ICD-206 governs them via this lint rather than the cite gate.
+# establish, or which modalities were unavailable. Like estimative hedges, these are
+# analytic-confidence calibration, not evidence claims, so ICD-206 governs them via
+# this lint rather than the cite gate.
 _CAVEAT_MARKERS = (
     "cannot be ruled out",
     "cannot be confirmed",
@@ -154,8 +155,18 @@ _CAVEAT_MARKERS = (
     "no direct evidence",
     "remains unconfirmed",
     "remains tentative",
+    "single modality",
+    "single-modality",
 )
-_CAVEAT_RE = re.compile("|".join(re.escape(m) for m in _CAVEAT_MARKERS), re.IGNORECASE)
+# Sole-modality phrasings that aren't fixed strings ("rests on the graph alone",
+# "this modality alone"): one analysis modality was used — an evidential limit. The
+# noun set is analysis-methodology terms only, so "a single source of funding alone"
+# (an entity claim) is NOT exempted.
+_CAVEAT_PATTERNS = (r"\b(?:graph|modality|evidence)\s+alone\b",)
+_CAVEAT_RE = re.compile(
+    "|".join([*(re.escape(m) for m in _CAVEAT_MARKERS), *_CAVEAT_PATTERNS]),
+    re.IGNORECASE,
+)
 
 
 def is_analytic_caveat(text: str) -> bool:

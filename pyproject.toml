@@ -36,6 +36,7 @@ dependencies = [
     # See ADR-0010 and docs/superpowers/plans/2026-06-03-observability-otel.md.
     "opentelemetry-api>=1.30",
     "tomli-w>=1.2.0",
+    "pysbd>=0.3.4",
 ]
 
 [project.optional-dependencies]
@@ -183,6 +184,12 @@ asyncio_mode = "auto"
 log_level = "INFO"
 log_cli = true
 log_cli_level = "WARNING"
+filterwarnings = [
+    # pysbd 0.3.4 (2021) uses non-raw regex strings -> SyntaxWarning on py3.12;
+    # the segmenter is correct, so silence its import-time noise (ADR-0022).
+    # Matched by message (compile-time SyntaxWarnings aren't attributed to pysbd).
+    "ignore:invalid escape sequence:SyntaxWarning",
+]
 markers = [
     "integration: requires real external boundaries (containers/network/live MCP servers)",
     "network: needs network access (e.g. HF dataset streaming) but NOT Docker; exempt from the Docker-down skip",

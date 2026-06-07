@@ -45,6 +45,7 @@ from ariadne.provenance.citations import validate_citations
 from ariadne.provenance.governance import audit_read_only
 from ariadne.provenance.hook import make_provenance_hook
 from ariadne.provenance.ledger import ProvenanceLedger
+from ariadne.provenance.repair import repair_citations_loop
 from ariadne.provenance.tradecraft import lint_estimative_language
 from ariadne.relational.postgres_server import RELATIONAL_TOOLS, postgres_stdio_config
 from ariadne.report.note import write_outputs
@@ -60,6 +61,8 @@ from ariadne.runs import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from claude_agent_sdk.types import McpServerConfig
 
     from ariadne.provenance.governance import GovernanceReport
@@ -69,6 +72,12 @@ _SYSTEM_PROMPT = (
     "available read-only evidence tools — the graph store and, when present, the "
     "relational store — to gather evidence, and follow the entity-workup skill. "
     "Cite every fact as [cite:gN]. Output only the finished analytic note."
+)
+
+_REPAIR_SYSTEM_PROMPT = (
+    "You are a meticulous intelligence-analysis citation editor. You attach existing "
+    "provenance citations to under-cited claims and never fabricate evidence or ids. "
+    "Output only the corrected Markdown note, with no preamble."
 )
 
 
@@ -108,6 +117,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Fail (exit 3) if the agent violated the read-only contract "
         "(attempted a write to the evidence stores). Default: advisory only.",
+    )
+    wk.add_argument(
+        "--repair",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Post-hoc P-Cite pass: attach ledger cites to any uncited synthesis "
+        "claims the recall gate finds, then re-check (bounded). --no-repair measures "
+        "the raw single-pass draft. Default: on.",
     )
     ev = sub.add_parser("eval", help="Score a workup dir against the planted-needle fixture")
     ev.add_argument("workup_dir", help="Workup output dir (note.md + provenance.jsonl)")
@@ -478,6 +495,38 @@ def build_options(
     )
 
 
+def build_repair_options(model: str | None) -> ClaudeAgentOptions:
+    """Tool-less options for the post-hoc citation-repair pass: no MCP servers and no
+    tools, so the pass can only rewrite text — never retrieve or mutate (ADR-0022)."""
+    extra: dict[str, Any] = {}
+    if model is not None:
+        extra["model"] = model
+    return ClaudeAgentOptions(
+        mcp_servers={},
+        allowed_tools=[],
+        system_prompt=_REPAIR_SYSTEM_PROMPT,
+        permission_mode="default",
+        **extra,
+    )
+
+
+def make_repair_caller(model: str | None) -> Callable[[str], Awaitable[str]]:
+    """Return an injected ``call_llm`` that runs one tool-less repair query (P-Cite)."""
+    options = build_repair_options(model)
+
+    async def _call(prompt: str) -> str:
+        parts: list[str] = []
+        result_text: str | None = None
+        async for message in query(prompt=prompt, options=options):
+            if isinstance(message, AssistantMessage):
+                parts.extend(b.text for b in message.content if isinstance(b, TextBlock))
+            elif isinstance(message, ResultMessage):
+                result_text = message.result
+        return (result_text or "\n".join(parts)).strip()
+
+    return _call
+
+
 def workup_exit_code(
     *, governance: GovernanceReport, strict: bool, had_error: bool, citations_ok: bool
 ) -> int:
@@ -509,6 +558,7 @@ async def run_workup(
     dataset: str = "synthetic",
     profile: str = "default",
     strict: bool = False,
+    repair: bool = True,
 ) -> int:
     from ariadne.datasets.base import get_adapter
     from ariadne.profiles import load_profiles, resolve_profile
@@ -551,9 +601,14 @@ async def run_workup(
                 result_cost = message.total_cost_usd
                 result_usage = message.usage
                 result_model_usage = message.model_usage
-        elapsed = time.monotonic() - started
         note = (result_text or "\n".join(note_parts)).strip()
-        report = validate_citations(note, ledger, verifier=verifier)
+        if repair:
+            note, report = await repair_citations_loop(
+                note, ledger, call_llm=make_repair_caller(prof.model), verifier=verifier
+            )
+        else:
+            report = validate_citations(note, ledger, verifier=verifier)
+        elapsed = time.monotonic() - started
         tradecraft = lint_estimative_language(note)
         governance = audit_read_only(ledger.entries)
         record_workup_metrics(
@@ -689,5 +744,6 @@ def main(argv: list[str] | None = None) -> int:
             dataset=args.dataset,
             profile=args.profile,
             strict=args.strict,
+            repair=args.repair,
         )
     )

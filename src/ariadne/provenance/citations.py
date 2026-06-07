@@ -26,6 +26,8 @@ import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
+import pysbd
+
 from ariadne.provenance.tradecraft import (
     is_analytic_caveat as _is_analytic_caveat,
     is_analytic_judgment as _is_analytic_judgment,
@@ -42,7 +44,11 @@ _HEADER_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)$")
 _BULLET_RE = re.compile(r"^[\s>*+\-]+")
 _NUMBERED_RE = re.compile(r"^\d+\.\s+")
 _HAS_LETTER_RE = re.compile(r"[A-Za-z]")
-_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+
+# research(2026-06): pysbd rule-based SBD is abbreviation-aware (i.e./e.g./U.S.)
+# and dependency-free, so it won't split a cited sentence on an internal "." the
+# way a naive `(?<=[.!?])\s+` regex did (ADR-0022; arXiv:2010.09657).
+_SEGMENTER = pysbd.Segmenter(language="en", clean=False)
 
 # Sections whose claims do not require a citation. Matched case-insensitively as
 # a substring of the section header text.
@@ -106,7 +112,7 @@ def _iter_claim_segments(
         if stripped.startswith("|"):  # markdown table row/separator — not a prose claim
             continue
         line = _NUMBERED_RE.sub("", _BULLET_RE.sub("", raw)).strip()
-        sentences = [s.strip() for s in _SENTENCE_SPLIT_RE.split(line) if s.strip()]
+        sentences = [s.strip() for s in _SEGMENTER.segment(line) if s.strip()]
         last_cited = max((i for i, s in enumerate(sentences) if _CITE_RE.search(s)), default=-1)
         yield sentences, last_cited
 

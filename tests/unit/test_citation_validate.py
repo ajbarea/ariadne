@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from ariadne.provenance.citations import (
     CitationReport,
     extract_citations,
@@ -218,3 +220,37 @@ def test_uncited_fact_in_findings_still_flagged() -> None:
 
     note = "## Findings\nHalberd operates out of Compound-Alpha."
     assert find_uncited_claims(note) == ["Halberd operates out of Compound-Alpha."]
+
+
+# ── Segmentation robustness: abbreviations must not orphan a cited tail ──
+
+
+@pytest.mark.parametrize(
+    "caveat",
+    [
+        # Live Halberd workup survivor: a methodological caveat about modality
+        # ABSENCE has no gN to cite — it is an ICD-206 evidential-limit statement.
+        "No relational store is referenced in the available evidence; this assessment "
+        "likely rests on the graph alone.",
+        "The role inference is single-modality and rests on the graph alone.",
+    ],
+)
+def test_single_modality_evidential_limit_caveat_is_exempt(caveat: str) -> None:
+    note = f"## Identification\n- {caveat}\n"
+    assert find_uncited_claims(note) == []
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        "i.e. each edge is a self-attributed forward",  # live Enron false positive
+        "e.g. it routes through one shared mailbox",
+        "the U.S. trading desk booked it",
+    ],
+)
+def test_abbreviation_does_not_orphan_a_cited_tail(tail: str) -> None:
+    # The recall gate's sentence splitter must not break on the period inside an
+    # abbreviation ("i.e.", "e.g.", "U.S.") and orphan the fully-cited remainder of
+    # the sentence as a pseudo-claim. The whole sentence is cited via [cite:g1].
+    note = f"## Graph footprint\n- The 953 self-loop is a modeling artifact [cite:g1], {tail}.\n"
+    assert find_uncited_claims(note) == []
