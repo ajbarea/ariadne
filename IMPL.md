@@ -20,11 +20,20 @@ verified over the real protocol via the SDK's in-memory client).
 **Next — Axis B, bounded & audited self-improvement** (the harness is the verifiable
 reward; the eval dimensions are already surfaced in the report):
 - **B2 · Learned analytic skills** — distil high-scoring workup trajectories into named,
-  reusable, composable skills. `# research(2026-06): Voyager / ProcMEM — web-search
-  current practice first.`
+  reusable, composable skills. `# research(2026-06): Trace2Skill (arXiv 2603.25158) is
+  exactly this — trajectory-local lessons → transferable skills, consolidated into a skill
+  directory; SkillTTA / "Skills on the Fly" (arXiv 2605.16986) is the test-time-synthesis
+  alternative to an eager global library (decide which fits a workup); SoK Agentic Skills
+  (arXiv 2602.20867). Best practice: a STRUCTURED skill store (granularity / prerequisites /
+  composability / reliability), not a flat cache.`
 - **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
-  dimensions and proposes a refined skill / mapping / query. `# research(2026-06):
-  Reflexion + verifiable-reward self-improvement — web-search first.`
+  dimensions and proposes a refined skill / mapping / query. `# research(2026-06): the
+  verifiability constraint — self-improvement is reliable only with an EXTERNAL verifiable
+  reward (our eval harness is exactly that); intrinsic self-correction is NOT a quality
+  gate (the model that erred has the same blind spots) → the deterministic eval stays the
+  gate, per ADR-0026/0020. Reflection grounding: each reflection must CITE the specific
+  eval-failure episodic evidence (auditable, human-reviewable) — a clean fit for Ariadne's
+  citation ethos.`
 
 Deferred (YAGNI until a consumer needs them): A3 richer per-dataset tool families
 (dataset-scoped search, etc.); A2's SHACL transpile of `validate_against_ontology`, an

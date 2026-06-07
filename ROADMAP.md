@@ -595,10 +595,16 @@ items must not be hardened against one answer.
       read lazily from env (off argv). *Remaining:* agent-driven refinement of a
       persisted mapping from experience (needs B3).
 - [ ] **B2 · Learned analytic skills** — distil high-scoring workup trajectories into
-      named, reusable, composable skills. `# research(2026-06): Voyager / ProcMEM.`
+      named, reusable, composable skills. `# research(2026-06): Trace2Skill (arXiv
+      2603.25158) = trajectory-local lessons → transferable skills; SkillTTA (arXiv
+      2605.16986) = test-time synthesis vs an eager library; structured skill store, not a
+      flat cache (SoK Agentic Skills arXiv 2602.20867).`
 - [ ] **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
       dimensions (the harness is the verifiable reward; now surfaced in the report)
-      and proposes a refined skill/mapping/query.
+      and proposes a refined skill/mapping/query. `# research(2026-06): verifiability
+      constraint — only an external verifiable reward (our eval harness) makes this
+      reliable; intrinsic self-correction is not the gate (ADR-0026/0020); reflection
+      grounding — cite the specific eval-failure evidence (auditable).`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical
