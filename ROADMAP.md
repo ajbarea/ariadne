@@ -331,6 +331,16 @@ items must not be hardened against one answer.
       `find_unsupported_claims`, so a calibrated analytic judgment is checked by
       the calibration lint, not falsely rejected by HHEM. Separates factual
       precision from analytic calibration. `# research(2026-06): ICD-203 likelihood vs ALCE entailment.`
+- [x] **Citation gate v2 — coverage hardening (P-Cite repair loop) (2026-06-07):**
+      the agent's single-pass G-Cite draft is precision-first but under-covers
+      synthesis/ACH judgments; a bounded, deterministic-gate-terminated post-hoc
+      pass attaches ledger cites to uncited claims (or softens ungroundable ones),
+      and `pysbd` replaces the naive `[.!?]` splitter so abbreviations (`i.e.`/`U.S.`)
+      no longer orphan a cited tail. `is_analytic_caveat` now also exempts
+      single-modality evidential limits (ICD-206). `--repair/--no-repair` (default on)
+      doubles as the raw-vs-repaired eval lever. Live-verified: Halberd exits 0 with
+      repair, 1 without. [ADR-0022](./docs/architecture/decisions/0022-citation-recall-coverage-hardening.md).
+      `# research(2026-06): G-Cite vs P-Cite, P-Cite-first for high-stakes (arXiv:2509.21557); bounded refinement (arXiv:2303.17651); pysbd (arXiv:2010.09657).`
 - [x] **LLM-rubric scoring of the analytic standards + `--entail` flag (2026-06-04):**
       `evaluation/rubric.py` scores a note against four ICD-203 standards the
       mechanical gates cannot see (alternatives / argumentation / relevance /

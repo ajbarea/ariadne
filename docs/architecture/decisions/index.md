@@ -48,6 +48,7 @@ ADR is where the *comparison* lives.
 | [0019](0019-retrieval-side-evaluation-for-sensemaking.md) | Retrieval-side evaluation — context utilization, not precision@k | Accepted |
 | [0020](0020-adaptive-self-improving-ariadne.md) | Adaptive & self-improving Ariadne — bounded, audited, propose→ratify→freeze | Accepted |
 | [0021](0021-run-output-organization.md) | Run-output organization — immutable per-run dirs + reproducibility manifest | Accepted |
+| [0022](0022-citation-recall-coverage-hardening.md) | Citation-recall coverage hardening — P-Cite repair loop + abbreviation-robust segmentation | Accepted |
 
 ## Template
 
