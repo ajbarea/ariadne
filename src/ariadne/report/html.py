@@ -664,8 +664,10 @@ elbl.textContent=(DATA.entity||"").slice(0,20); svg.appendChild(elbl);
 sources.forEach(s=>node("src:"+s,pos["src:"+s].x,pos["src:"+s].y,11,SRC_COLORS[s]||"#7c8190",
   s+" ("+bySrc[s].length+")",null));
 DATA.ledger.forEach(e=>{const n=citeCounts[e.id]||0,r=Math.min(4+n*1.5,9);
-  node(e.id,pos[e.id].x,pos[e.id].y,r,SRC_COLORS[e.source]||"#7c8190",
-    e.id+(n?" · "+n+"×":""),()=>selectEvidence(e.id,null));});
+  const g=node(e.id,pos[e.id].x,pos[e.id].y,r,SRC_COLORS[e.source]||"#7c8190",
+    e.id+(n?" · "+n+"×":""),()=>selectEvidence(e.id,null));
+  g.addEventListener("mouseenter",()=>{if(!$("#drawer").classList.contains("open"))provTrace(e.id,e.source);});
+  g.addEventListener("mouseleave",()=>{if(!$("#drawer").classList.contains("open"))provClear();});});
 const PROV_LEGEND=sources.map(s=>`<span><i style="background:${SRC_COLORS[s]}"></i>${s}</span>`).join("")
   + `<span><i style="background:#e0a73c"></i>entity</span><span style="color:var(--muted)">size = times cited · click any node</span>`;
 
@@ -825,6 +827,17 @@ if(netSearch) netSearch.addEventListener("input",()=>{
   ng.addEventListener("dblclick",e=>{if(!e.target.closest(".node")&&ng._baseVb)setVb(ng._baseVb);});
 })();
 
+// ---- Provenance trace: highlight entity -> source -> evidence (hover preview + click) ----
+function provTrace(id,source){
+  document.querySelectorAll("#graph .node").forEach(n=>n.classList.toggle("dim",
+    n.dataset.node!==id && n.dataset.node!=="entity" && n.dataset.node!=="src:"+source));
+  document.querySelectorAll("#graph .edge").forEach(p=>{const on=p.dataset.gid===id;
+    p.classList.toggle("hot",on); p.classList.toggle("dim", p.dataset.gid && !on);});
+}
+function provClear(){
+  document.querySelectorAll("#graph .node.dim,#graph .edge.dim").forEach(n=>n.classList.remove("dim"));
+  document.querySelectorAll("#graph .edge.hot").forEach(n=>n.classList.remove("hot"));
+}
 // ---- Evidence drawer (details-on-demand) ----
 function selectEvidence(id, chip){
   const e=byId[id]; if(!e) return;
@@ -839,9 +852,7 @@ function selectEvidence(id, chip){
     const on=b.dataset.cite===id; b.classList.toggle("sel",on);
     const blk=b.closest("p,li,h1,h2,h3"); if(blk) blk.classList.toggle("blk-hot",on);
   });
-  document.querySelectorAll(".node").forEach(n=>n.classList.toggle("dim", n.dataset.node!==id && n.dataset.node!=="entity" && n.dataset.node!=="src:"+e.source));
-  document.querySelectorAll(".edge").forEach(p=>{const on=p.dataset.gid===id;
-    p.classList.toggle("hot",on); p.classList.toggle("dim", p.dataset.gid && !on);});
+  provTrace(id, e.source);  // scoped to the provenance svg (was global — dimmed the network too)
 }
 function closeDrawer(){
   $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open");
