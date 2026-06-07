@@ -3,10 +3,13 @@
 !!! note "What runs today"
 
     The harness runs end-to-end: `ariadne workup <entity>` drives the live agent
-    loop over the seeded stores and writes a cited analytic note. The live loop
-    needs `ANTHROPIC_API_KEY` and, for the relational/semantic legs, running
-    Neo4j and Postgres. The offline gates (`eval`, `governance`) need neither.
-    Each design choice is grounded in
+    loop over the seeded stores and writes a cited analytic note, and `ariadne
+    report <run-dir>` renders a self-contained interactive report. It also adapts
+    to your own Postgres (introspect, propose a mapping, ratify) and learns from
+    experience (`distil`, `reflect`, `compare`). The live loop needs
+    `ANTHROPIC_API_KEY` and, for the relational/semantic legs, running Neo4j and
+    Postgres; the offline commands (`report`, `eval`, `governance`, `compare`) need
+    neither. Each design choice is grounded in
     [current best practice](research/best-practice-architecture.md) before it
     hardens into code.
 
