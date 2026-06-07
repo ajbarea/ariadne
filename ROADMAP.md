@@ -578,7 +578,11 @@ items must not be hardened against one answer.
       routing (arXiv 2604.02618) + Anchor SHACL-enforced typing (arXiv 2606.01208);
       lightweight TOML over LinkML (arXiv 2511.16935).`
 - [ ] **A3 · Dynamic MCP surface** — per-source tool families register at runtime as
-      datasets connect (`notifications/tools/list_changed`). `# research(2026-06):
+      datasets connect (`notifications/tools/list_changed`). *Enumeration seam shipped
+      2026-06-07:* `list_datasets` over MCP (built-ins + `$ARIADNE_MAPPINGS` user
+      mappings), the prerequisite for any per-dataset tool family; the runtime
+      registration + `list_changed` half remains. `# research(2026-06): MCP listChanged
+      capability + notifications/tools/list_changed; FastMCP runtime tool registration;
       dynamic-fastmcp / Spring AI / Docker Dynamic MCP.`
 
 *Axis B — self-improvement (bounded, audited):*

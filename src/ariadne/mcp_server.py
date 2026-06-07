@@ -103,6 +103,40 @@ async def list_profiles() -> dict[str, Any]:
     }
 
 
+def list_datasets_info(env: dict[str, str]) -> dict[str, dict[str, str]]:
+    """Every dataset a host agent can target: built-ins + ``$ARIADNE_MAPPINGS`` user mappings.
+
+    Imports the built-in adapters for their registration side-effect (the MCP server is a
+    separate entry point from the CLI, so they aren't otherwise loaded), then discovers any
+    ratified user mappings under ``$ARIADNE_MAPPINGS`` (ADR-0025). Each name is a valid
+    ``dataset`` argument to ``workup``. The enumeration seam dynamic per-dataset tool
+    families (A3) will build on.
+    """
+    import ariadne.datasets.enron  # side-effect: register the built-in adapters
+    import ariadne.datasets.lahman
+    import ariadne.datasets.synthetic
+    import ariadne.datasets.worldspeech  # noqa: F401  (last side-effect import; binds nothing read)
+    from ariadne.datasets.base import DATASETS
+    from ariadne.datasets.mapping_source import discover_and_register
+
+    discover_and_register(env)
+    return {
+        name: {"entity_type": a.entity_type, "access": a.access}
+        for name, a in sorted(DATASETS.items())
+    }
+
+
+@mcp.tool()
+async def list_datasets() -> dict[str, Any]:
+    """List the datasets this deployment can work up (built-ins + user-mapped stores).
+
+    Each name is a valid ``dataset`` argument to ``workup``; ``access`` is "public" or
+    "restricted". User stores ratified under ``$ARIADNE_MAPPINGS`` (ADR-0025) appear here
+    once their mapping is in place.
+    """
+    return list_datasets_info(dict(os.environ))
+
+
 @mcp.tool()
 async def hybrid_search(query: str, limit: int = 5) -> dict[str, Any]:
     """Full-text + semantic (RRF) search over indexed email-body documents."""

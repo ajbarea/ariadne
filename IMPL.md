@@ -10,10 +10,15 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 **Adaptive Ariadne — A3: the dynamic MCP surface.** A1 (introspect → propose
 [deterministic *and* LLM] → validate → freeze → apply) and **A2 (the declarative user
-ontology)** are both complete — see *Recently shipped*. A3 is the next thread:
-per-source tool families register at runtime as datasets connect
-(`notifications/tools/list_changed`). `# research(2026-06): dynamic-fastmcp / Spring AI
-/ Docker Dynamic MCP — web-search current practice before building.`
+ontology)** are both complete — see *Recently shipped*. A3 exposes per-source tool
+families at runtime as datasets connect (`notifications/tools/list_changed`). **Step 1
+landed:** `list_datasets` — the MCP enumeration seam (built-ins + `$ARIADNE_MAPPINGS`
+user mappings), the prerequisite for any per-dataset tool family. **Remaining:** the
+runtime registration itself + firing `list_changed` when a dataset connects mid-session
+(needs a live MCP-client verification, so it's the harder slice — do it next).
+`# research(2026-06): MCP listChanged capability + notifications/tools/list_changed;
+FastMCP supports runtime tool registration — web-search current practice before the
+runtime half.`
 
 A2 follow-ons, deferred (smaller, ride the same seams): formalize
 `validate_against_ontology` as a SHACL transpile (entity types → `sh:NodeShape`,
@@ -26,6 +31,15 @@ the eval harness).
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**MCP `list_datasets` — A3 enumeration seam, shipped 2026-06-07.** The MCP server
+exposed `list_profiles` but no way to discover which *datasets* a host agent could
+`workup` — built-ins *or* user stores ratified under `$ARIADNE_MAPPINGS`. `list_datasets`
+(testable core `list_datasets_info(env)`) imports the built-in adapters for their
+registration side-effect, runs `discover_and_register`, and returns
+`{name: {entity_type, access}}`. Closes the discovery gap and is the enumeration
+foundation A3's dynamic per-dataset tool families build on. Live-smoked: the built-in
+slate + the ratified `intel` user mapping all enumerate over the seam. TDD; 387 unit green.
 
 **Declarative user ontology — A2 first slice, shipped 2026-06-07** ([ADR-0027](./docs/architecture/decisions/0027-declarative-user-ontology.md)).
 The mapper now maps into a user's *own* closed vocabulary, not just the open-string
