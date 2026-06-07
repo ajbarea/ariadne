@@ -8,41 +8,49 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — Axis A is shipped end to end; Axis B (self-improvement) is next.**
-A1 (introspect → propose [deterministic *and* LLM] → validate → freeze → apply), **A2**
-(the declarative user ontology), and **A3** (the dynamic MCP surface) are all complete —
-see *Recently shipped*. A3: `list_datasets` enumerates datasets and **`connect_dataset`
-activates a ratified user store at runtime** — exposing a `workup_<name>` tool and firing
-`notifications/tools/list_changed` so clients re-list, no server restart
-([ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md);
-verified over the real protocol via the SDK's in-memory client).
+**Adaptive Ariadne — Axis A complete; Axis B (self-improvement) underway: B2 shipped, B3 next.**
+Axis A — A1 (introspect → propose [deterministic *and* LLM] → validate → freeze → apply),
+**A2** (the declarative user ontology), **A3** (the dynamic MCP surface) — and Axis B's
+**B2** (learned analytic skills: `ariadne distil`) are all complete; see *Recently shipped*.
 
-**Next — Axis B, bounded & audited self-improvement** (the harness is the verifiable
-reward; the eval dimensions are already surfaced in the report):
-- **B2 · Learned analytic skills** — distil high-scoring workup trajectories into named,
-  reusable, composable skills. `# research(2026-06): Trace2Skill (arXiv 2603.25158) is
-  exactly this — trajectory-local lessons → transferable skills, consolidated into a skill
-  directory; SkillTTA / "Skills on the Fly" (arXiv 2605.16986) is the test-time-synthesis
-  alternative to an eager global library (decide which fits a workup); SoK Agentic Skills
-  (arXiv 2602.20867). Best practice: a STRUCTURED skill store (granularity / prerequisites /
-  composability / reliability), not a flat cache.`
-- **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
-  dimensions and proposes a refined skill / mapping / query. `# research(2026-06): the
-  verifiability constraint — self-improvement is reliable only with an EXTERNAL verifiable
-  reward (our eval harness is exactly that); intrinsic self-correction is NOT a quality
-  gate (the model that erred has the same blind spots) → the deterministic eval stays the
-  gate, per ADR-0026/0020. Reflection grounding: each reflection must CITE the specific
-  eval-failure episodic evidence (auditable, human-reviewable) — a clean fit for Ariadne's
-  citation ethos.`
+**Next — B3 · Reflexion over eval** (the harness is the verifiable reward; the eval
+dimensions are already surfaced in the report): the agent reflects on its own low-scoring
+eval dimensions and proposes a refined skill / mapping / query — then re-scores against the
+*same* deterministic gate it may never edit. `# research(2026-06): the verifiability
+constraint — self-improvement is reliable only with an EXTERNAL verifiable reward (our eval
+harness is exactly that); intrinsic self-correction is NOT a quality gate (the model that
+erred has the same blind spots) → the deterministic eval stays the gate, per ADR-0026/0020.
+Reflection grounding: each reflection must CITE the specific eval-failure episodic evidence
+(auditable, human-reviewable) — a clean fit for Ariadne's citation ethos.` B3 closes the
+loop B2 opened: the ratify step of `distil` is where the SkillGen-style net-effect check
+(does a workup *using* a skill out-score one without it) would automate, scored by eval.
 
-Deferred (YAGNI until a consumer needs them): A3 richer per-dataset tool families
-(dataset-scoped search, etc.); A2's SHACL transpile of `validate_against_ontology`, an
-`ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges.
+Deferred (YAGNI until a consumer needs them): B2's multi-trajectory hierarchical
+consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`),
+deepening an existing skill, the automated net-effect ratification check, and test-time skill
+synthesis (the SkillTTA ephemeral track); A3 richer per-dataset tool families (dataset-scoped
+search, etc.); A2's SHACL transpile of `validate_against_ontology`, an `ARIADNE_ONTOLOGIES`
+registry, multi-`domain`/`range` edges.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**Distil analytic skills from eval-certified trajectories — B2 first slice, shipped 2026-06-07** ([ADR-0029](./docs/architecture/decisions/0029-distilling-analytic-skills-from-trajectories.md)).
+`ariadne distil <run>` distils a high-scoring workup into a named, structured, declarative
+skill (`SKILL.md` + a `skill-card.toml` sidecar) — the skill analog of A1's `map`, on the same
+propose → ratify → freeze spine. **Keystone gate:** distil **only** from a run the eval harness
+certified `grounded` (the external verifiable reward; no eval ⇒ no distillation — the honest
+capability line). The deterministic distiller *records* the trajectory into a phase-grouped
+skeleton (graph-schema / relational-schema / traversal / relational-query / free-text); `--llm`
+runs the Trace2Skill move, generalizing the trajectory + note into transferable procedural prose
+via forced tool-use (`propose_skill`, behind the `adaptive` extra, key-guarded). The draft lands
+in `skills-proposed/` for a human to ratify into `.claude/skills/`. Live-smoked both paths against
+the `halberd` run — the `--llm` smoke caught a `max_tokens` truncation (the forced tool-call
+dropped the required `body`), now fixed (8192 + a clear incomplete-proposal error). TDD; 419 unit
+green. `# research(2026-06): Trace2Skill arXiv 2603.25158; SkillGen verifier-gate arXiv 2605.10999;
+SoK Agentic Skills arXiv 2602.20867; SkillTTA arXiv 2605.16986 (the rejected ephemeral alternative).`
 
 **MCP `connect_dataset` — A3 runtime activation, shipped 2026-06-07** ([ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md)).
 A host agent can onboard a ratified user store **mid-session**: `connect_dataset(name)`

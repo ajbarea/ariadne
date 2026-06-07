@@ -19,6 +19,10 @@ venv/
 # Run artifacts (CLI default --out runs/; immutable per-run dirs + manifest, ADR-0021)
 /runs/
 
+# Distilled skill drafts (ariadne distil --out skills-proposed/; a human ratifies one by
+# moving it under .claude/skills/, ADR-0029). The proposal is local until ratified.
+/skills-proposed/
+
 # IDE
 .vscode/
 .idea/

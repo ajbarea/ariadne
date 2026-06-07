@@ -232,6 +232,26 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Map into a user-declared ontology.toml (closed entity/relationship vocabulary): "
         "LLM-guided with --llm, validation-only without (ADR-0027).",
     )
+
+    ds = sub.add_parser(
+        "distil",
+        help="Distil an eval-certified workup into a draft analytic skill (B2, ADR-0029)",
+    )
+    ds.add_argument("run_dir", help="A workup run dir (must carry an eval.json with grounded=true)")
+    ds.add_argument(
+        "--name", default=None, help="Skill slug (default: entity-workup-<dataset>; --llm proposes)"
+    )
+    ds.add_argument(
+        "--out",
+        default="skills-proposed",
+        help="Where to write the draft (default: skills-proposed)",
+    )
+    ds.add_argument(
+        "--llm",
+        action="store_true",
+        help="Generalize the trajectory into a transferable skill with the Claude distiller "
+        "(needs the 'adaptive' extra + ANTHROPIC_API_KEY); else a deterministic record.",
+    )
     return parser.parse_args(argv)
 
 
@@ -313,6 +333,64 @@ def _run_map(
     print(
         f"Review/edit {out}, place it under $ARIADNE_MAPPINGS, set ${dsn_env}, "
         f"then: ariadne index --dataset {name}"
+    )
+    return 0
+
+
+def _run_distil(
+    run_dir: str, *, name: str | None = None, out: str = "skills-proposed", llm: bool = False
+) -> int:
+    """Distil an eval-certified workup into a draft analytic skill (B2, ADR-0029).
+
+    The *propose* step of propose -> ratify -> freeze: only a run the eval harness scored
+    ``grounded`` is a skill source (the external verifiable reward — the gate the loop may
+    never edit). ``--llm`` generalizes the trajectory into transferable prose (the Trace2Skill
+    move) behind a key-guard + the ``adaptive`` extra; otherwise a deterministic record. The
+    draft lands under ``out/<name>/`` for a human to review and move into ``.claude/skills/``.
+    """
+    from ariadne.learning.distil import (
+        NotCertified,
+        distil_deterministic,
+        distil_with_llm,
+        load_run,
+        write_skill,
+    )
+
+    distiller = None
+    if llm:
+        # Key-guard before load_run or any anthropic import (mirrors --map --llm): a missing
+        # key exits cleanly, nothing is written.
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print(
+                "ANTHROPIC_API_KEY is not set — export it to use --llm (the Claude distiller).",
+                file=sys.stderr,
+            )
+            return 2
+        from ariadne.learning.distil import ClaudeSkillDistiller
+
+        distiller = ClaudeSkillDistiller()
+
+    run = load_run(run_dir)
+    try:
+        if distiller is not None:
+            skill = distil_with_llm(
+                run, call_llm=distiller.call_llm, name=name, model=distiller.model
+            )
+        else:
+            skill = distil_deterministic(run, name=name)
+    except NotCertified as exc:
+        print(f"Cannot distil {run_dir}: {exc}", file=sys.stderr)
+        return 1
+
+    out_dir = write_skill(out, skill)
+    prereqs = ", ".join(skill.card.prerequisites)
+    print(
+        f"Proposed skill -> {out_dir}/ "
+        f"({skill.card.granularity}, prerequisites: {prereqs}, distilled_by {skill.card.distilled_by})."
+    )
+    print(
+        f"Review/edit {out_dir}/SKILL.md, then ratify by moving it: "
+        f"mv {out_dir} .claude/skills/{skill.card.name}"
     )
     return 0
 
@@ -822,6 +900,8 @@ def main(argv: list[str] | None = None) -> int:
             llm=args.llm,
             ontology=args.ontology,
         )
+    if args.command == "distil":
+        return _run_distil(args.run_dir, name=args.name, out=args.out, llm=args.llm)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

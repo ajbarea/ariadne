@@ -594,11 +594,20 @@ items must not be hardened against one answer.
       re-discovered (reused) on the next workup over that store, with the source DSN
       read lazily from env (off argv). *Remaining:* agent-driven refinement of a
       persisted mapping from experience (needs B3).
-- [ ] **B2 · Learned analytic skills** — distil high-scoring workup trajectories into
-      named, reusable, composable skills. `# research(2026-06): Trace2Skill (arXiv
-      2603.25158) = trajectory-local lessons → transferable skills; SkillTTA (arXiv
-      2605.16986) = test-time synthesis vs an eager library; structured skill store, not a
-      flat cache (SoK Agentic Skills arXiv 2602.20867).`
+- [x] **B2 · Learned analytic skills — first slice shipped 2026-06-07.** `ariadne distil
+      <run>` distils a high-scoring workup into a named, structured, declarative skill
+      (`SKILL.md` + a `skill-card.toml` store record) — the skill analog of A1's `map`, on
+      the same propose → ratify → freeze spine
+      ([ADR-0029](./docs/architecture/decisions/0029-distilling-analytic-skills-from-trajectories.md)).
+      The keystone gate: distil **only** from a run the eval harness certified `grounded`
+      (the external verifiable reward — the gate the loop may never edit). Deterministic
+      records the trajectory into phase groups; `--llm` runs the Trace2Skill generalization
+      via forced tool-use. *Remaining (deferred): multi-trajectory consolidation, skill
+      composition (`composes_with`), deepening an existing skill, the automated net-effect
+      ratification check, and the SkillTTA ephemeral test-time track.* `# research(2026-06):
+      Trace2Skill (arXiv 2603.25158); SkillGen verifier-gate (arXiv 2605.10999); structured
+      store not a flat cache (SoK Agentic Skills arXiv 2602.20867); SkillTTA (arXiv 2605.16986)
+      the rejected ephemeral alternative.`
 - [ ] **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
       dimensions (the harness is the verifiable reward; now surfaced in the report)
       and proposes a refined skill/mapping/query. `# research(2026-06): verifiability
@@ -620,8 +629,12 @@ items must not be hardened against one answer.
 > open-string canonical types; and **A3 shipped** (2026-06-07,
 > [ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md)) —
 > `connect_dataset` activates a ratified store at runtime over MCP. **Axis A (adaptivity)
-> is now complete end to end.** **Next: Axis B — bounded, audited self-improvement:**
-> learned analytic skills (B2) and reflexion over the eval harness (B3).
+> is now complete end to end.** **Axis B (self-improvement) is underway:** B2 shipped
+> (2026-06-07, [ADR-0029](./docs/architecture/decisions/0029-distilling-analytic-skills-from-trajectories.md))
+> — `ariadne distil` distils an eval-certified workup into a structured, declarative skill on
+> the propose → ratify → freeze spine. **Next: B3 — reflexion over the eval harness** (the
+> agent reflects on its own low-scoring eval dimensions and proposes a refined skill/mapping/
+> query, re-scored against the same gate it may never edit).
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
