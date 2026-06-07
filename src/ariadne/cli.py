@@ -292,8 +292,33 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _missing_workup(workup_dir: str, *required: str) -> str | None:
+    """An actionable message if the dir or a required artifact is absent, else ``None``.
+
+    Serves both the human reading the terminal and the agent driving the MCP: state what is
+    wrong and how to fix it, rather than leaking a FileNotFoundError traceback.
+    """
+    directory = Path(workup_dir)
+    if not directory.is_dir():
+        return (
+            f"No run directory at '{workup_dir}'. Point at a workup output dir such as "
+            "runs/<dataset>/<slug>/latest, or run `ariadne workup <entity>` first."
+        )
+    missing = [name for name in required if not (directory / name).is_file()]
+    if missing:
+        return (
+            f"'{workup_dir}' is not a finished workup (missing {', '.join(missing)}). "
+            "Run `ariadne workup <entity>` first, or point at runs/<dataset>/<slug>/latest."
+        )
+    return None
+
+
 def _run_report(workup_dir: str) -> int:
     """Render the offline interactive report.html from a persisted workup."""
+    msg = _missing_workup(workup_dir, "note.md")
+    if msg:
+        print(msg, file=sys.stderr)
+        return 2
     from ariadne.report.html import write_report
 
     out = write_report(workup_dir)
@@ -551,6 +576,10 @@ def _run_compare(baseline: list[str], candidate: list[str], *, out: str | None =
 
 def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
     """Score an existing workup against a planted-needle fixture (no API key needed)."""
+    msg = _missing_workup(workup_dir, "note.md", "provenance.jsonl")
+    if msg:
+        print(msg, file=sys.stderr)
+        return 2
     report = score_workup_dir(workup_dir, FIXTURES[fixture_name])
     rec = None
     with eval_span(report.entity, fixture_name):

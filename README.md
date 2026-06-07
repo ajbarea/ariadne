@@ -149,7 +149,9 @@ for the design rationale and considered alternatives.
 
 ## Quickstart
 
-Phase 1 works up a target entity against a graph store and returns a cited analytic note.
+Work up a target entity against a graph store, open an interactive report, and score
+the run. This first run is graph-only (one store, ~90s); add `--sql --semantic` once you
+have Postgres up for the full cross-store workup.
 
 ```bash
 # 1a. start a local Neo4j
@@ -160,24 +162,31 @@ docker exec -i ariadne-neo4j cypher-shell -u neo4j -p password < infra/neo4j/see
 # 2. the live agent loop needs an API key
 export ANTHROPIC_API_KEY=sk-...
 
-# 3. run a workup (writes ./workups/<entity>/{note.md, provenance.jsonl,
-#    citations.json, tradecraft.json, governance.json})
+# 3. work up a target entity. The output is an immutable run dir
+#    runs/synthetic/halberd/<run-id>/ (note.md, provenance.jsonl, citations.json,
+#    manifest.json, ...), with runs/synthetic/halberd/latest pointing at the newest run.
 uv run ariadne workup Halberd
 
-# 4. score the run: planted-needle grounding (+ optional cross-store reconciliation)
-uv run ariadne eval workups/halberd --reconcile synthetic
-#    and the ICD-203 analytic-quality rubric (LLM judge; needs the 'rubric' extra)
-uv run ariadne rubric workups/halberd
+# 4. open the self-contained interactive report: entity-network view, clickable
+#    provenance + evidence drawer, reconciliation panel, eval dashboard. The fastest
+#    way to see what the workup found.
+uv run ariadne report runs/synthetic/halberd/latest
+#    -> writes runs/synthetic/halberd/latest/report.html; open it in a browser
 
-# 5. enforce the read-only contract offline (CI gate, no API key; exit 3 on a write attempt)
-uv run ariadne governance workups/halberd
+# 5. score the run: planted-needle grounding (+ optional cross-store reconciliation)
+uv run ariadne eval runs/synthetic/halberd/latest --reconcile synthetic
+#    and the ICD-203 analytic-quality rubric (LLM judge; needs the 'rubric' extra)
+uv run ariadne rubric runs/synthetic/halberd/latest
+
+# 6. enforce the read-only contract offline (CI gate, no API key; exit 3 on a write attempt)
+uv run ariadne governance runs/synthetic/halberd/latest
 ```
 
 Every fact in the note carries a `[cite:gN]` id that resolves to a recorded graph
 query in `provenance.jsonl`; the run fails if any citation is uncited, dangling,
 or (with the optional `eval` extra) unsupported by its cited evidence. `ariadne
 eval` then scores whether the run **surfaced and actually traversed** the seed's
-planted non-obvious bridge — `grounded=True` means it reasoned, not guessed.
+planted non-obvious bridge; `grounded=True` means it reasoned, not guessed.
 
 The analytic loop is **read-only by construction** (the graph and relational MCP
 connectors run in read-only / restricted mode); `ariadne governance` *verifies* that
@@ -202,16 +211,16 @@ Archived, auditable runs (reconciled by `/techne:audit`):
 
 ## Repository layout
 
-| Path            | Purpose                                                              |
-| --------------- | ------------------------------------------------------------------- |
-| `src/ariadne/`  | The Python package — harness wiring, CLI entrypoint.                |
-| `tools/`        | Custom/in-process agent tools (connectors, processors). *Pending.* |
-| `skills/`       | Agent Skills — packaged analytic procedures (e.g. entity-workup). *Pending.* |
-| `mcp_servers/`  | MCP server connectors for graph / SQL / vector stores. *Pending.*  |
-| `docs/`         | Zensical documentation site (conventions, architecture, research). |
-| `docs/research/`| June-2026 best-practice research backing every design decision.    |
-| `tests/`        | Test suite (unit + integration).                                   |
-| `scripts/`      | `dev-runner.sh` and other repo scripts.                            |
+| Path | Purpose |
+| ---- | ------- |
+| `src/ariadne/` | The package: CLI + MCP server, read-only store connectors (`graph`, `relational`, `unstructured`), the adapt layer (`introspect`, `mapping`), bounded self-improvement (`learning`), and the eval / provenance / report modules. |
+| `plugins/ariadne/` | The Claude Code plugin: the bundled MCP server config + the `analyst-workup` skill. |
+| `.claude/skills/entity-workup/` | The analytic procedure (gather, act, verify, synthesize) the agent loop follows. |
+| `infra/` | docker-compose for a local Neo4j + Postgres. |
+| `docs/architecture/decisions/` | MADR ADRs: every contestable choice and its rejected alternatives. |
+| `docs/research/` | The June-2026 best-practice research backing each design decision. |
+| `tests/` | Unit + integration suite. |
+| `scripts/` | `dev-runner.sh` and other repo scripts. |
 
 ## Documentation site
 
@@ -224,10 +233,15 @@ make docs        # uv run --with zensical zensical serve
 
 ## Status
 
-Phase 1 shipped. The Neo4j MCP connector, `entity-workup` skill, provenance hook,
-and `ariadne workup` CLI are all committed and gated. See [`IMPL.md`](./IMPL.md)
-for what's in flight (Phase 2) and [`ROADMAP.md`](./ROADMAP.md) for the phased
-build order.
+Ariadne works up an entity end to end: graph, relational, full-text, and semantic
+retrieval; a citation-gated analytic note; a self-contained interactive report;
+planted-needle and ICD-203 evaluation; and a read-only governance gate. Beyond the
+built-in datasets it **adapts** to a user's own Postgres (introspect, propose a
+mapping, ratify, then run the existing pipeline unchanged) and **learns from
+experience** (distil a skill from a high-scoring run, reflect on a low-scoring one,
+deepen a skill from a new run, and use `ariadne compare` to measure whether a learned
+change actually helps before adopting it). See [`IMPL.md`](./IMPL.md) for what's in
+flight and [`ROADMAP.md`](./ROADMAP.md) for the build order.
 
 ## License
 

@@ -36,6 +36,7 @@ make setup        # uv sync: installs dependencies + dev group
 | Full test suite            | `make test`                      |
 | Pre-push gate              | `make validate`                  |
 | Run a workup (live loop)   | `uv run ariadne workup <entity>` |
+| Open a run's report        | `uv run ariadne report <run-dir>` |
 | List the CLI subcommands   | `uv run ariadne --help`          |
 | Serve these docs locally   | `make docs`                      |
 
@@ -63,10 +64,10 @@ It deploys automatically to GitHub Pages on every push to `main` that touches
 
 | Path            | Purpose                                                       |
 | --------------- | ------------------------------------------------------------- |
-| `src/ariadne/`  | The Python package, harness wiring, CLI entrypoint.          |
-| `tools/`        | Custom/in-process agent tools (connectors, processors).       |
-| `skills/`       | Agent Skills, packaged analytic procedures.                  |
-| `mcp_servers/`  | MCP connectors for graph / SQL / vector stores.               |
+| `src/ariadne/`  | The package: CLI + MCP server, store connectors, the adapt layer, and the `learning` self-improvement modules. |
+| `plugins/ariadne/` | The Claude Code plugin (bundled MCP server + analyst-workup skill). |
+| `infra/`        | docker-compose for a local Neo4j + Postgres.                  |
+| `docs/architecture/decisions/` | The MADR ADRs (every contestable choice + its alternatives). |
 | `docs/`         | This documentation site (conventions, architecture, research).|
 | `tests/`        | Test suite (unit + integration).                              |
 
