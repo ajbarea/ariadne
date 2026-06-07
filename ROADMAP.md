@@ -565,10 +565,18 @@ items must not be hardened against one answer.
       loop (vs the deterministic baseline). *Remaining (deferred, large schemas only):*
       AutoLink-style schema *exploration* without seeing the full schema. `# research(2026-06):
       AutoLink agentic schema linking (arXiv 2511.17190) — the large-schema path.`
-- [ ] **A2 · Ontology / semantic layer** — a declarative TOML of the user's entity
-      types + relationship vocabulary + an LLM-assisted mapping into it, using
-      intrinsic-vs-relational routing (attribute vs edge). SHACL-validatable later.
-      `# research(2026-06): OntoKG (arXiv 2604.02618) + Anchor (arXiv 2606.01208).`
+- [x] **A2 · Ontology / semantic layer — first slice shipped 2026-06-07.** A user
+      declares their entity-type + relationship vocabulary as a lightweight
+      `ontology.toml` (`domain → range`); the LLM mapper maps into *that*
+      (enum-constrained forced-tool + ontology-in-prompt), and
+      `validate_against_ontology` enforces the closed vocabulary + intrinsic-vs-relational
+      routing inside the existing repair loop — `ariadne map --ontology PATH`
+      ([ADR-0027](./docs/architecture/decisions/0027-declarative-user-ontology.md)).
+      *Remaining (deferred): a SHACL transpile of the validator (`sh:NodeShape` /
+      `sh:PropertyShape`); an `ARIADNE_ONTOLOGIES` registry so an ontology self-discovers
+      like profiles/mappings; multi-`domain`/`range` edges.* `# research(2026-06): OntoKG
+      routing (arXiv 2604.02618) + Anchor SHACL-enforced typing (arXiv 2606.01208);
+      lightweight TOML over LinkML (arXiv 2511.16935).`
 - [ ] **A3 · Dynamic MCP surface** — per-source tool families register at runtime as
       datasets connect (`notifications/tools/list_changed`). `# research(2026-06):
       dynamic-fastmcp / Spring AI / Docker Dynamic MCP.`
@@ -593,9 +601,12 @@ items must not be hardened against one answer.
 > deterministic testcontainers proof: source PG → mapping → indexer → traversable
 > Neo4j edge) — and the agentic LLM mapper that proposes those drafts
 > ([ADR-0026](./docs/architecture/decisions/0026-llm-schema-mapper.md)). **A1 is now
-> complete.** **Next:** the full user ontology (A2 — map into a user-declared entity/
-> relationship vocabulary, not just the open-string canonical types), then dynamic MCP
-> (A3), learned skills (B2), reflexion over the eval harness (B3).
+> complete**, and **A2's first slice shipped** (2026-06-07,
+> [ADR-0027](./docs/architecture/decisions/0027-declarative-user-ontology.md)) — the
+> mapper now maps into a user-declared `ontology.toml` vocabulary, not just the
+> open-string canonical types. **Next:** dynamic MCP (A3 — per-source tool families
+> registering at runtime), then learned skills (B2) and reflexion over the eval harness
+> (B3); plus A2's deferred follow-ons (SHACL transpile, ontology registry).
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).

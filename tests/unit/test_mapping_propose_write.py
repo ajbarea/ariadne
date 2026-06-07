@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ariadne.mapping.ontology import load_ontology_toml
 from ariadne.mapping.propose import propose_and_write
 from ariadne.mapping.schema import DatasetHeader, load_dataset_header, load_mapping_toml
 
@@ -71,3 +72,23 @@ def test_propose_and_write_stamps_a_dataset_header_when_given_one(tmp_path: Path
     assert load_dataset_header(out.read_text(encoding="utf-8")) == DatasetHeader(
         "acme", dsn_env="ACME_DSN"
     )
+
+
+def test_propose_and_write_surfaces_ontology_violations(tmp_path: Path) -> None:
+    # The baseline types `widgets` -> "widget" (singularized); an ontology of only
+    # person/org rejects it, so the conformance error is surfaced alongside the
+    # (clean) structural check — the draft is still written for the human to fix.
+    results = [
+        (
+            ["table_name", "column_name", "data_type"],
+            [("widgets", "id", "integer"), ("widgets", "name", "text")],
+        ),
+        (["from_table", "from_column", "to_table", "to_column"], []),
+    ]
+    ontology = load_ontology_toml(
+        '[[entity_types]]\nname = "person"\n[[entity_types]]\nname = "org"\n'
+    )
+    out = tmp_path / "mapping.toml"
+    _mapping, errors = propose_and_write(_FakeConn(results), out, ontology=ontology)
+    assert any("widget" in e and "ontology" in e for e in errors)
+    assert out.exists()

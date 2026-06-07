@@ -49,6 +49,11 @@ ADR is where the *comparison* lives.
 | [0020](0020-adaptive-self-improving-ariadne.md) | Adaptive & self-improving Ariadne — bounded, audited, propose→ratify→freeze | Accepted |
 | [0021](0021-run-output-organization.md) | Run-output organization — immutable per-run dirs + reproducibility manifest | Accepted |
 | [0022](0022-citation-recall-coverage-hardening.md) | Citation-recall coverage hardening — P-Cite repair loop + abbreviation-robust segmentation | Accepted |
+| [0023](0023-measuring-citation-coverage-gain.md) | Measure the P-Cite repair loop's citation-coverage gain (Δcoverage) | Accepted |
+| [0024](0024-trajectory-grades-observations.md) | Trajectory eval grades observations, not just actions | Accepted |
+| [0025](0025-applying-a-ratified-mapping.md) | Apply a ratified mapping — it self-registers as a dataset | Accepted |
+| [0026](0026-llm-schema-mapper.md) | LLM-backed schema mapper — forced tool-use + validator-terminated retry | Accepted |
+| [0027](0027-declarative-user-ontology.md) | Declarative user ontology — a lightweight TOML vocabulary the mapper maps into | Accepted |
 
 ## Template
 

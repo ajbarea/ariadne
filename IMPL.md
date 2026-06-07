@@ -8,19 +8,43 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — A2: the declarative user ontology.** A1 is complete (introspect
-→ propose [deterministic *and* LLM] → validate → freeze → apply; see *Recently
-shipped*). A2 is the next thread: today the mapper maps into the **open-string**
-canonical types (`person`/`org`/…); A2 lets a user declare *their own* entity-type +
-relationship vocabulary as a lightweight TOML ontology and has the mapper map into
-*that* (intrinsic-vs-relational routing), SHACL-validatable later. Builds directly on
-the `SchemaMapper` seam + the `[dataset]` header. `# research(2026-06): OntoKG
-(arXiv 2604.02618) + Anchor (arXiv 2606.01208); web-search current practice before
-building.` Then A3 (dynamic MCP), B2 (learned skills), B3 (reflexion over the eval
-harness). (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j
-needs the manual `infra/neo4j/seed.cypher` on a fresh container.)
+**Adaptive Ariadne — A3: the dynamic MCP surface.** A1 (introspect → propose
+[deterministic *and* LLM] → validate → freeze → apply) and **A2 (the declarative user
+ontology)** are both complete — see *Recently shipped*. A3 is the next thread:
+per-source tool families register at runtime as datasets connect
+(`notifications/tools/list_changed`). `# research(2026-06): dynamic-fastmcp / Spring AI
+/ Docker Dynamic MCP — web-search current practice before building.`
+
+A2 follow-ons, deferred (smaller, ride the same seams): formalize
+`validate_against_ontology` as a SHACL transpile (entity types → `sh:NodeShape`,
+relationship types → `sh:PropertyShape` with `sh:class` domain/range); an
+`ARIADNE_ONTOLOGIES` registry so an ontology self-discovers like profiles/mappings;
+multi-`domain`/`range` edges (`sh:or`). Then B2 (learned skills), B3 (reflexion over
+the eval harness).
+
+(Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
+manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**Declarative user ontology — A2 first slice, shipped 2026-06-07** ([ADR-0027](./docs/architecture/decisions/0027-declarative-user-ontology.md)).
+The mapper now maps into a user's *own* closed vocabulary, not just the open-string
+canonical types. A lightweight `ontology.toml` declares `[[entity_types]]` +
+`[[relationship_types]]` (`domain → range`); `mapping/ontology.py` loads it and
+`validate_against_ontology` enforces it — every entity a declared type, every edge a
+declared type routed between the declared endpoints (the relational half of OntoKG's
+intrinsic-vs-relational routing, made checkable; composes with the structural
+validator, doesn't duplicate it). The LLM mapper is *guided*: `build_map_tool(ontology)`
+injects the vocabulary as JSON-Schema `enum`s on the forced-tool `type` fields, the
+prompt describes the legal edges, and `propose_with_repair` re-prompts on conformance
+errors as well as structural ones (the same gate-terminates-the-loop spine as ADR-0026).
+`ariadne map --ontology PATH`: LLM-guided with `--llm`, validation-only for the baseline
+(which can't invent a user's vocabulary from table names — the honest capability line).
+Chose lightweight TOML over LinkML (kept the all-TOML idiom + zero new deps; LinkML's
+codegen / prompt-gen value is redundant with the existing loop or deferred to the SHACL
+transpile). TDD; 384 unit green. `# research(2026-06): OntoKG routing (arXiv 2604.02618);
+Anchor SHACL-enforced typing + prompt-inclusion-for-small-ontologies (arXiv 2606.01208);
+LinkML the heavier alternative (arXiv 2511.16935).`
 
 **Agentic LLM schema mapper — A1 complete, shipped 2026-06-07** ([ADR-0026](./docs/architecture/decisions/0026-llm-schema-mapper.md)).
 The agentic half of A1: `ariadne map --llm` proposes the `mapping.toml` with a real

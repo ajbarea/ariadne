@@ -15,8 +15,10 @@ model's self-judgment.
 
 from __future__ import annotations
 
+import copy
 from typing import TYPE_CHECKING, Any
 
+from ariadne.mapping.ontology import validate_against_ontology
 from ariadne.mapping.schema import (
     EntityMapping,
     Mapping,
@@ -28,6 +30,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from ariadne.introspect.postgres import SchemaSummary
+    from ariadne.mapping.ontology import Ontology
 
 MAX_MAP_ATTEMPTS = 3  # initial proposal + up to two validator-driven retries
 _DEFAULT_MODEL = "claude-opus-4-8"
@@ -89,13 +92,34 @@ MAP_TOOL: dict[str, Any] = {
     },
 }
 
+
+def build_map_tool(ontology: Ontology | None = None) -> dict[str, Any]:
+    """The forced-tool schema; with an ontology, the type fields become closed ``enum``s.
+
+    Without an ontology the ``type`` is an open string (A1, canonical). With one, the
+    declared entity/relationship type names are injected as JSON-Schema ``enum``s so the
+    model's structured output can only name the user's vocabulary (ADR-0027).
+    """
+    if ontology is None:
+        return MAP_TOOL
+    tool = copy.deepcopy(MAP_TOOL)
+    props = tool["input_schema"]["properties"]
+    ent_type = props["entities"]["items"]["properties"]["type"]
+    ent_type["enum"] = sorted(ontology.entity_type_names)
+    ent_type["description"] = "the user's declared entity type (one of the listed values)"
+    rel_type = props["relationships"]["items"]["properties"]["type"]
+    rel_type["enum"] = sorted(ontology.relationship_type_names)
+    rel_type["description"] = "the user's declared relationship type (one of the listed values)"
+    return tool
+
+
 _SYSTEM = (
-    "You map a user's relational schema onto Ariadne's canonical sensemaking schema "
-    "(person / org / site / document entities + typed relationships). Each table that "
-    "names a real-world entity becomes an entity with an id column and a human-readable "
-    "name column; its descriptive columns become attributes; each foreign key linking two "
-    "mapped entities becomes a relationship. The canonical type is an open string — pick "
-    "the most natural one. Submit the mapping with the propose_mapping tool."
+    "You map a user's relational schema onto a target sensemaking ontology of entity "
+    "types and typed relationships. Each table that names a real-world entity becomes an "
+    "entity with an id column and a human-readable name column; its descriptive columns "
+    "become intrinsic attributes; each foreign key linking two mapped entities becomes a "
+    "relationship. Use the entity and relationship types offered to you, picking the most "
+    "natural fit. Submit the mapping with the propose_mapping tool."
 )
 
 
@@ -111,13 +135,30 @@ def _describe_schema(summary: SchemaSummary) -> str:
     return f"## Tables\n{tables}" + (f"\n\n## Foreign keys\n{fks}" if fks else "")
 
 
-def build_mapping_prompt(summary: SchemaSummary, errors: Sequence[str] = ()) -> str:
-    """Render the proposal prompt; on a retry, include the validator's errors to fix."""
+def _describe_ontology(ontology: Ontology) -> str:
+    ents = ", ".join(e.name for e in ontology.entity_types)
+    rels = "\n".join(f"- {r.name}: {r.domain} -> {r.range}" for r in ontology.relationship_types)
+    return f"## Map into THIS user ontology — use only these types\nEntity types: {ents}\n" + (
+        f"Relationship types (domain -> range):\n{rels}" if rels else "No relationship types."
+    )
+
+
+def build_mapping_prompt(
+    summary: SchemaSummary, errors: Sequence[str] = (), ontology: Ontology | None = None
+) -> str:
+    """Render the proposal prompt: schema, target vocabulary, and (on a retry) errors to fix."""
+    target = (
+        "the user ontology below"
+        if ontology is not None
+        else "the canonical person/org/site/document schema"
+    )
     prompt = (
-        "Map this introspected Postgres schema onto the canonical person/org/site/document "
-        "schema. Use only column names that appear below.\n\n"
+        f"Map this introspected Postgres schema onto {target}. "
+        "Use only column names that appear below.\n\n"
         f"{_describe_schema(summary)}"
     )
+    if ontology is not None:
+        prompt += f"\n\n{_describe_ontology(ontology)}"
     if errors:
         listed = "\n".join(f"- {e}" for e in errors)
         prompt += (
@@ -157,23 +198,28 @@ def propose_with_repair(
     *,
     call_llm: Callable[[str], dict[str, Any]],
     max_attempts: int = MAX_MAP_ATTEMPTS,
+    ontology: Ontology | None = None,
 ) -> Mapping:
     """Propose -> validate -> re-prompt with errors, bounded; the validator terminates.
 
-    Returns the first loadable mapping, or the last parseable draft if the bound is hit
-    (the draft is written regardless — ``propose_and_write`` re-validates and a human
-    ratifies). A malformed proposal is fed back as an error and retried, too.
+    With an ``ontology``, the proposal must be both structurally loadable *and*
+    conformant to the declared vocabulary (``validate_against_ontology``); both error
+    sets are fed back on a retry. Returns the first clean mapping, or the last parseable
+    draft if the bound is hit (the draft is written regardless — ``propose_and_write``
+    re-validates and a human ratifies). A malformed proposal is fed back and retried, too.
     """
     errors: list[str] = []
     mapping: Mapping | None = None
     for _ in range(max_attempts):
-        tool_input = call_llm(build_mapping_prompt(summary, errors))
+        tool_input = call_llm(build_mapping_prompt(summary, errors, ontology))
         try:
             mapping = parse_mapping(tool_input)
         except (KeyError, TypeError) as exc:
             errors = [f"malformed proposal, missing/invalid field: {exc}"]
             continue
         errors = validate_mapping(mapping, summary)
+        if ontology is not None:
+            errors += validate_against_ontology(mapping, ontology)
         if not errors:
             return mapping
     if mapping is None:
@@ -196,6 +242,7 @@ class ClaudeSchemaMapper:
         model: str = _DEFAULT_MODEL,
         max_tokens: int = 2048,
         max_attempts: int = MAX_MAP_ATTEMPTS,
+        ontology: Ontology | None = None,
     ) -> None:
         import importlib
 
@@ -206,13 +253,15 @@ class ClaudeSchemaMapper:
         self._model = model
         self._max_tokens = max_tokens
         self._max_attempts = max_attempts
+        self._ontology = ontology
+        self._tool = build_map_tool(ontology)  # enum-constrained when an ontology is given
 
     def _call_llm(self, prompt: str) -> dict[str, Any]:
         response = self._client.messages.create(
             model=self._model,
             max_tokens=self._max_tokens,
             system=_SYSTEM,
-            tools=[MAP_TOOL],
+            tools=[self._tool],
             tool_choice={"type": "tool", "name": "propose_mapping"},
             messages=[{"role": "user", "content": prompt}],
         )
@@ -223,5 +272,8 @@ class ClaudeSchemaMapper:
 
     def propose(self, summary: SchemaSummary) -> Mapping:
         return propose_with_repair(
-            summary, call_llm=self._call_llm, max_attempts=self._max_attempts
+            summary,
+            call_llm=self._call_llm,
+            max_attempts=self._max_attempts,
+            ontology=self._ontology,
         )
