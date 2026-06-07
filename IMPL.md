@@ -8,29 +8,43 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — A3: the dynamic MCP surface.** A1 (introspect → propose
-[deterministic *and* LLM] → validate → freeze → apply) and **A2 (the declarative user
-ontology)** are both complete — see *Recently shipped*. A3 exposes per-source tool
-families at runtime as datasets connect (`notifications/tools/list_changed`). **Step 1
-landed:** `list_datasets` — the MCP enumeration seam (built-ins + `$ARIADNE_MAPPINGS`
-user mappings), the prerequisite for any per-dataset tool family. **Remaining:** the
-runtime registration itself + firing `list_changed` when a dataset connects mid-session
-(needs a live MCP-client verification, so it's the harder slice — do it next).
-`# research(2026-06): MCP listChanged capability + notifications/tools/list_changed;
-FastMCP supports runtime tool registration — web-search current practice before the
-runtime half.`
+**Adaptive Ariadne — Axis A is shipped end to end; Axis B (self-improvement) is next.**
+A1 (introspect → propose [deterministic *and* LLM] → validate → freeze → apply), **A2**
+(the declarative user ontology), and **A3** (the dynamic MCP surface) are all complete —
+see *Recently shipped*. A3: `list_datasets` enumerates datasets and **`connect_dataset`
+activates a ratified user store at runtime** — exposing a `workup_<name>` tool and firing
+`notifications/tools/list_changed` so clients re-list, no server restart
+([ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md);
+verified over the real protocol via the SDK's in-memory client).
 
-A2 follow-ons, deferred (smaller, ride the same seams): formalize
-`validate_against_ontology` as a SHACL transpile (entity types → `sh:NodeShape`,
-relationship types → `sh:PropertyShape` with `sh:class` domain/range); an
-`ARIADNE_ONTOLOGIES` registry so an ontology self-discovers like profiles/mappings;
-multi-`domain`/`range` edges (`sh:or`). Then B2 (learned skills), B3 (reflexion over
-the eval harness).
+**Next — Axis B, bounded & audited self-improvement** (the harness is the verifiable
+reward; the eval dimensions are already surfaced in the report):
+- **B2 · Learned analytic skills** — distil high-scoring workup trajectories into named,
+  reusable, composable skills. `# research(2026-06): Voyager / ProcMEM — web-search
+  current practice first.`
+- **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
+  dimensions and proposes a refined skill / mapping / query. `# research(2026-06):
+  Reflexion + verifiable-reward self-improvement — web-search first.`
+
+Deferred (YAGNI until a consumer needs them): A3 richer per-dataset tool families
+(dataset-scoped search, etc.); A2's SHACL transpile of `validate_against_ontology`, an
+`ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**MCP `connect_dataset` — A3 runtime activation, shipped 2026-06-07** ([ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md)).
+A host agent can onboard a ratified user store **mid-session**: `connect_dataset(name)`
+resolves a mapping.toml ratified under `$ARIADNE_MAPPINGS`, registers its adapter, exposes
+an intent-named `workup_<name>` tool via `add_tool`, and fires `send_tool_list_changed` so
+connected clients re-list — no server restart. Governance held: only an already-ratified
+mapping can be activated, never a raw DSN (the ADR-0020 boundary). The research pass caught
+that the **official MCP SDK's FastMCP does *not* auto-notify on `add_tool`** (that's the
+separate `jlowin/fastmcp` v2) and only delivers from within a request context — so the
+notification is sent by hand. Verified end to end over the real protocol via the SDK's
+**in-memory client** (connect → `tools/list` shows `workup_<name>`). TDD; 390 unit green.
 
 **MCP `list_datasets` — A3 enumeration seam, shipped 2026-06-07.** The MCP server
 exposed `list_profiles` but no way to discover which *datasets* a host agent could

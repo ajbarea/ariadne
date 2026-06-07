@@ -577,13 +577,16 @@ items must not be hardened against one answer.
       like profiles/mappings; multi-`domain`/`range` edges.* `# research(2026-06): OntoKG
       routing (arXiv 2604.02618) + Anchor SHACL-enforced typing (arXiv 2606.01208);
       lightweight TOML over LinkML (arXiv 2511.16935).`
-- [ ] **A3 · Dynamic MCP surface** — per-source tool families register at runtime as
-      datasets connect (`notifications/tools/list_changed`). *Enumeration seam shipped
-      2026-06-07:* `list_datasets` over MCP (built-ins + `$ARIADNE_MAPPINGS` user
-      mappings), the prerequisite for any per-dataset tool family; the runtime
-      registration + `list_changed` half remains. `# research(2026-06): MCP listChanged
-      capability + notifications/tools/list_changed; FastMCP runtime tool registration;
-      dynamic-fastmcp / Spring AI / Docker Dynamic MCP.`
+- [x] **A3 · Dynamic MCP surface — shipped 2026-06-07.** `list_datasets` enumerates
+      datasets (built-ins + `$ARIADNE_MAPPINGS`), and `connect_dataset(name)` activates a
+      ratified user store at runtime — registering its adapter, exposing a `workup_<name>`
+      tool, and firing `notifications/tools/list_changed` so clients re-list with no server
+      restart ([ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md);
+      verified over the real protocol via the SDK's in-memory client). Governance held —
+      only already-ratified mappings activate, never a raw DSN. *Deferred (YAGNI): richer
+      per-dataset tool families (e.g. dataset-scoped search).* `# research(2026-06): MCP
+      listChanged + notifications/tools/list_changed; official-SDK FastMCP needs a manual
+      notify (auto-notify belongs to the separate jlowin/fastmcp v2).`
 
 *Axis B — self-improvement (bounded, audited):*
 - [x] **B1 seed · Learned mappings (procedural memory) — shipped 2026-06-07.** A
@@ -608,9 +611,11 @@ items must not be hardened against one answer.
 > complete**, and **A2's first slice shipped** (2026-06-07,
 > [ADR-0027](./docs/architecture/decisions/0027-declarative-user-ontology.md)) — the
 > mapper now maps into a user-declared `ontology.toml` vocabulary, not just the
-> open-string canonical types. **Next:** dynamic MCP (A3 — per-source tool families
-> registering at runtime), then learned skills (B2) and reflexion over the eval harness
-> (B3); plus A2's deferred follow-ons (SHACL transpile, ontology registry).
+> open-string canonical types; and **A3 shipped** (2026-06-07,
+> [ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md)) —
+> `connect_dataset` activates a ratified store at runtime over MCP. **Axis A (adaptivity)
+> is now complete end to end.** **Next: Axis B — bounded, audited self-improvement:**
+> learned analytic skills (B2) and reflexion over the eval harness (B3).
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).

@@ -19,7 +19,7 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
 from ariadne.runs import slug as entity_slug
 
@@ -135,6 +135,64 @@ async def list_datasets() -> dict[str, Any]:
     once their mapping is in place.
     """
     return list_datasets_info(dict(os.environ))
+
+
+def activate_dataset(name: str, env: dict[str, str], *, add_tool: Callable[[str], str]) -> str:
+    """Activate a ratified dataset at runtime and register its per-dataset tool (ADR-0028).
+
+    ``name`` must be an already-ratified mapping under ``$ARIADNE_MAPPINGS`` (or a
+    built-in) — the agent *activates*, it never onboards unvetted data. Ensures the
+    adapter is registered (via ``list_datasets_info``) and calls ``add_tool(name)`` to
+    expose a ``workup_<name>`` tool, returning the new tool's name. Raises ``ValueError``
+    when ``name`` is not an available dataset (the governance gate).
+    """
+    available = list_datasets_info(env)
+    if name not in available:
+        raise ValueError(
+            f"{name!r} is not an available dataset; ratify a mapping.toml under "
+            f"$ARIADNE_MAPPINGS, or pick one of {sorted(available)}"
+        )
+    return add_tool(name)
+
+
+def _make_dataset_workup(dataset: str) -> Callable[..., Awaitable[str]]:
+    """Build the per-dataset ``workup_<dataset>`` handler (a thin ``workup(dataset=...)``)."""
+
+    async def _workup(
+        entity: str, sql: bool = False, semantic: bool = False, profile: str = "default"
+    ) -> str:
+        return await run_workup_tool(
+            entity, dataset=dataset, sql=sql, semantic=semantic, profile=profile
+        )
+
+    return _workup
+
+
+@mcp.tool()
+async def connect_dataset(name: str, ctx: Context) -> str:
+    """Activate a ratified user dataset at runtime, exposing a ``workup_<name>`` tool (ADR-0028).
+
+    ``name`` must be a mapping.toml ratified under ``$ARIADNE_MAPPINGS`` (or a built-in).
+    The new tool appears in ``tools/list`` — connected clients are notified via
+    ``notifications/tools/list_changed`` — and the dataset becomes workup-able without a
+    server restart. Human ratification still happens offline; this only *activates*, it
+    never onboards a raw connection string (the ADR-0020 governance boundary).
+    """
+
+    def _add(dataset: str) -> str:
+        tool_name = f"workup_{dataset}"
+        ctx.fastmcp.add_tool(
+            _make_dataset_workup(dataset),
+            name=tool_name,
+            description=f"Produce a cited analytic note for an entity in the {dataset!r} dataset.",
+        )
+        return tool_name
+
+    tool_name = activate_dataset(name, dict(os.environ), add_tool=_add)
+    # The official SDK does not auto-notify on add_tool, and only delivers from within a
+    # request context — send it here, by hand (ADR-0028).
+    await ctx.session.send_tool_list_changed()
+    return f"Activated {name!r}: call {tool_name}(entity=...) or workup(dataset={name!r})."
 
 
 @mcp.tool()

@@ -54,6 +54,7 @@ ADR is where the *comparison* lives.
 | [0025](0025-applying-a-ratified-mapping.md) | Apply a ratified mapping — it self-registers as a dataset | Accepted |
 | [0026](0026-llm-schema-mapper.md) | LLM-backed schema mapper — forced tool-use + validator-terminated retry | Accepted |
 | [0027](0027-declarative-user-ontology.md) | Declarative user ontology — a lightweight TOML vocabulary the mapper maps into | Accepted |
+| [0028](0028-runtime-dataset-activation-over-mcp.md) | Runtime dataset activation over MCP — `connect_dataset` + a dynamically-registered tool | Accepted |
 
 ## Template
 
