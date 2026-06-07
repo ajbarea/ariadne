@@ -65,13 +65,56 @@ def _read_ledger(path: Path) -> list[dict]:
 
 
 def _inline(text: str) -> str:
-    """Escape one line of note prose, then re-introduce bold/italic + cite chips."""
+    """Escape one line of note prose, then re-introduce code/bold/italic + cite chips."""
     s = _html.escape(text)
+    s = re.sub(
+        r"`([^`]+)`", r"<code>\1</code>", s
+    )  # inline code spans (before */ ** so they're protected)
     s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
     s = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"<em>\1</em>", s)
     return _CITE_RE.sub(
         lambda m: f'<button class="cite" data-cite="{m.group(1)}">{m.group(1)}</button>', s
     )
+
+
+def _split_row(line: str) -> list[str]:
+    """Split a Markdown table row into trimmed cells (outer pipes stripped)."""
+    s = line.strip().removeprefix("|").removesuffix("|")
+    return [c.strip() for c in s.split("|")]
+
+
+def _is_table_sep(line: str) -> bool:
+    """A GFM table separator: every cell is ``-``/``:-``/``-:``/``:-:`` (the |---|---| row)."""
+    cells = _split_row(line)
+    return bool(cells) and all(re.fullmatch(r":?-+:?", c) for c in cells)
+
+
+def _col_alignments(sep_line: str) -> list[str]:
+    out = []
+    for c in _split_row(sep_line):
+        left, right = c.startswith(":"), c.endswith(":")
+        out.append("center" if left and right else "right" if right else "left" if left else "")
+    return out
+
+
+def _render_table(header: list[str], rows: list[list[str]], aligns: list[str]) -> str:
+    """A GFM table -> ``<table>``; cells run through ``_inline`` so cites/bold survive.
+
+    Rows are padded/truncated to the header's column count (GFM behaviour), so a ragged
+    note table still renders as a clean grid.
+    """
+    ncol = len(header)
+
+    def cell(tag: str, text: str, i: int) -> str:
+        a = aligns[i] if i < len(aligns) else ""
+        return f"<{tag}{f' style="text-align:{a}"' if a else ''}>{_inline(text)}</{tag}>"
+
+    def tr(cells: list[str], tag: str) -> str:
+        padded = (cells + [""] * ncol)[:ncol]
+        return "<tr>" + "".join(cell(tag, c, i) for i, c in enumerate(padded)) + "</tr>"
+
+    body = "".join(tr(r, "td") for r in rows)
+    return f'<table class="ntable"><thead>{tr(header, "th")}</thead><tbody>{body}</tbody></table>'
 
 
 def _render_note_html(note: str) -> str:
@@ -94,10 +137,24 @@ def _render_note_html(note: str) -> str:
             buf().append("</ul>")
             in_ul = False
 
-    for raw in note.splitlines():
-        line = raw.rstrip()
+    lines = note.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].rstrip()
         if not line.strip():
             close_ul()
+            i += 1
+            continue
+        # GFM table: a pipe row immediately followed by a |---|---| separator
+        if "|" in line and i + 1 < len(lines) and _is_table_sep(lines[i + 1]):
+            close_ul()
+            header_cells, aligns = _split_row(line), _col_alignments(lines[i + 1])
+            i += 2
+            rows = []
+            while i < len(lines) and "|" in lines[i] and lines[i].strip():
+                rows.append(_split_row(lines[i].rstrip()))
+                i += 1
+            buf().append(_render_table(header_cells, rows, aligns))
             continue
         header = _HEADER_RE.match(line)
         if header:
@@ -109,6 +166,7 @@ def _render_note_html(note: str) -> str:
                 )
             else:
                 buf().append(f"<h{level}>{_inline(txt)}</h{level}>")
+            i += 1
             continue
         bullet = _BULLET_RE.match(line)
         if bullet:
@@ -116,9 +174,11 @@ def _render_note_html(note: str) -> str:
                 buf().append("<ul>")
                 in_ul = True
             buf().append(f"<li>{_inline(bullet.group(1))}</li>")
+            i += 1
             continue
         close_ul()
         buf().append(f"<p>{_inline(line)}</p>")
+        i += 1
     close_ul()
 
     html = ["".join(pre)] if any(p.strip() for p in pre) else []
@@ -292,6 +352,14 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .note h1,.note h2,.note h3{font-family:var(--serif);color:var(--ink);line-height:1.25;margin:26px 0 8px}
 .note h1{font-size:24px} .note h2{font-size:20px;color:var(--thread)} .note h3{font-size:17px;letter-spacing:.02em}
 .note p{margin:10px 0} .note ul{margin:8px 0 8px 2px;padding-left:20px} .note li{margin:6px 0}
+.note .ntable{border-collapse:collapse;width:100%;margin:14px 0 18px;font-family:var(--sans);font-size:13.5px}
+.note .ntable th,.note .ntable td{padding:7px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.note .ntable thead th{color:var(--soft);font-weight:600;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;border-bottom:1.5px solid var(--muted)}
+.note .ntable tbody tr:hover{background:var(--panel2)}
+.note .ntable tbody tr:last-child td{border-bottom:none}
+.note code{font-family:var(--mono);font-size:.84em;background:var(--panel2);border:1px solid var(--line);
+  padding:1px 5px;border-radius:5px;color:var(--soft)}
 .nsec{border-top:1px solid var(--line)} .nsec:first-of-type{border-top:none}
 .nsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;
   font-family:var(--serif);font-size:20px;font-weight:600;color:var(--thread);padding:16px 0 6px}

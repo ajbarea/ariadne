@@ -3,7 +3,12 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from ariadne.report.html import extract_report_data, render_report, write_report
+from ariadne.report.html import (
+    _render_note_html,
+    extract_report_data,
+    render_report,
+    write_report,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -315,6 +320,45 @@ def test_reconciliation_panel_classifies_corroboration_and_conflict(tmp_path: Pa
     assert any("conflicts" in s.lower() or "disagrees" in s.lower() for s in rec["conflicts"])
     html = render_report(d)
     assert "Reconciliation" in html and "corroborat" in html.lower()
+
+
+def test_note_renders_a_gfm_table_not_raw_pipes() -> None:
+    note = (
+        "## Top correspondents\n"
+        "| Contact | Count |\n"
+        "|---|---|\n"
+        "| vkaminski@aol.com | 1,007 |\n"
+        "| shirley.crenshaw@enron.com | 456 |\n"
+    )
+    html = _render_note_html(note)
+    assert "<table" in html
+    assert "<th" in html and "Contact" in html and "Count" in html
+    assert "<td" in html and "vkaminski@aol.com" in html and "1,007" in html
+    # the raw markdown must NOT leak as paragraph text
+    assert "|---|" not in html
+    assert "<p>| Contact" not in html and "| vkaminski" not in html
+
+
+def test_table_cells_render_cites_and_column_alignment() -> None:
+    note = "| Who | Count |\n|:---|---:|\n| see [cite:g18] | 5 |\n"
+    html = _render_note_html(note)
+    assert 'data-cite="g18"' in html  # cites stay clickable inside a cell
+    assert "text-align:right" in html  # the ---: column is right-aligned
+    assert "text-align:left" in html  # the :--- column is left-aligned
+
+
+def test_inline_code_spans_render_as_code_not_literal_backticks() -> None:
+    html = _render_note_html("Aggregated by `count`; variant `vkaminskji@aol.com` appears.\n")
+    assert "<code>count</code>" in html
+    assert "<code>vkaminskji@aol.com</code>" in html
+    assert "`count`" not in html  # no literal backticks leak through
+
+
+def test_a_lone_pipe_line_is_not_mistaken_for_a_table() -> None:
+    # Prose that merely contains a pipe (no |---| separator) stays a paragraph.
+    html = _render_note_html("The flag is a|b in the config.\n")
+    assert "<table" not in html
+    assert "a|b" in html
 
 
 def test_write_report_emits_report_html(tmp_path: Path) -> None:
