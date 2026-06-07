@@ -347,6 +347,15 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .edge{fill:none;stroke:var(--line);stroke-width:1.4;transition:stroke .2s,stroke-width .2s,opacity .2s}
 .edge.hot{stroke:var(--thread);stroke-width:2.4}
 .dim{opacity:.16}
+.nlabel{transition:opacity .16s}
+.node.lab-min .nlabel{opacity:0}
+.node.lab-min:hover .nlabel,.node.nbr .nlabel,.node.foc .nlabel{opacity:1}
+.node.dim .nlabel{opacity:0}
+.node.nbr circle,.node:hover circle{stroke-width:2.6}
+.node.foc circle{stroke-width:2.8}
+.elabelg{transition:opacity .15s}
+.elabelg:not(.show){opacity:0;pointer-events:none}
+.leg-rel{font-family:var(--mono);color:var(--thread);letter-spacing:.05em;font-size:10.5px}
 
 /* Evidence drawer */
 .drawer{position:fixed;right:0;top:0;bottom:0;width:min(460px,92vw);z-index:40;
@@ -667,7 +676,7 @@ function renderNet(W,H){
     return {...d,x:W/2+Math.cos(a)*R,y:H/2+Math.sin(a)*R};});
   nodes.forEach(d=>{d.vx=0;d.vy=0;});
   const ix=Object.fromEntries(nodes.map((d,i)=>[d.id,i]));
-  const links=sg.edges.filter(e=>ix[e.src]!=null&&ix[e.dst]!=null);
+  const links=sg.edges.filter(e=>ix[e.src]!=null&&ix[e.dst]!=null&&e.src!==e.dst);
   // Edge rest length (and matching repulsion) scale with the canvas, so the same
   // graph spreads to fill a bigger fullscreen while staying readable in the panel.
   const REST=Math.max(118,Math.min(W,H)*0.30), REP=REST*REST*0.95;
@@ -684,43 +693,67 @@ function renderNet(W,H){
   }
   const NS2="http://www.w3.org/2000/svg";
   const mk=(t,a)=>{const e=document.createElementNS(NS2,t);for(const kk in a)e.setAttribute(kk,a[kk]);return e;};
-  const adj={}; nodes.forEach(d=>adj[d.id]=new Set([d.id]));
-  const elabels=[];
-  links.forEach(l=>{adj[l.src].add(l.dst);adj[l.dst].add(l.src);
-    const a=nodes[ix[l.src]],b=nodes[ix[l.dst]];
-    gsvg.appendChild(mk("path",{class:"edge",d:`M${a.x},${a.y} L${b.x},${b.y}`,"data-pair":l.src+"|"+l.dst}));
-    elabels.push({x:(a.x+b.x)/2,y:(a.y+b.y)/2,t:l.type,w:l.type.length*5.2+8});});
-  // nudge overlapping edge labels apart (mostly vertical) so crossing edges stay legible
-  for(let it=0;it<90;it++){let moved=false;
-    for(let i=0;i<elabels.length;i++)for(let j=i+1;j<elabels.length;j++){
-      const A=elabels[i],B=elabels[j],ox=(A.w+B.w)/2-Math.abs(A.x-B.x),oy=14-Math.abs(A.y-B.y);
-      if(ox>0&&oy>0){const dir=A.y===B.y?(i%2?1:-1):(A.y<B.y?-1:1),p=(oy/2+0.6)*dir;
-        A.y+=p;B.y-=p;moved=true;}}
-    if(!moved)break;}
-  elabels.forEach(L=>{const g=mk("g",{class:"elabelg"});
-    g.appendChild(mk("rect",{x:L.x-L.w/2,y:L.y-7.5,width:L.w,height:14,rx:3,class:"elabel-bg"}));
-    const t=mk("text",{class:"elabel",x:L.x,y:L.y,dy:"0.32em","text-anchor":"middle"});
-    t.textContent=L.t; g.appendChild(t); gsvg.appendChild(g);});
-  nodes.forEach(d=>{const g=mk("g",{class:"node","data-node":d.id,transform:`translate(${d.x},${d.y})`});
-    const r=d.target?15:10;
+  const escL=s=>String(s).replace(/[<&>]/g,c=>({"<":"&lt;","&":"&amp;",">":"&gt;"}[c]));
+  // emails -> local-part; long names truncated, so labels stop colliding
+  const shortName=s=>{s=String(s||"");const at=s.indexOf("@");if(at>0)s=s.slice(0,at);
+    return s.length>24?s.slice(0,23)+"…":s;};
+  // adjacency + degree (degree drives node size and label prominence)
+  const adj={},deg={}; nodes.forEach(d=>{adj[d.id]=new Set([d.id]);deg[d.id]=0;});
+  links.forEach(l=>{adj[l.src].add(l.dst);adj[l.dst].add(l.src);deg[l.src]++;deg[l.dst]++;});
+  const maxDeg=Math.max(1,...nodes.map(d=>deg[d.id]));
+  // Homogeneous edges (one relationship type) carry no per-edge information, so the legend
+  // states the type and we draw NO edge labels (kills the "EMAILED x N" noise). Mixed types
+  // keep labels; on a large graph they're revealed only for an active node's incident edges.
+  const edgeTypes=[...new Set(links.map(l=>l.type))],homogeneous=edgeTypes.length<=1;
+  const labelAll=n<=14;  // small graph: all node labels legible at once; large: target + on hover
+
+  links.forEach(l=>{const a=nodes[ix[l.src]],b=nodes[ix[l.dst]];
+    gsvg.appendChild(mk("path",{class:"edge",d:`M${a.x},${a.y} L${b.x},${b.y}`,
+      "data-pair":l.src+"|"+l.dst}));});
+  if(!homogeneous){
+    const elabels=links.map(l=>{const a=nodes[ix[l.src]],b=nodes[ix[l.dst]];
+      return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,t:l.type,w:l.type.length*5.2+8,pair:l.src+"|"+l.dst};});
+    for(let it=0;it<90;it++){let moved=false;  // nudge overlapping labels apart
+      for(let i=0;i<elabels.length;i++)for(let j=i+1;j<elabels.length;j++){
+        const A=elabels[i],B=elabels[j],ox=(A.w+B.w)/2-Math.abs(A.x-B.x),oy=14-Math.abs(A.y-B.y);
+        if(ox>0&&oy>0){const dir=A.y===B.y?(i%2?1:-1):(A.y<B.y?-1:1),p=(oy/2+0.6)*dir;A.y+=p;B.y-=p;moved=true;}}
+      if(!moved)break;}
+    elabels.forEach(L=>{const g=mk("g",{class:"elabelg"+(labelAll?" show":""),"data-pair":L.pair});
+      g.appendChild(mk("rect",{x:L.x-L.w/2,y:L.y-7.5,width:L.w,height:14,rx:3,class:"elabel-bg"}));
+      const t=mk("text",{class:"elabel",x:L.x,y:L.y,dy:"0.32em","text-anchor":"middle"});
+      t.textContent=L.t; g.appendChild(t); gsvg.appendChild(g);});
+  }
+  // shared highlight — used by transient hover AND committed (pinned) click
+  function applyFocus(id){const on=adj[id];
+    gsvg.querySelectorAll(".node").forEach(o=>{const k=on.has(o.dataset.node);
+      o.classList.toggle("dim",!k); o.classList.toggle("nbr",k&&o.dataset.node!==id);
+      o.classList.toggle("foc",o.dataset.node===id);});
+    gsvg.querySelectorAll(".edge").forEach(p=>{const[s,t2]=p.dataset.pair.split("|"),inc=s===id||t2===id;
+      p.classList.toggle("hot",inc); p.classList.toggle("dim",!(on.has(s)&&on.has(t2)));});
+    if(!homogeneous&&!labelAll) gsvg.querySelectorAll(".elabelg").forEach(g=>{
+      const[s,t2]=g.dataset.pair.split("|"); g.classList.toggle("show",s===id||t2===id);});}
+  function clearFocus(){gsvg.querySelectorAll(".dim,.nbr,.foc").forEach(o=>o.classList.remove("dim","nbr","foc"));
+    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));
+    if(!homogeneous&&!labelAll) gsvg.querySelectorAll(".elabelg.show").forEach(g=>g.classList.remove("show"));}
+  gsvg._clearFocus=clearFocus; gsvg._focus=applyFocus;  // reused by closeEntity + node search
+
+  nodes.forEach(d=>{const g=mk("g",{class:"node"+((labelAll||d.target)?"":" lab-min"),
+      "data-node":d.id,transform:`translate(${d.x},${d.y})`});
+    const r=d.target?15:6+Math.round(deg[d.id]/maxDeg*7);  // 6..13 by degree centrality
     if(d.target) g.appendChild(mk("circle",{r:r+5,fill:"none",stroke:"#e0a73c",
       "stroke-width":1.5,"stroke-dasharray":"3 3",opacity:.8}));
     g.appendChild(mk("circle",{r,fill:netColor(d.label)+"33",stroke:netColor(d.label),"stroke-width":1.8}));
-    const lab=mk("text",{class:"nlabel",y:r+13,"text-anchor":"middle"}); lab.textContent=d.name; g.appendChild(lab);
-    g.style.cursor="pointer";
-    g.addEventListener("click",()=>{const on=adj[d.id];
-      gsvg.querySelectorAll(".node").forEach(o=>o.classList.toggle("dim",!on.has(o.dataset.node)));
-      gsvg.querySelectorAll(".edge").forEach(p=>{const[s,t2]=p.dataset.pair.split("|");
-        p.classList.toggle("hot",s===d.id||t2===d.id); p.classList.toggle("dim",!(on.has(s)&&on.has(t2)));});
-      selectEntity(d.id);});  // details-on-demand: open the entity drawer for this node
+    const lab=mk("text",{class:"nlabel",y:r+12,"text-anchor":"middle"}); lab.textContent=shortName(d.name); g.appendChild(lab);
+    g.addEventListener("mouseenter",()=>{if(!gsvg.dataset.pin)applyFocus(d.id);});
+    g.addEventListener("mouseleave",()=>{if(!gsvg.dataset.pin)clearFocus();});
+    g.addEventListener("click",ev=>{ev.stopPropagation();gsvg.dataset.pin=d.id;applyFocus(d.id);selectEntity(d.id);});
     gsvg.appendChild(g);});
-  gsvg.onclick=ev=>{if(ev.target===gsvg){  // click empty space = deselect + close panel
-    gsvg.querySelectorAll(".dim").forEach(o=>o.classList.remove("dim"));
-    gsvg.querySelectorAll(".edge.hot").forEach(o=>o.classList.remove("hot"));
-    closeEntity();}};
+  gsvg.onclick=ev=>{if(ev.target===gsvg){delete gsvg.dataset.pin;clearFocus();closeEntity();}};
   const labels=[...new Set(nodes.map(d=>d.label))];
-  NET_LEGEND=labels.map(l=>`<span><i style="background:${netColor(l)}"></i>${l}</span>`).join("")
-    +`<span style="color:var(--muted)">${n} entities · ${links.length} links · click a node to focus</span>`;
+  const relTxt=homogeneous?(edgeTypes[0]||"linked"):edgeTypes.length+" relationship types";
+  NET_LEGEND=labels.map(l=>`<span><i style="background:${netColor(l)}"></i>${escL(l)}</span>`).join("")
+    +`<span class="leg-rel">&mdash; ${escL(relTxt)} &mdash;</span>`
+    +`<span style="color:var(--muted)">${n} entities · ${links.length} links · hover to trace · click to pin</span>`;
   return true;
 }
 const SG_N=(DATA.subgraph&&DATA.subgraph.nodes)?DATA.subgraph.nodes.length:0;
@@ -836,8 +869,9 @@ function selectEntity(id){
 }
 function closeEntity(){
   $("#edrawer").classList.remove("open"); $("#edrawer").setAttribute("aria-hidden","true");
-  // deselecting clears the graph trace too
-  document.querySelectorAll(".node.dim,.edge.dim").forEach(n=>n.classList.remove("dim"));
+  // deselecting unpins + clears the graph trace too
+  const ng=$("#netgraph"); if(ng){delete ng.dataset.pin; if(ng._clearFocus)ng._clearFocus();}
+  document.querySelectorAll(".node.dim,.node.nbr,.node.foc,.edge.dim").forEach(n=>n.classList.remove("dim","nbr","foc"));
   document.querySelectorAll(".edge.hot").forEach(n=>n.classList.remove("hot"));
 }
 $("#e-x").addEventListener("click",closeEntity);
