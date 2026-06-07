@@ -41,7 +41,7 @@ from ariadne.observability import (
     setup_telemetry,
     workup_span,
 )
-from ariadne.provenance.citations import validate_citations
+from ariadne.provenance.citations import citation_coverage, validate_citations
 from ariadne.provenance.governance import audit_read_only
 from ariadne.provenance.hook import make_provenance_hook
 from ariadne.provenance.ledger import ProvenanceLedger
@@ -278,6 +278,8 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
         )
     if report.context_utilization is not None:
         line += f" utilization={report.context_utilization:.2f}"  # descriptive, never gates
+    if report.citation_coverage is not None:
+        line += f" coverage={report.citation_coverage:.2f}"  # descriptive, never gates (ADR-0023)
     print(line)
     if rec is not None:
         print(
@@ -603,11 +605,18 @@ async def run_workup(
                 result_model_usage = message.model_usage
         note = (result_text or "\n".join(note_parts)).strip()
         if repair:
-            note, report = await repair_citations_loop(
+            outcome = await repair_citations_loop(
                 note, ledger, call_llm=make_repair_caller(prof.model), verifier=verifier
             )
+            note, report = outcome.note, outcome.report
+            coverage_before = outcome.coverage_before
+            coverage_after = outcome.coverage_after
+            repair_passes = outcome.passes_run
         else:
             report = validate_citations(note, ledger, verifier=verifier)
+            coverage_before = None
+            coverage_after = citation_coverage(note)
+            repair_passes = None
         elapsed = time.monotonic() - started
         tradecraft = lint_estimative_language(note)
         governance = audit_read_only(ledger.entries)
@@ -632,6 +641,9 @@ async def run_workup(
             tradecraft=tradecraft,
             governance=governance,
             profile=prof,
+            coverage_before=coverage_before,
+            coverage_after=coverage_after,
+            repair_passes=repair_passes,
         )
         # Additive: persist the traversed entity neighborhood (for the report's
         # network view) + render the self-contained interactive report alongside
@@ -646,6 +658,11 @@ async def run_workup(
         f"Wrote {out_dir}/note.md + report.html ({len(ledger.entries)} graph calls cited) "
         f"in {elapsed:.1f}s."
     )
+    if repair_passes is not None and coverage_after.fraction is not None:
+        before = coverage_before.fraction if coverage_before is not None else None
+        delta = f" (+{coverage_after.fraction - before:.0%})" if before is not None else ""
+        passes = f"{repair_passes} repair pass{'' if repair_passes == 1 else 'es'}"
+        print(f"Citation coverage {coverage_after.fraction:.0%}{delta} after {passes}.")
     if tradecraft.nonstandard_terms:
         print(
             "Tradecraft (advisory): non-standard estimative terms "

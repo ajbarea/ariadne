@@ -64,11 +64,11 @@ async def test_repair_loop_grounds_uncited_claims_within_bound() -> None:
     async def fixing_llm(prompt: str) -> str:
         return note.replace("H1 is favored.", "H1 is favored [cite:g1].")
 
-    repaired, report = await repair_citations_loop(note, led, call_llm=fixing_llm)
+    outcome = await repair_citations_loop(note, led, call_llm=fixing_llm)
 
-    assert report.ok is True
-    assert report.uncited == []
-    assert "H1 is favored [cite:g1]." in repaired
+    assert outcome.report.ok is True
+    assert outcome.report.uncited == []
+    assert "H1 is favored [cite:g1]." in outcome.note
 
 
 async def test_repair_loop_is_bounded_when_the_model_cannot_fix() -> None:
@@ -80,10 +80,10 @@ async def test_repair_loop_is_bounded_when_the_model_cannot_fix() -> None:
         calls["n"] += 1
         return note  # never grounds the claim
 
-    _, report = await repair_citations_loop(note, led, call_llm=stubborn_llm, max_passes=2)
+    outcome = await repair_citations_loop(note, led, call_llm=stubborn_llm, max_passes=2)
 
-    assert report.ok is False
-    assert report.uncited  # still flagged, no infinite loop
+    assert outcome.report.ok is False
+    assert outcome.report.uncited  # still flagged, no infinite loop
     assert calls["n"] == 2  # bounded to exactly max_passes attempts
 
 
@@ -103,7 +103,46 @@ async def test_repair_loop_threads_the_entailment_verifier_and_skips_unsupported
         calls["n"] += 1
         return note
 
-    _, report = await repair_citations_loop(note, led, call_llm=llm, verifier=RejectAll())
+    outcome = await repair_citations_loop(note, led, call_llm=llm, verifier=RejectAll())
 
-    assert report.unsupported  # verifier was applied in the final validation
+    assert outcome.report.unsupported  # verifier was applied in the final validation
     assert calls["n"] == 0  # nothing uncited -> no repair pass fired
+
+
+# ── Coverage gain: the repair loop reports a measured number, not an exit code (ADR-0023) ──
+
+
+async def test_repair_loop_reports_coverage_before_and_after() -> None:
+    # The loop surfaces the raw G-Cite coverage (the unrepaired baseline) and the
+    # post-repair coverage, so the gain is a measured Δ — not just exit 0 vs 1.
+    led = _ledger()
+    note = "## Summary\nHalberd leads Signals-Cell [cite:g1].\n\n## ACH\nH1 is favored.\n"
+
+    async def fixing_llm(prompt: str) -> str:
+        return note.replace("H1 is favored.", "H1 is favored [cite:g1].")
+
+    outcome = await repair_citations_loop(note, led, call_llm=fixing_llm)
+
+    assert outcome.report.ok is True
+    assert "H1 is favored [cite:g1]." in outcome.note
+    # before: 1 of 2 claims cited (the ACH verdict was bare); after: 2 of 2.
+    assert outcome.coverage_before.fraction == 0.5
+    assert outcome.coverage_after.fraction == 1.0
+    assert outcome.passes_run == 1
+
+
+async def test_repair_loop_reports_no_gain_when_the_model_cannot_fix() -> None:
+    # A bounded failure: coverage_before == coverage_after (no Δ), passes_run hits
+    # the bound, and the gate still fails — repair did not paper over the gap.
+    led = _ledger()
+    note = "## ACH\nH1 is favored.\n"
+
+    async def stubborn_llm(prompt: str) -> str:
+        return note  # never grounds the claim
+
+    outcome = await repair_citations_loop(note, led, call_llm=stubborn_llm, max_passes=2)
+
+    assert outcome.report.ok is False
+    assert outcome.coverage_before.fraction == 0.0
+    assert outcome.coverage_after.fraction == 0.0
+    assert outcome.passes_run == 2

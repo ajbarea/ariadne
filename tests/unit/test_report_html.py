@@ -178,6 +178,7 @@ def test_report_renders_evaluation_panel_when_scored(tmp_path: Path) -> None:
                 "supporting_fact_recall": 0.33,
                 "supporting_fact_f1": 0.5,
                 "context_utilization": 0.67,
+                "citation_coverage": 0.83,
             }
         ),
         encoding="utf-8",
@@ -205,6 +206,7 @@ def test_report_renders_evaluation_panel_when_scored(tmp_path: Path) -> None:
     assert "Analytic evaluation" in html  # the panel heading
     assert "ACH on the decisive finding" in html  # a rubric rationale is shown
     assert "halberd" in html  # the fixture is named
+    assert "EV.citation_coverage" in html  # final-note coverage wired into the eval panel
 
 
 def test_report_omits_evaluation_data_when_not_scored(tmp_path: Path) -> None:
@@ -224,6 +226,49 @@ def test_report_surfaces_context_utilization(tmp_path: Path) -> None:
     assert "Context utilization" in html  # the dashboard card label
     # the plain-language definition names the exploratory-retrieval caveat
     assert "exploratory" in html.lower()
+
+
+def test_report_surfaces_repair_coverage_gain(tmp_path: Path) -> None:
+    # ADR-0023: the P-Cite repair loop's measured coverage gain — raw G-Cite draft
+    # to repaired coverage — is a dashboard card (descriptive, never gated).
+    d = _make_workup(tmp_path)
+    (d / "citations.json").write_text(
+        json.dumps(
+            {
+                "entity": "Halberd",
+                "ok": True,
+                "cited": ["g1", "g2"],
+                "dangling": [],
+                "unused": [],
+                "uncited": [],
+                "coverage": {
+                    "before": 0.5,
+                    "after": 1.0,
+                    "gain": 0.5,
+                    "covered": 2,
+                    "total": 2,
+                    "passes": 1,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    data = extract_report_data(d)
+    # the before/after/gain values reach the data island so the dashboard JS can render them
+    assert data["citations"]["coverage"] == {
+        "before": 0.5,
+        "after": 1.0,
+        "gain": 0.5,
+        "covered": 2,
+        "total": 2,
+        "passes": 1,
+    }
+    html = render_report(d)
+    assert "Citation coverage" in html  # the dashboard card label
+    assert "structural coverage" in html.lower()  # the descriptive definition
+    # the card must be WIRED INTO the dashboard array, not merely defined — a
+    # defined-but-unlisted covStat renders nothing (caught headlessly once already).
+    assert "covStat," in html  # array membership; computed render is verified headlessly
 
 
 def test_entity_network_node_has_a_detail_drawer(tmp_path: Path) -> None:

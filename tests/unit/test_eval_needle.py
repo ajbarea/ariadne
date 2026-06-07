@@ -85,6 +85,15 @@ def test_report_carries_context_utilization_over_the_ledger() -> None:
     assert report.context_utilization == 2 / 3
 
 
+def test_report_carries_citation_coverage_of_the_note() -> None:
+    # Fixture-independent structural coverage (ADR-0023): of the note's citable
+    # claims, the fraction carrying a citation. Descriptive, like context_utilization;
+    # surfaced across datasets by `ariadne eval`. The ledger is irrelevant (note-only).
+    note = "Halberd leads Signals-Cell [cite:g1]. He also secretly runs Talon."
+    report = score_workup(note, [_entry("CO_LOCATED Compound-Alpha")], HALBERD_FIXTURE)
+    assert report.citation_coverage == 0.5  # one of two claims cited
+
+
 def test_traversal_counts_even_when_the_bridge_node_is_not_named_in_a_query() -> None:
     # The agent reaches the bridge node via relationships (a shortest path / *..4
     # hop) without querying it by name — the relationship types are the evidence

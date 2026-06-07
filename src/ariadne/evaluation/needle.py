@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 from ariadne.evaluation._text import all_present, fraction_present, statement_text
 from ariadne.evaluation.utilization import context_utilization
+from ariadne.provenance.citations import citation_coverage
 from ariadne.provenance.ledger import ProvenanceLedger
 
 
@@ -77,6 +78,10 @@ class EvalReport:
     # distinct retrieved evidence that grounded a cited claim. None when nothing was
     # retrieved. Reported, never gated — exploratory retrieval legitimately lowers it.
     context_utilization: float | None = None
+    # Fixture-independent structural citation coverage (ADR-0023): fraction of the
+    # note's citable claims that carry a citation — the axis the P-Cite repair loop
+    # moves. Descriptive, like context_utilization; None when no citable claim.
+    citation_coverage: float | None = None
 
 
 # The seed's planted length-3 bridge:
@@ -161,6 +166,7 @@ def score_workup(note: str, ledger_entries: list[dict], fixture: NeedleFixture) 
         supporting_fact_recall=sf_recall,
         supporting_fact_f1=sf_f1,
         context_utilization=context_utilization(note, ledger_entries),
+        citation_coverage=citation_coverage(note).fraction,
     )
 
 

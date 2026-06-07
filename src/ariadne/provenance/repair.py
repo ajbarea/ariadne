@@ -14,14 +14,15 @@ bounded, deterministically-terminated refinement (arXiv:2303.17651). ADR-0022.``
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from ariadne.provenance.citations import validate_citations
+from ariadne.provenance.citations import citation_coverage, validate_citations
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from ariadne.provenance.citations import CitationReport, EntailmentVerifier
+    from ariadne.provenance.citations import CitationReport, CoverageStats, EntailmentVerifier
     from ariadne.provenance.ledger import ProvenanceLedger
 
 # research(2026-06): bound the passes + let the deterministic gate (not the model)
@@ -74,6 +75,24 @@ async def repair_citations(
     return await call_llm(prompt)
 
 
+@dataclass(frozen=True)
+class RepairOutcome:
+    """Result of the P-Cite repair loop, carrying the measured coverage gain (ADR-0023).
+
+    ``coverage_before`` is the raw G-Cite draft's coverage — the *unrepaired
+    baseline* — and ``coverage_after`` the post-repair note's; their delta is the
+    repair gain (``# research(2026-06): Δ vs unrepaired baseline, Doctor-RAG
+    arXiv:2604.00865``). Capturing the baseline inside the run makes the gain a true
+    ablation on one fixed draft, isolating the repair effect from draft variance.
+    """
+
+    note: str
+    report: CitationReport
+    coverage_before: CoverageStats
+    coverage_after: CoverageStats
+    passes_run: int
+
+
 async def repair_citations_loop(
     note: str,
     ledger: ProvenanceLedger,
@@ -81,17 +100,27 @@ async def repair_citations_loop(
     call_llm: Callable[[str], Awaitable[str]],
     verifier: EntailmentVerifier | None = None,
     max_passes: int = MAX_REPAIR_PASSES,
-) -> tuple[str, CitationReport]:
+) -> RepairOutcome:
     """Repair uncited claims until the deterministic gate is clean or the bound is hit.
 
     Only recall (``uncited``) is repaired; ``dangling`` / ``unsupported`` are surfaced
     in the returned report, not rewritten. The gate decides when to stop, so the loop
-    cannot talk itself out of a correct note the way an LLM self-judge would.
+    cannot talk itself out of a correct note the way an LLM self-judge would. Returns
+    the raw-vs-repaired coverage so the gain is a measured number (ADR-0023).
     """
+    coverage_before = citation_coverage(note)
     report = validate_citations(note, ledger, verifier=verifier)
+    passes_run = 0
     for _ in range(max_passes):
         if report.ok or not report.uncited:
             break
         note = await repair_citations(note, ledger, report.uncited, call_llm=call_llm)
+        passes_run += 1
         report = validate_citations(note, ledger, verifier=verifier)
-    return note, report
+    return RepairOutcome(
+        note=note,
+        report=report,
+        coverage_before=coverage_before,
+        coverage_after=citation_coverage(note),
+        passes_run=passes_run,
+    )

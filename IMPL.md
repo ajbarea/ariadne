@@ -8,27 +8,33 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — first Postgres slice (ADR-0020).** Hermetic core **shipped
-2026-06-05**; live I/O + CLI + integration owed. The propose→ratify→freeze→apply
-loop exists end to end against fake rows:
-- `introspect/postgres.py` — read-only `information_schema` reader; pure
-  `build_schema_summary` + live `introspect(conn)` (fake-connection tested).
-- `mapping/schema.py` — the `mapping.toml` model + deterministic structural
-  validator (loadability: columns exist, edge endpoints are mapped) + TOML
-  round-trip (via `tomli-w`).
-- `mapping/propose.py` — `SchemaMapper` Protocol + deterministic `BaselineMapper`
-  (table→entity, FK→relationship); LLM mapper is a later phase.
-- `mapping/adapter.py` — `MappingDrivenAdapter` (frozen mapping + injected
-  `RowReader` → canonical `Entity`/`Relationship`), satisfies `DatasetAdapter`.
-- A full introspect→propose→validate→freeze(TOML)→apply round-trip test.
+**Nothing actively mid-edit.** The citation-coverage measurement
+([ADR-0023](./docs/architecture/decisions/0023-measuring-citation-coverage-gain.md))
+shipped this session — see *Recently shipped* below and ROADMAP Phase 4.
 
-**Owed (needs Docker up — Colima currently down):** a live psycopg `RowReader`, an
-`ariadne connect`/`map` CLI tying connect→introspect→propose→write-draft→[human
-ratify]→validate→register, and a testcontainers integration test running the whole
-loop against a seeded Postgres → a grounded workup. Then axis A2 (full user
-ontology), A3 (dynamic MCP), B2 (learned skills), B3 (reflexion).
+**Next thread — Adaptive Ariadne, first Postgres slice ([ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)).**
+Hermetic core shipped 2026-06-05 (introspect → propose → validate → freeze(TOML)
+→ apply round-trip against fake rows). **Owed live work:** a psycopg `RowReader`,
+an `ariadne connect`/`map` CLI (connect → introspect → propose → write-draft →
+[human ratify] → validate → register), and a testcontainers integration test
+running the whole loop against a seeded Postgres → a grounded workup. Then A2
+(full user ontology), A3 (dynamic MCP), B2 (learned skills), B3 (reflexion).
+Docker is up again — the original blocker is gone.
 
 ---
+
+**Citation-coverage measurement — shipped 2026-06-07** ([ADR-0023](./docs/architecture/decisions/0023-measuring-citation-coverage-gain.md)).
+The P-Cite repair loop's gain is now a *measured number*, not an exit code:
+`citation_coverage` scores structural coverage (cited / total citable claims,
+sharing one claim classifier with the recall gate, so coverage is `1.0` iff the
+gate passes); `repair_citations_loop` returns raw-vs-repaired coverage; the Δ
+(after − before) persists to `citations.json`, prints to stdout, and surfaces in
+`ariadne eval` + the report (dashboard card + eval panel). Live Halberd:
+**87% → 100% (+13 pts) in one repair pass**, 31/31 claims grounded; the report
+card was headless-confirmed (and a defined-but-unwired card bug it surfaced is now
+guarded by a wiring test). TDD; 334 tests green.
+`# research(2026-06): Coverage axis + Δcoverage = P-Cite − G-Cite (arXiv:2509.21557);
+Δ vs unrepaired baseline (Doctor-RAG arXiv:2604.00865); claim-level ALiiCE deferred.`
 
 Recently shipped: the **interactive workup report**
 ([ADR-0017](./docs/architecture/decisions/0017-interactive-workup-report.md)) —
@@ -80,7 +86,8 @@ negative-confirmation retrieval legitimately lowers it). TDD; verified headlessl
 pass reframed this for the agentic domain: precision@k doesn't apply, retrieval-
 recall is already covered by needle `recall` + supporting-fact F1.
 
-Open candidates after this:
+Open candidates after this (the Adaptive Postgres slice is promoted to *In flight*
+above as the next thread):
 
 - **Entity-resolution implementation** — strategy now specified
   ([ADR-0016](./docs/architecture/decisions/0016-entity-resolution-across-stores.md));

@@ -4,6 +4,8 @@ import pytest
 
 from ariadne.provenance.citations import (
     CitationReport,
+    CoverageStats,
+    citation_coverage,
     extract_citations,
     find_uncited_claims,
     validate_citations,
@@ -253,4 +255,73 @@ def test_abbreviation_does_not_orphan_a_cited_tail(tail: str) -> None:
     # abbreviation ("i.e.", "e.g.", "U.S.") and orphan the fully-cited remainder of
     # the sentence as a pseudo-claim. The whole sentence is cited via [cite:g1].
     note = f"## Graph footprint\n- The 953 self-loop is a modeling artifact [cite:g1], {tail}.\n"
+    assert find_uncited_claims(note) == []
+
+
+# ── Citation coverage: the measured number behind the repair loop (ADR-0023) ──
+
+
+def test_coverage_is_one_when_every_claim_is_cited() -> None:
+    stats = citation_coverage("## Summary\nHalberd leads the Signals-Cell unit [cite:g1].\n")
+    assert isinstance(stats, CoverageStats)
+    assert (stats.covered, stats.total, stats.fraction) == (1, 1, 1.0)
+
+
+def test_coverage_is_zero_when_nothing_is_cited() -> None:
+    stats = citation_coverage("## Summary\nHalberd leads Signals-Cell and reports to HQ.\n")
+    assert (stats.covered, stats.total, stats.fraction) == (0, 1, 0.0)
+
+
+def test_coverage_is_a_fraction_when_partially_cited() -> None:
+    note = (
+        "## Summary\n"
+        "Halberd leads the Signals-Cell unit [cite:g1]. "
+        "He secretly controls the entire Directorate.\n"
+    )
+    stats = citation_coverage(note)
+    assert (stats.covered, stats.total, stats.fraction) == (1, 2, 0.5)
+
+
+def test_coverage_fraction_is_none_when_no_citable_claims() -> None:
+    # Only a header + an exempt section — nothing asserts a citable claim.
+    note = "# Analytic note\n\n## Gaps & caveats\nNo financial links were found.\n"
+    stats = citation_coverage(note)
+    assert stats.total == 0
+    assert stats.fraction is None
+
+
+def test_coverage_is_one_iff_recall_gate_passes() -> None:
+    # The load-bearing invariant: full coverage <=> the recall gate has no uncited
+    # claims, so the measured number and the binary gate can never disagree.
+    clean = "## Relationships\n- A connects to B, the decisive shared link [cite:g1][cite:g2].\n"
+    gappy = "## Relationships\n- A connects to B [cite:g1]. And A also secretly funds D.\n"
+    assert citation_coverage(clean).fraction == 1.0
+    assert find_uncited_claims(clean) == []
+    assert citation_coverage(gappy).fraction == 0.5
+    assert find_uncited_claims(gappy)
+
+
+def test_coverage_total_equals_covered_plus_uncited() -> None:
+    # The denominator is exactly the recall gate's claim universe.
+    note = (
+        "## Relationships\n"
+        "- A connects to B [cite:g1]. And A also secretly funds D.\n"
+        "- C is unrelated to everything else here.\n"
+    )
+    stats = citation_coverage(note)
+    assert stats.total == stats.covered + len(find_uncited_claims(note))
+
+
+def test_coverage_exempts_caveats_and_counts_trailing_grounded_judgment_as_covered() -> None:
+    # An ICD-206 evidential-limit caveat is not a citable claim (excluded from total);
+    # a judgment trailing its in-segment cite is covered, not uncited.
+    note = (
+        "## Organizational position\n"
+        "- No REPORTS_TO edge originates from Halberd [cite:g5]. Halberd's command "
+        "linkage is therefore mediated by the Signals-Cell unit node.\n"
+        "- The role inference is single-modality and rests on the graph alone.\n"
+    )
+    stats = citation_coverage(note)
+    # Two grounded sentences in the first bullet; the caveat bullet is not citable.
+    assert (stats.covered, stats.total, stats.fraction) == (2, 2, 1.0)
     assert find_uncited_claims(note) == []

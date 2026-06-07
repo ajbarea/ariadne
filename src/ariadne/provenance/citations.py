@@ -75,6 +75,24 @@ class CitationReport:
     )  # claims the cited evidence does not entail
 
 
+@dataclass(frozen=True)
+class CoverageStats:
+    """Claim-level structural citation coverage of a note (ADR-0023).
+
+    ``covered`` citable claims carry — or are covered by — an in-segment
+    ``[cite:gN]``; ``total`` is the recall gate's full citable-claim universe
+    (``covered`` + uncited), so ``fraction`` is ``1.0`` exactly when
+    ``find_uncited_claims`` is empty. ``fraction`` is ``None`` when a note has no
+    citable claim (undefined, not zero). This is the measurement the P-Cite repair
+    loop moves; precision (entailment) is a separate axis. ``# research(2026-06):
+    Coverage = proportion of attribution present, P-Cite > G-Cite (arXiv:2509.21557).``
+    """
+
+    covered: int
+    total: int
+    fraction: float | None
+
+
 def extract_citations(note: str) -> list[str]:
     """Return unique ``gN`` ids in first-seen order."""
     seen: dict[str, None] = {}
@@ -117,6 +135,31 @@ def _iter_claim_segments(
         yield sentences, last_cited
 
 
+def _iter_citable_claims(
+    note: str,
+    exempt_keywords: tuple[str, ...],
+    is_judgment: Callable[[str], bool],
+    is_caveat: Callable[[str], bool],
+) -> Iterator[tuple[str, bool]]:
+    """Yield ``(sentence, covered)`` for each *citable* claim sentence in the note.
+
+    A citable claim asserts something that needs a citation, so non-claims are
+    excluded: headers / blanks / fenced code / exempt sections (upstream in
+    ``_iter_claim_segments``), plus table rows, colon lead-ins, and ICD-206
+    evidential-limit caveats. ``covered`` is True when the sentence carries or is
+    covered by an in-segment ``[cite:gN]`` — including a trailing analytic judgment
+    grounded by a cite earlier in its segment (ICD-206) — else False (uncited).
+
+    The single source of truth for both the recall gate (``find_uncited_claims``)
+    and the coverage metric (``citation_coverage``), so the two cannot diverge.
+    """
+    for sentences, last_cited in _iter_claim_segments(note, exempt_keywords):
+        for i, s in enumerate(sentences):
+            if not _HAS_LETTER_RE.search(s) or s.rstrip().endswith(":") or is_caveat(s):
+                continue
+            yield s, (i <= last_cited or (last_cited >= 0 and is_judgment(s)))
+
+
 def find_uncited_claims(
     note: str,
     *,
@@ -126,32 +169,35 @@ def find_uncited_claims(
 ) -> list[str]:
     """Return the asserted claim sentences that carry no ``[cite:gN]`` (recall).
 
-    Only prose sentences that fall *after* a segment's last citation (or a
-    segment with no citation at all) count as uncited; a trailing citation covers
-    the sentences before it.
-
-    Analytic judgments (sentences with ICD-203 estimative language or inference
-    connectives) that trail a segment which ALREADY carries a citation are exempt
-    — per ICD-206, such a judgment depends on evidence cited in the same segment
-    and need not repeat the cite. Facts, and any claim in a segment with no
-    citation at all, are still flagged regardless.
+    Only prose sentences *after* a segment's last citation (or in a segment with no
+    citation at all) count as uncited; a trailing citation covers the sentences
+    before it. Analytic judgments trailing a segment that ALREADY carries a citation
+    are exempt (ICD-206 — they rest on evidence cited in the same segment); facts,
+    and any claim in an uncited segment, are flagged regardless.
     """
-    uncited: list[str] = []
-    for sentences, last_cited in _iter_claim_segments(note, exempt_keywords):
-        for i, s in enumerate(sentences):
-            if i <= last_cited or not _HAS_LETTER_RE.search(s):
-                continue
-            if s.rstrip().endswith(":"):  # lead-in introducing a list/table, not a claim
-                continue
-            if is_caveat(s):  # evidential-limit statement, not an evidence claim (ICD-206)
-                continue
-            # A trailing analytic judgment grounded by evidence cited earlier in
-            # the SAME segment needn't repeat the cite (ICD-206). Facts, and any
-            # claim in a segment with no citation at all, are still flagged.
-            if last_cited >= 0 and is_judgment(s):
-                continue
-            uncited.append(s)
-    return uncited
+    claims = _iter_citable_claims(note, exempt_keywords, is_judgment, is_caveat)
+    return [s for s, covered in claims if not covered]
+
+
+def citation_coverage(
+    note: str,
+    *,
+    exempt_keywords: tuple[str, ...] = _EXEMPT_SECTION_KEYWORDS,
+    is_judgment: Callable[[str], bool] = _is_analytic_judgment,
+    is_caveat: Callable[[str], bool] = _is_analytic_caveat,
+) -> CoverageStats:
+    """Structural citation coverage: covered citable claims / total citable claims.
+
+    The claim universe is exactly the one ``find_uncited_claims`` walks (both derive
+    from ``_iter_citable_claims``), so coverage is ``1.0`` iff that gate is clean.
+    ``fraction`` is ``None`` when the note has no citable claim (undefined, not 0).
+    The measurement the P-Cite repair loop moves; precision is a separate axis. ADR-0023.
+    """
+    covered = total = 0
+    for _s, is_covered in _iter_citable_claims(note, exempt_keywords, is_judgment, is_caveat):
+        total += 1
+        covered += int(is_covered)
+    return CoverageStats(covered, total, covered / total if total else None)
 
 
 def find_unsupported_claims(

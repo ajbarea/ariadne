@@ -159,7 +159,8 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
         "entity": entity,
         "note_html": _render_note_html(note),
         "citations": {
-            k: cites.get(k) for k in ("ok", "cited", "dangling", "unused", "unsupported", "uncited")
+            k: cites.get(k)
+            for k in ("ok", "cited", "dangling", "unused", "unsupported", "uncited", "coverage")
         },
         "ledger": ledger,
         "tradecraft": _load_json(d / "tradecraft.json"),
@@ -562,11 +563,29 @@ function stat(cls, k, v, sub, def){return `<div class="stat ${cls}" tabindex="0"
   aria-label="${k} — click for definition"><div class="rail"></div>
   <div class="k">${k} <span class="info">&#9432;</span></div><div class="v">${v}</div>
   <div class="sub">${sub}</div><div class="statdef">${def}</div></div>`;}
+const cov = c.coverage || null;
+let covStat = "";
+if(cov && cov.after!=null){
+  const after = Math.round(cov.after*100);
+  let headline, sub;
+  if(cov.before!=null && cov.gain!=null){
+    const gain = Math.round(cov.gain*100);
+    const passTxt = cov.passes!=null ? ` from ${cov.passes} repair pass${cov.passes===1?"":"es"}` : "";
+    headline = `${Math.round(cov.before*100)}% &rarr; ${after}%`;
+    sub = gain===0 ? `no change${passTxt}` : `${gain>0?"+":""}${gain} pts${passTxt}`;
+  } else { headline = `${after}%`; sub = "raw G-Cite draft (no repair)"; }
+  covStat = stat("","Citation coverage", headline, sub,
+    "Of the note's citable claims, the share that carry a citation (structural coverage). "
+    +"The P-Cite repair loop attaches missing cites after the draft, so this shows the raw "
+    +"G-Cite coverage rising to the repaired coverage. Descriptive, never a pass/fail — the "
+    +"citation gate is the binary check (ADR-0023).");
+}
 $("#dash").innerHTML = [
   stat(c.ok?"ok":"bad","Citation gate", c.ok?'<span class="pill ok">PASS</span>':'<span class="pill bad">FAIL</span>',
        `${nCited} cited · ${nUncited} uncited · ${nDangling} dangling`,
        "Does every claim in the note carry a [cite] that resolves to real retrieved evidence? "
        +"FAIL = a claim is uncited, or cites evidence that isn't in the ledger (dangling)."),
+  covStat,
   stat("","Evidence calls", DATA.ledger.length, `${new Set(DATA.ledger.map(e=>e.source)).size} source(s) engaged`,
        "How many times the agent queried an evidence store (graph / relational / text) to ground "
        +"the note. More sources engaged = more cross-checking across the data."),
@@ -837,6 +856,7 @@ if(EV||RB){
       m("Recall", pct(EV.recall)), m("Trajectory", pct(EV.trajectory))];
     if(EV.supporting_fact_f1!=null) cells.push(m("Supporting-fact F1", fx(EV.supporting_fact_f1)));
     if(EV.context_utilization!=null) cells.push(m("Context utilization", pct(EV.context_utilization)));
+    if(EV.citation_coverage!=null) cells.push(m("Citation coverage", pct(EV.citation_coverage)));
     cells.push(m("Queries", EV.queries_run!=null?EV.queries_run:"—"));
     cells.push(m("Pivot burden", fx(EV.pivot_burden)));
     if(EV.reconciliation){const R=EV.reconciliation;

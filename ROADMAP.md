@@ -341,6 +341,18 @@ items must not be hardened against one answer.
       doubles as the raw-vs-repaired eval lever. Live-verified: Halberd exits 0 with
       repair, 1 without. [ADR-0022](./docs/architecture/decisions/0022-citation-recall-coverage-hardening.md).
       `# research(2026-06): G-Cite vs P-Cite, P-Cite-first for high-stakes (arXiv:2509.21557); bounded refinement (arXiv:2303.17651); pysbd (arXiv:2010.09657).`
+- [x] **Citation coverage — measuring the repair loop's gain (2026-06-07):** the
+      P-Cite loop's effect is now a *measured number*, not an exit code.
+      `citation_coverage` scores **structural coverage** (cited / total citable
+      claims — the complement of the recall gate's `uncited` set, both derived from
+      one shared claim classifier, so coverage is `1.0` iff the gate passes);
+      `repair_citations_loop` returns raw-G-Cite-vs-repaired coverage; the gain
+      (Δ = after − before) persists to `citations.json`, prints to stdout, and
+      surfaces in `ariadne eval` + the report (dashboard card + eval panel).
+      Live-verified Halberd: **87% → 100% (+13 pts) in one repair pass**, 31/31
+      claims grounded; report card headless-confirmed.
+      [ADR-0023](./docs/architecture/decisions/0023-measuring-citation-coverage-gain.md).
+      `# research(2026-06): Coverage axis + Δcoverage = P-Cite − G-Cite (arXiv:2509.21557 Fig.3); Δ vs unrepaired baseline (Doctor-RAG arXiv:2604.00865 §5.1); claim-level ALiiCE deferred.`
 - [x] **LLM-rubric scoring of the analytic standards + `--entail` flag (2026-06-04):**
       `evaluation/rubric.py` scores a note against four ICD-203 standards the
       mechanical gates cannot see (alternatives / argumentation / relevance /
