@@ -57,6 +57,7 @@ ADR is where the *comparison* lives.
 | [0028](0028-runtime-dataset-activation-over-mcp.md) | Runtime dataset activation over MCP — `connect_dataset` + a dynamically-registered tool | Accepted |
 | [0029](0029-distilling-analytic-skills-from-trajectories.md) | Distil analytic skills from eval-certified trajectories — `ariadne distil` (B2) | Accepted |
 | [0030](0030-reflexion-over-the-eval-harness.md) | Reflexion over the eval harness — `ariadne reflect`, grounded and gold-free (B3) | Accepted |
+| [0031](0031-net-effect-ratification-comparator.md) | Net-effect ratification comparator — `ariadne compare`, measure don't read | Accepted |
 
 ## Template
 

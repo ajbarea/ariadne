@@ -616,11 +616,26 @@ items must not be hardened against one answer.
       The two reward-hacking vectors are structurally closed — no evaluator tampering
       (proposes only ratified artifacts) and no train/test leakage (never the gold); the
       eval stays the gate, propose-only breaks the in-context self-refine loop. Deterministic
-      diagnosis + `--llm` reflexion. *Remaining (deferred): the automated net-effect
-      ratification check; multi-run reflection; auto-regenerating a refined skill.*
+      diagnosis + `--llm` reflexion. *Remaining (deferred): multi-run reflection;
+      auto-regenerating a refined skill.*
       `# research(2026-06): Reflexion (arXiv 2303.11366); the two reward-hacking vectors —
       evaluator tampering + train/test leakage (arXiv 2603.11337); in-context reward hacking
       (arXiv 2407.04549 / 2402.06627) → propose-only.`
+
+*Ratify step (closes the B2/B3 loop):*
+- [x] **Net-effect ratification comparator — shipped 2026-06-07.** `ariadne compare --baseline
+      RUN… --candidate RUN…` gives the human ratify step a **measured** verdict — you cannot tell a
+      good skill from its prose (negative transfer ~25%), so it nets a candidate's **repairs**
+      against its **regressions** vs a baseline on the **same eval instance**, not a single delta
+      ([ADR-0031](./docs/architecture/decisions/0031-net-effect-ratification-comparator.md)). A
+      hard-gated regression (`grounded`/`citation_coverage`) forces *reject*; caveats for a differing
+      harness + small N (stochastic eval). Reads `eval.json`, never recomputes a score (the eval stays
+      the single scorer). Exit code carries the verdict (ratify/neutral 0, reject 1). *Remaining
+      (deferred): the live wrapper that produces the paired runs + an auto-ratify gate.*
+      `# research(2026-06): SkillGen net-gain gate (arXiv 2605.10999); can't-tell-by-reading /
+      negative-transfer-25% (SkillLens/SkillOpt arXiv 2605.23904); net-effect = repairs−regressions
+      (arXiv 2511.11012); paired same-instance variance reduction (arXiv 2512.06710); disclose the
+      harness (arXiv 2605.23950).`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical

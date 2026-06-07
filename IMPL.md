@@ -18,20 +18,39 @@ is realized in first-slice form: the harness adapts to a user's store *and* lear
 experience (success → a distilled skill; failure → a grounded reflection), with every change
 human-ratified and the eval gate it can never edit as the external verifiable reward.
 
-**Next candidates (all YAGNI until a consumer needs them):** the automated net-effect
-ratification check (does a workup *using* a distilled skill / ratified reflection out-score one
-without it — scored by eval, closing the B2/B3 loop the human ratifies today); B2's
-multi-trajectory hierarchical consolidation (Trace2Skill across many runs), skill *composition*
-(`composes_with`), deepening an existing skill; B1's agent-driven refinement of a persisted
-mapping (now unblocked by B3); test-time skill synthesis (the SkillTTA ephemeral track); A3
-richer per-dataset tool families; A2's SHACL transpile of `validate_against_ontology`, an
-`ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges. Re-survey ROADMAP and overrule if
-something higher-value surfaces.
+The **net-effect ratification comparator** (`ariadne compare`, [ADR-0031](./docs/architecture/decisions/0031-net-effect-ratification-comparator.md))
+gives that ratify step a *measured* verdict — see *Recently shipped*.
+
+**Next candidates (all YAGNI until a consumer needs them):** the live wrapper that *produces*
+the paired runs for `compare` (orchestrate a workup with vs without the artifact) + an auto-ratify
+gate on its verdict; B2's multi-trajectory hierarchical consolidation (Trace2Skill across many
+runs), skill *composition* (`composes_with`), deepening an existing skill; B1's agent-driven
+refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis (the SkillTTA
+ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
+`validate_against_ontology`, an `ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges.
+Re-survey ROADMAP and overrule if something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**Net-effect ratification comparator — shipped 2026-06-07** ([ADR-0031](./docs/architecture/decisions/0031-net-effect-ratification-comparator.md)).
+`ariadne compare --baseline RUN… --candidate RUN…` gives the ratify step a *measured* verdict:
+you cannot tell a good skill from its prose (negative transfer hits ~25% of skills), so it nets a
+candidate's **repairs** against its **regressions** vs a baseline — not a single delta (an artifact
+can fix more *and* break more). **Same-instance gate** (all runs share the eval fixture — paired
+comparison is what makes the delta a signal, not instance noise; mixed fixtures raise
+`IncomparableRuns`); a hard-gated regression (`grounded` / `citation_coverage`) forces *reject*
+regardless of the net; caveats for a differing harness (model/profile/params — disclosure) and
+small N (`<3`/side — agentic eval is stochastic). It only *reads* `eval.json` — never recomputes a
+score (the eval stays the single scorer, ADR-0020). Exit code carries the verdict (ratify/neutral 0,
+reject 1, incomparable 2). Hermetic core (no API, no live stores); the live wrapper that produces the
+paired runs is deferred. Smoked on the real `halberd` run vs a degraded copy — REJECT (4 regressions,
+net -4) and, reversed, RATIFY (4 repairs, +4). TDD; 453 unit green. `# research(2026-06): SkillGen
+net-gain gate arXiv 2605.10999; "can't tell a good skill by reading it" / negative-transfer-25%
+SkillLens-SkillOpt arXiv 2605.23904; net-effect = repairs−regressions arXiv 2511.11012; paired
+same-instance variance reduction arXiv 2512.06710; disclose the harness arXiv 2605.23950.`
 
 **Reflexion over the eval harness — B3 first slice, shipped 2026-06-07** ([ADR-0030](./docs/architecture/decisions/0030-reflexion-over-the-eval-harness.md)).
 `ariadne reflect <run>` reflects on an under-performing workup and **proposes refinements for a

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import sys
 import time
@@ -267,6 +268,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Run the Claude reflexion (post-mortem + proposed refinements) over the findings "
         "(needs the 'adaptive' extra + ANTHROPIC_API_KEY); else a deterministic diagnosis.",
     )
+
+    cmp = sub.add_parser(
+        "compare",
+        help="Net a candidate's effect vs a baseline on the same instance (ratify step, ADR-0031)",
+    )
+    cmp.add_argument(
+        "--baseline", nargs="+", required=True, metavar="RUN", help="Baseline run dir(s)"
+    )
+    cmp.add_argument(
+        "--candidate", nargs="+", required=True, metavar="RUN", help="Candidate run dir(s)"
+    )
+    cmp.add_argument(
+        "--out", default=None, help="Also write the structured comparison.json to this path"
+    )
     return parser.parse_args(argv)
 
 
@@ -459,6 +474,34 @@ def _run_reflect(run_dir: str, *, out: str | None = None, llm: bool = False) -> 
     )
     print("Review the proposed refinements and ratify by acting on them — nothing is auto-applied.")
     return 0
+
+
+def _run_compare(baseline: list[str], candidate: list[str], *, out: str | None = None) -> int:
+    """Net a candidate's effect vs a baseline (the measured ratify step, ADR-0031).
+
+    Exit code carries the verdict for scripting: ratify/neutral = 0, reject = 1, and an
+    incomparable pairing (empty / unscored / different instance) = 2. Reads `eval.json`;
+    never recomputes a score.
+    """
+    from ariadne.learning.netcheck import (
+        IncomparableRuns,
+        compare,
+        comparison_dict,
+        render_comparison_md,
+    )
+    from ariadne.learning.runs import load_run
+
+    try:
+        net = compare([load_run(d) for d in baseline], [load_run(d) for d in candidate])
+    except IncomparableRuns as exc:
+        print(f"Cannot compare: {exc}", file=sys.stderr)
+        return 2
+
+    print(render_comparison_md(net))
+    if out:
+        Path(out).write_text(json.dumps(comparison_dict(net), indent=2), encoding="utf-8")
+        print(f"Wrote {out}")
+    return 1 if net.verdict == "reject" else 0
 
 
 def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
@@ -970,6 +1013,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_distil(args.run_dir, name=args.name, out=args.out, llm=args.llm)
     if args.command == "reflect":
         return _run_reflect(args.run_dir, out=args.out, llm=args.llm)
+    if args.command == "compare":
+        return _run_compare(args.baseline, args.candidate, out=args.out)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",
