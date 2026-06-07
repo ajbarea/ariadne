@@ -17,7 +17,8 @@ relationship vocabulary as a lightweight TOML ontology and has the mapper map in
 the `SchemaMapper` seam + the `[dataset]` header. `# research(2026-06): OntoKG
 (arXiv 2604.02618) + Anchor (arXiv 2606.01208); web-search current practice before
 building.` Then A3 (dynamic MCP), B2 (learned skills), B3 (reflexion over the eval
-harness). Docker is up; stores seeded; `adaptive` extra (anthropic) synced.
+harness). (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j
+needs the manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
 
