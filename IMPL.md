@@ -8,34 +8,51 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — Axis A complete; Axis B (self-improvement) underway: B2 shipped, B3 next.**
-Axis A — A1 (introspect → propose [deterministic *and* LLM] → validate → freeze → apply),
-**A2** (the declarative user ontology), **A3** (the dynamic MCP surface) — and Axis B's
-**B2** (learned analytic skills: `ariadne distil`) are all complete; see *Recently shipped*.
+**Adaptive Ariadne — Axis A + Axis B first slices complete end to end.** Axis A — A1
+(introspect → propose [deterministic *and* LLM] → validate → freeze → apply), **A2** (the
+declarative user ontology), **A3** (the dynamic MCP surface). Axis B (self-improvement) —
+**B1** seed (learned mappings), **B2** (learned analytic skills: `ariadne distil`), **B3**
+(reflexion over the eval harness: `ariadne reflect`) — all complete; see *Recently shipped*.
+The propose → ratify → freeze epic of [ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)
+is realized in first-slice form: the harness adapts to a user's store *and* learns from
+experience (success → a distilled skill; failure → a grounded reflection), with every change
+human-ratified and the eval gate it can never edit as the external verifiable reward.
 
-**Next — B3 · Reflexion over eval** (the harness is the verifiable reward; the eval
-dimensions are already surfaced in the report): the agent reflects on its own low-scoring
-eval dimensions and proposes a refined skill / mapping / query — then re-scores against the
-*same* deterministic gate it may never edit. `# research(2026-06): the verifiability
-constraint — self-improvement is reliable only with an EXTERNAL verifiable reward (our eval
-harness is exactly that); intrinsic self-correction is NOT a quality gate (the model that
-erred has the same blind spots) → the deterministic eval stays the gate, per ADR-0026/0020.
-Reflection grounding: each reflection must CITE the specific eval-failure episodic evidence
-(auditable, human-reviewable) — a clean fit for Ariadne's citation ethos.` B3 closes the
-loop B2 opened: the ratify step of `distil` is where the SkillGen-style net-effect check
-(does a workup *using* a skill out-score one without it) would automate, scored by eval.
-
-Deferred (YAGNI until a consumer needs them): B2's multi-trajectory hierarchical
-consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`),
-deepening an existing skill, the automated net-effect ratification check, and test-time skill
-synthesis (the SkillTTA ephemeral track); A3 richer per-dataset tool families (dataset-scoped
-search, etc.); A2's SHACL transpile of `validate_against_ontology`, an `ARIADNE_ONTOLOGIES`
-registry, multi-`domain`/`range` edges.
+**Next candidates (all YAGNI until a consumer needs them):** the automated net-effect
+ratification check (does a workup *using* a distilled skill / ratified reflection out-score one
+without it — scored by eval, closing the B2/B3 loop the human ratifies today); B2's
+multi-trajectory hierarchical consolidation (Trace2Skill across many runs), skill *composition*
+(`composes_with`), deepening an existing skill; B1's agent-driven refinement of a persisted
+mapping (now unblocked by B3); test-time skill synthesis (the SkillTTA ephemeral track); A3
+richer per-dataset tool families; A2's SHACL transpile of `validate_against_ontology`, an
+`ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges. Re-survey ROADMAP and overrule if
+something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**Reflexion over the eval harness — B3 first slice, shipped 2026-06-07** ([ADR-0030](./docs/architecture/decisions/0030-reflexion-over-the-eval-harness.md)).
+`ariadne reflect <run>` reflects on an under-performing workup and **proposes refinements for a
+human to ratify** — the failure-side counterpart to B2's success-side distillation. Eval-triggered
+(no eval ⇒ refuse) and **gold-free by construction**: it reads the run's own scores + artifacts and
+never the held-out gold (`reflect.py` does not import the fixture gold — a structural test enforces
+it). Findings: *own-evidence* (citation_coverage / grounded cite the agent's own uncited/dangling
+claims) · *score-triggered* (recall / trajectory / sf-f1 below ideal, grounded in the trajectory
+*shape*, never the missed gold) · *behavioral* (exact-duplicate queries). Descriptive dims
+(pivot_burden, context_utilization) are reported as context, not defects (no arbitrary thresholds).
+The two reward-hacking vectors are structurally closed — **no evaluator tampering** (proposes only
+ratified artifacts, never the scorer) and **no train/test leakage** (never the gold); **propose-only**
+breaks the in-context self-refine loop. Deterministic diagnosis + `--llm` reflexion (`propose_reflection`
+forced tool-use, `adaptive` extra, key-guarded), writing `reflection.{md,json}` beside the run.
+Live-smoked: the clean `halberd` run → *no findings* (restraint); a degraded copy → 3 findings, and
+the `--llm` reflexion caught that an uncited claim was *contradicted by the run's own traversal*
+(co-location ≠ command) and proposed a closing-citation-audit skill + an enumeration query strategy +
+a supporting-fact mapping — all gold-free. Also refactored the shared run model + structural
+extraction into `learning/runs.py` (DRY, B2+B3). TDD; 437 unit green. `# research(2026-06): Reflexion
+arXiv 2303.11366; reward-hacking vectors = evaluator-tampering + train/test-leakage arXiv 2603.11337;
+in-context reward hacking arXiv 2407.04549 / 2402.06627 → propose-only.`
 
 **Distil analytic skills from eval-certified trajectories — B2 first slice, shipped 2026-06-07** ([ADR-0029](./docs/architecture/decisions/0029-distilling-analytic-skills-from-trajectories.md)).
 `ariadne distil <run>` distils a high-scoring workup into a named, structured, declarative

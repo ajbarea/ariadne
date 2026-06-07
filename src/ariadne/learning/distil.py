@@ -27,30 +27,22 @@ from typing import TYPE_CHECKING, Any
 
 import tomli_w
 
-from ariadne.provenance.ledger import ProvenanceLedger
+from ariadne.learning import DEFAULT_MODEL
+from ariadne.learning.runs import (
+    RunArtifacts,
+    fmt_score,
+    move_sequence,
+    prerequisites,
+    query_text,
+    truncate,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-_DEFAULT_MODEL = "claude-opus-4-8"
-
-# MCP server name -> the capability it provides, for the skill's prerequisites.
-_CAPABILITY = {"neo4j": "graph", "postgres": "relational", "ariadne": "semantic"}
-
 
 class NotCertified(Exception):
     """A run is not an eligible skill source — it was not scored, or it did not ground."""
-
-
-@dataclass(frozen=True)
-class RunArtifacts:
-    """What distillation reads from one immutable run dir (ADR-0021)."""
-
-    run_dir: str
-    provenance: list[dict[str, Any]]
-    eval_scores: dict[str, Any]
-    manifest: dict[str, Any] | None
-    note: str
 
 
 @dataclass(frozen=True)
@@ -91,33 +83,6 @@ class DistilledSkill:
     skill_md: str
 
 
-# --- the filesystem seam -----------------------------------------------------------
-
-
-def _read_json(path: Path) -> dict[str, Any] | None:
-    import json
-
-    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
-
-
-def load_run(run_dir: str | Path) -> RunArtifacts:
-    """Load a run's trajectory, scores, manifest, and note. Missing eval -> ``{}``.
-
-    ``load_run`` never refuses a run (a fixture-less live workup has no ``eval.json``);
-    the certification gate, not the loader, is what rejects an uncertified run.
-    """
-    run_dir = Path(run_dir)
-    prov = run_dir / "provenance.jsonl"
-    note = run_dir / "note.md"
-    return RunArtifacts(
-        run_dir=str(run_dir),
-        provenance=ProvenanceLedger.read_jsonl(prov) if prov.is_file() else [],
-        eval_scores=_read_json(run_dir / "eval.json") or {},
-        manifest=_read_json(run_dir / "manifest.json"),
-        note=note.read_text(encoding="utf-8") if note.is_file() else "",
-    )
-
-
 # --- the certification gate (the keystone) -----------------------------------------
 
 
@@ -141,77 +106,9 @@ def certify(run: RunArtifacts) -> None:
         )
 
 
-# --- structural extraction (deterministic, always) ---------------------------------
-
-
-def tool_family(tool: str) -> str:
-    """The MCP server a tool belongs to: ``mcp__<server>__<name>`` -> ``<server>``."""
-    parts = tool.split("__")
-    return parts[1] if len(parts) >= 3 and parts[0] == "mcp" else "other"
-
-
-def prerequisites(run: RunArtifacts) -> tuple[str, ...]:
-    """The distinct, sorted capabilities (graph / relational / semantic) the run used."""
-    caps = {_CAPABILITY.get(fam := tool_family(e.get("tool", "")), fam) for e in run.provenance}
-    return tuple(sorted(caps))
-
-
 def granularity(prereqs: tuple[str, ...]) -> str:
     """``composite`` if the skill spans more than one capability, else ``atomic``."""
     return "composite" if len(prereqs) > 1 else "atomic"
-
-
-def _is_graph_schema_query(query: str) -> bool:
-    q = query.lower()
-    return any(
-        p in q for p in ("db.labels", "db.relationshiptypes", "db.schema", "db.propertykeys")
-    )
-
-
-def _is_fulltext_sql(sql: str) -> bool:
-    s = sql.lower()
-    return any(p in s for p in ("@@", "tsquery", "tsvector", "ts_rank"))
-
-
-def phase_of(entry: dict[str, Any]) -> str:
-    """Categorize one trajectory entry into an analytic phase by tool family + query shape."""
-    tool = entry.get("tool", "")
-    fam = tool_family(tool)
-    ti = entry.get("tool_input", {}) or {}
-    if fam == "neo4j":
-        if "get_neo4j_schema" in tool or _is_graph_schema_query(ti.get("query") or ""):
-            return "graph-schema"
-        return "graph-traversal"
-    if fam == "postgres":
-        if not tool.endswith("execute_sql"):
-            return "relational-schema"
-        sql = ti.get("sql") or ti.get("query") or ""
-        return "free-text" if _is_fulltext_sql(sql) else "relational-query"
-    if fam == "ariadne":
-        return "free-text"
-    return "other"
-
-
-def _query_text(entry: dict[str, Any]) -> str:
-    ti = entry.get("tool_input", {}) or {}
-    return ti.get("query") or ti.get("sql") or ""
-
-
-def _truncate(text: str, limit: int) -> str:
-    text = " ".join(text.split())
-    return text if len(text) <= limit else text[: limit - 3] + "..."
-
-
-def _move_sequence(provenance: list[dict[str, Any]]) -> list[tuple[str, list[dict[str, Any]]]]:
-    """The trajectory collapsed into consecutive same-phase steps, in run order."""
-    steps: list[tuple[str, list[dict[str, Any]]]] = []
-    for entry in provenance:
-        ph = phase_of(entry)
-        if steps and steps[-1][0] == ph:
-            steps[-1][1].append(entry)
-        else:
-            steps.append((ph, [entry]))
-    return steps
 
 
 def _source(run: RunArtifacts) -> dict[str, str]:
@@ -246,15 +143,8 @@ def _prose_join(items: tuple[str, ...]) -> str:
     return ", ".join(items[:-1]) + ", and " + items[-1]
 
 
-def _fmt_score(value: Any) -> str:
-    """Round a float for human prose (the TOML sidecar keeps full precision)."""
-    if isinstance(value, float):
-        return f"{value:.3f}".rstrip("0").rstrip(".")
-    return str(value)
-
-
 def _score_prose(reliability: dict[str, Any]) -> str:
-    return ", ".join(f"{k}={_fmt_score(v)}" for k, v in reliability.items())
+    return ", ".join(f"{k}={fmt_score(v)}" for k, v in reliability.items())
 
 
 def _deterministic_description(prereqs: tuple[str, ...], source: dict[str, str]) -> str:
@@ -292,13 +182,13 @@ def _deterministic_body(run: RunArtifacts, card: SkillCard) -> str:
         "## Observed move sequence",
         "",
     ]
-    for i, (phase, entries) in enumerate(_move_sequence(run.provenance), 1):
+    for i, (phase, entries) in enumerate(move_sequence(run.provenance), 1):
         tools = ", ".join(f"`{t}`" for t in sorted({e.get("tool", "") for e in entries}))
         lines.append(f"{i}. **{phase}** — {tools}")
         for entry in entries:
-            query = _query_text(entry)
+            query = query_text(entry)
             if query:
-                lines.append(f"   - `{_truncate(query, 140)}`")
+                lines.append(f"   - `{truncate(query, 140)}`")
     src = card.source
     rel = _score_prose(card.reliability)
     lines += [
@@ -348,10 +238,10 @@ def _truncate_note(note: str, limit: int) -> str:
 def build_distil_prompt(run: RunArtifacts, prereqs: tuple[str, ...]) -> str:
     """The prompt that grounds the model in the real trajectory + the certifying score."""
     moves = []
-    for i, (phase, entries) in enumerate(_move_sequence(run.provenance), 1):
+    for i, (phase, entries) in enumerate(move_sequence(run.provenance), 1):
         for entry in entries:
-            query = _query_text(entry)
-            suffix = f": {_truncate(query, 160)}" if query else ""
+            query = query_text(entry)
+            suffix = f": {truncate(query, 160)}" if query else ""
             moves.append(f"{i}. [{phase}] {entry.get('tool', '')}{suffix}")
     rel = _score_prose(_reliability(run.eval_scores))
     return (
@@ -374,7 +264,7 @@ def distil_with_llm(
     *,
     call_llm: Callable[[str], dict[str, Any]],
     name: str | None = None,
-    model: str = _DEFAULT_MODEL,
+    model: str = DEFAULT_MODEL,
 ) -> DistilledSkill:
     """Generalize a certified trajectory into a transferable skill via an injected LLM seam.
 
@@ -472,7 +362,7 @@ class ClaudeSkillDistiller:
 
     # A skill body is prose, far longer than a mapping's structured output — 2048 (the
     # mapper's budget) truncates mid-body and drops the required `body` field (caught live).
-    def __init__(self, *, model: str = _DEFAULT_MODEL, max_tokens: int = 8192) -> None:
+    def __init__(self, *, model: str = DEFAULT_MODEL, max_tokens: int = 8192) -> None:
         import importlib
 
         anthropic = importlib.import_module("anthropic")

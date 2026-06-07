@@ -608,12 +608,19 @@ items must not be hardened against one answer.
       Trace2Skill (arXiv 2603.25158); SkillGen verifier-gate (arXiv 2605.10999); structured
       store not a flat cache (SoK Agentic Skills arXiv 2602.20867); SkillTTA (arXiv 2605.16986)
       the rejected ephemeral alternative.`
-- [ ] **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
-      dimensions (the harness is the verifiable reward; now surfaced in the report)
-      and proposes a refined skill/mapping/query. `# research(2026-06): verifiability
-      constraint — only an external verifiable reward (our eval harness) makes this
-      reliable; intrinsic self-correction is not the gate (ADR-0026/0020); reflection
-      grounding — cite the specific eval-failure evidence (auditable).`
+- [x] **B3 · Reflexion over eval — first slice shipped 2026-06-07.** `ariadne reflect <run>`
+      reflects on an under-performing workup and **proposes refinements for a human to
+      ratify** (the failure-side counterpart to B2) — eval-triggered and **gold-free by
+      construction** (reads the run's own scores + artifacts, never the held-out gold)
+      ([ADR-0030](./docs/architecture/decisions/0030-reflexion-over-the-eval-harness.md)).
+      The two reward-hacking vectors are structurally closed — no evaluator tampering
+      (proposes only ratified artifacts) and no train/test leakage (never the gold); the
+      eval stays the gate, propose-only breaks the in-context self-refine loop. Deterministic
+      diagnosis + `--llm` reflexion. *Remaining (deferred): the automated net-effect
+      ratification check; multi-run reflection; auto-regenerating a refined skill.*
+      `# research(2026-06): Reflexion (arXiv 2303.11366); the two reward-hacking vectors —
+      evaluator tampering + train/test leakage (arXiv 2603.11337); in-context reward hacking
+      (arXiv 2407.04549 / 2402.06627) → propose-only.`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical
@@ -629,12 +636,15 @@ items must not be hardened against one answer.
 > open-string canonical types; and **A3 shipped** (2026-06-07,
 > [ADR-0028](./docs/architecture/decisions/0028-runtime-dataset-activation-over-mcp.md)) —
 > `connect_dataset` activates a ratified store at runtime over MCP. **Axis A (adaptivity)
-> is now complete end to end.** **Axis B (self-improvement) is underway:** B2 shipped
-> (2026-06-07, [ADR-0029](./docs/architecture/decisions/0029-distilling-analytic-skills-from-trajectories.md))
-> — `ariadne distil` distils an eval-certified workup into a structured, declarative skill on
-> the propose → ratify → freeze spine. **Next: B3 — reflexion over the eval harness** (the
-> agent reflects on its own low-scoring eval dimensions and proposes a refined skill/mapping/
-> query, re-scored against the same gate it may never edit).
+> is now complete end to end**, and so is **Axis B (self-improvement)** in first-slice form:
+> B2 (2026-06-07, [ADR-0029](./docs/architecture/decisions/0029-distilling-analytic-skills-from-trajectories.md))
+> — `ariadne distil` learns a skill from a *successful* run — and B3 (2026-06-07,
+> [ADR-0030](./docs/architecture/decisions/0030-reflexion-over-the-eval-harness.md)) —
+> `ariadne reflect` reflects on a *failing* run and proposes refinements, gold-free and
+> propose-only. The adaptive & self-improving epic of ADR-0020 is realized: the harness adapts
+> to a user's store *and* learns from experience, every change human-ratified, the eval gate it
+> can never edit as the external verifiable reward. Next candidates are the deferred items (the
+> automated net-effect ratification check; multi-trajectory consolidation) — all YAGNI.
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).

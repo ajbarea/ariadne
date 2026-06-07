@@ -13,15 +13,17 @@ import pytest
 
 from ariadne.learning.distil import (
     NotCertified,
-    RunArtifacts,
     distil_deterministic,
     distil_with_llm,
     granularity,
+    write_skill,
+)
+from ariadne.learning.runs import (
+    RunArtifacts,
     load_run,
     phase_of,
     prerequisites,
     tool_family,
-    write_skill,
 )
 
 # A small, real-shaped trajectory: graph schema -> relational lookup -> graph traversal

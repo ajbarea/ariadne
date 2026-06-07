@@ -252,6 +252,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Generalize the trajectory into a transferable skill with the Claude distiller "
         "(needs the 'adaptive' extra + ANTHROPIC_API_KEY); else a deterministic record.",
     )
+
+    rf = sub.add_parser(
+        "reflect",
+        help="Reflect on an eval-scored workup's shortfalls + propose refinements (B3, ADR-0030)",
+    )
+    rf.add_argument("run_dir", help="A workup run dir (must carry an eval.json)")
+    rf.add_argument(
+        "--out", default=None, help="Where to write reflection.{md,json} (default: the run dir)"
+    )
+    rf.add_argument(
+        "--llm",
+        action="store_true",
+        help="Run the Claude reflexion (post-mortem + proposed refinements) over the findings "
+        "(needs the 'adaptive' extra + ANTHROPIC_API_KEY); else a deterministic diagnosis.",
+    )
     return parser.parse_args(argv)
 
 
@@ -352,9 +367,9 @@ def _run_distil(
         NotCertified,
         distil_deterministic,
         distil_with_llm,
-        load_run,
         write_skill,
     )
+    from ariadne.learning.runs import load_run
 
     distiller = None
     if llm:
@@ -392,6 +407,57 @@ def _run_distil(
         f"Review/edit {out_dir}/SKILL.md, then ratify by moving it: "
         f"mv {out_dir} .claude/skills/{skill.card.name}"
     )
+    return 0
+
+
+def _run_reflect(run_dir: str, *, out: str | None = None, llm: bool = False) -> int:
+    """Reflect on an eval-scored workup's shortfalls and propose refinements (B3, ADR-0030).
+
+    Eval-triggered and gold-free: reads the run's own scores + artifacts, never the held-out
+    gold. ``--llm`` runs the Claude reflexion (post-mortem + proposed refinements) over the
+    findings behind a key-guard; otherwise a deterministic diagnosis. Propose-only — the
+    reflection is written beside the run's artifacts for a human to ratify; nothing is applied.
+    """
+    from ariadne.learning.reflect import (
+        NoReward,
+        reflect_deterministic,
+        reflect_with_llm,
+        write_reflection,
+    )
+    from ariadne.learning.runs import load_run
+
+    reflector = None
+    if llm:
+        # Key-guard before load_run or any anthropic import (mirrors `distil --llm`).
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print(
+                "ANTHROPIC_API_KEY is not set — export it to use --llm (the Claude reflector).",
+                file=sys.stderr,
+            )
+            return 2
+        from ariadne.learning.reflect import ClaudeReflector
+
+        reflector = ClaudeReflector()
+
+    run = load_run(run_dir)
+    try:
+        if reflector is not None:
+            reflection = reflect_with_llm(run, call_llm=reflector.call_llm, model=reflector.model)
+        else:
+            reflection = reflect_deterministic(run)
+    except NoReward as exc:
+        print(f"Cannot reflect on {run_dir}: {exc}", file=sys.stderr)
+        return 1
+
+    md, js = write_reflection(out or run_dir, reflection)
+    if not reflection.findings:
+        print(f"No findings — every gold-anchored dimension is at its ideal. Wrote {md}.")
+        return 0
+    dims = ", ".join(sorted({f.dimension for f in reflection.findings}))
+    print(
+        f"Reflected on {run_dir}: {len(reflection.findings)} finding(s) [{dims}]. Wrote {md} + {js.name}."
+    )
+    print("Review the proposed refinements and ratify by acting on them — nothing is auto-applied.")
     return 0
 
 
@@ -902,6 +968,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.command == "distil":
         return _run_distil(args.run_dir, name=args.name, out=args.out, llm=args.llm)
+    if args.command == "reflect":
+        return _run_reflect(args.run_dir, out=args.out, llm=args.llm)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",
