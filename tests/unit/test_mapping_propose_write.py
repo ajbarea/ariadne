@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ariadne.mapping.propose import propose_and_write
-from ariadne.mapping.schema import load_mapping_toml
+from ariadne.mapping.schema import DatasetHeader, load_dataset_header, load_mapping_toml
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -56,3 +56,18 @@ def test_propose_and_write_writes_a_valid_draft(tmp_path: Path) -> None:
     # the draft round-trips back to the proposed mapping
     assert load_mapping_toml(out.read_text(encoding="utf-8")) == mapping
     assert mapping.entities[0].table == "people"
+
+
+def test_propose_and_write_stamps_a_dataset_header_when_given_one(tmp_path: Path) -> None:
+    results = [
+        (["table_name", "column_name", "data_type"], [("people", "id", "integer")]),
+        (["from_table", "from_column", "to_table", "to_column"], []),
+    ]
+    out = tmp_path / "mapping.toml"
+    propose_and_write(
+        _FakeConn(results), out, schema="public", header=DatasetHeader("acme", dsn_env="ACME_DSN")
+    )
+    # the draft is apply-able: it carries the [dataset] header a human ratifies
+    assert load_dataset_header(out.read_text(encoding="utf-8")) == DatasetHeader(
+        "acme", dsn_env="ACME_DSN"
+    )

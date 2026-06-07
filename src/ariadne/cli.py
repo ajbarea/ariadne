@@ -30,6 +30,7 @@ import ariadne.datasets.lahman
 import ariadne.datasets.synthetic
 import ariadne.datasets.worldspeech  # noqa: F401  (registers the worldspeech adapter)
 from ariadne.datasets.base import DATASETS
+from ariadne.datasets.mapping_source import discover_and_register
 from ariadne.evaluation.needle import FIXTURES, score_workup_dir, write_eval_json
 from ariadne.evaluation.reconcile import RECON_FIXTURES, score_reconciliation_dir
 from ariadne.graph.neo4j_server import GRAPH_TOOLS, neo4j_stdio_config
@@ -204,7 +205,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     mp = sub.add_parser(
         "map", help="Introspect a Postgres store and propose a draft mapping.toml (ADR-0020)"
     )
-    mp.add_argument("--dsn", required=True, help="Read-only Postgres connection string")
+    mp.add_argument("--name", default="user_postgres", help="Dataset name for the [dataset] header")
+    mp.add_argument(
+        "--dsn",
+        default=None,
+        help="Source connection string; prefer $ARIADNE_SOURCE_DSN (argv is world-readable)",
+    )
+    mp.add_argument(
+        "--dsn-env",
+        default="ARIADNE_SOURCE_DSN",
+        help="Env var holding the source DSN (default: ARIADNE_SOURCE_DSN)",
+    )
     mp.add_argument("--schema", default="public", help="Schema to introspect (default: public)")
     mp.add_argument(
         "--out", default="mapping.toml", help="Draft mapping path (default: mapping.toml)"
@@ -221,28 +232,44 @@ def _run_report(workup_dir: str) -> int:
     return 0
 
 
-def _run_map(dsn: str, out: str, schema: str = "public") -> int:
+def _run_map(
+    name: str,
+    out: str,
+    schema: str = "public",
+    *,
+    dsn: str | None = None,
+    dsn_env: str = "ARIADNE_SOURCE_DSN",
+) -> int:
     """Introspect a Postgres store and write a draft ``mapping.toml`` (no API key).
 
-    The agent does not run here — this is the read-only *propose* step of the
-    propose -> ratify -> freeze loop. A human reviews/edits the draft before it is used.
+    The read-only *propose* step of propose -> ratify -> freeze. The source DSN is
+    read from ``$dsn_env`` (kept off argv); ``--dsn`` overrides. The draft carries a
+    ``[dataset]`` header so, once ratified under ``$ARIADNE_MAPPINGS``, it applies via
+    ``ariadne index --dataset <name>`` (ADR-0025).
     """
     import psycopg
 
+    from ariadne.datasets.mapping_source import resolve_source_dsn
     from ariadne.mapping.propose import propose_and_write
+    from ariadne.mapping.schema import DatasetHeader
 
+    dsn = dsn or resolve_source_dsn(dict(os.environ), dsn_env)
+    header = DatasetHeader(name=name, dsn_env=dsn_env, schema=schema)
     with psycopg.connect(dsn) as conn:
-        mapping, errors = propose_and_write(conn, out, schema=schema)
+        mapping, errors = propose_and_write(conn, out, schema=schema, header=header)
     print(
         f"Proposed mapping -> {out}: {len(mapping.entities)} entit(ies), "
-        f"{len(mapping.relationships)} relationship(s) from schema {schema!r}."
+        f"{len(mapping.relationships)} relationship(s) from schema {schema!r} as dataset {name!r}."
     )
     if errors:
         print(f"{len(errors)} validation issue(s) to resolve before use:", file=sys.stderr)
         for e in errors:
             print(f"  ! {e}", file=sys.stderr)
         return 1
-    print(f"Review/edit {out}, then load it with a MappingDrivenAdapter.")
+    print(
+        f"Review/edit {out}, place it under $ARIADNE_MAPPINGS, set ${dsn_env}, "
+        f"then: ariadne index --dataset {name}"
+    )
     return 0
 
 
@@ -721,6 +748,7 @@ def main(argv: list[str] | None = None) -> int:
     # user runs the command (not from this installed module's location).
     load_dotenv(find_dotenv(usecwd=True), override=False)
     setup_telemetry()
+    discover_and_register(dict(os.environ))  # ADR-0025: register ARIADNE_MAPPINGS user datasets
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.command == "eval":
         return _run_eval(args.workup_dir, args.fixture, reconcile=args.reconcile)
@@ -741,7 +769,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "report":
         return _run_report(args.workup_dir)
     if args.command == "map":
-        return _run_map(args.dsn, args.out, args.schema)
+        return _run_map(args.name, args.out, args.schema, dsn=args.dsn, dsn_env=args.dsn_env)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

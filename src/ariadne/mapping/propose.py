@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from ariadne.mapping.schema import (
+    DatasetHeader,
     EntityMapping,
     Mapping,
     RelationshipMapping,
@@ -104,17 +105,20 @@ def propose_and_write(
     *,
     schema: str = "public",
     mapper: SchemaMapper | None = None,
+    header: DatasetHeader | None = None,
 ) -> tuple[Mapping, list[str]]:
     """Introspect ``conn``, propose a mapping, write the draft ``mapping.toml``.
 
     Returns the proposed mapping and any structural validation errors. The draft is
     written regardless (a human ratifies/edits it); errors are surfaced so the caller
-    can warn. This is the testable core of the ``ariadne map`` command.
+    can warn. With a ``header`` the draft carries its ``[dataset]`` block, so once
+    ratified it is apply-able as a registered dataset (ADR-0025). This is the testable
+    core of the ``ariadne map`` command.
     """
     from ariadne.introspect.postgres import introspect
 
     summary = introspect(conn, schema)
     mapping = (mapper or BaselineMapper()).propose(summary)
     errors = validate_mapping(mapping, summary)
-    Path(out_path).write_text(dump_mapping_toml(mapping), encoding="utf-8")
+    Path(out_path).write_text(dump_mapping_toml(mapping, header), encoding="utf-8")
     return mapping, errors

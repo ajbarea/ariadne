@@ -8,18 +8,33 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — first Postgres slice ([ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)).**
-The next thread (two eval-integrity increments shipped first this session — see
-*Recently shipped*). Hermetic core shipped 2026-06-05 (introspect → propose →
-validate → freeze(TOML) → apply round-trip against fake rows). **Owed live work:**
-a psycopg `RowReader`, an `ariadne connect`/`map` CLI (connect → introspect →
-propose → write-draft → [human ratify] → validate → register), and a testcontainers
-integration test running the whole loop against a seeded Postgres → a grounded
-workup. Then A2 (full user ontology), A3 (dynamic MCP), B2 (learned skills), B3
-(reflexion). Docker is up — the original blocker is gone. Best started on fresh
-context (a large thread).
+**Adaptive Ariadne — the agentic LLM mapper (the rest of A1).** The first Postgres
+slice (introspect → propose → validate → freeze → **apply**) shipped this session
+(see *Recently shipped*; [ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md)).
+What remains of A1 is the **agentic iterative schema-linking** mapper: a real
+Claude-backed `SchemaMapper` behind the existing Protocol seam (mirrors the injected
+rubric judge), proposing entity-type + intrinsic-vs-relational column routing instead
+of the deterministic `BaselineMapper`, with a self-correcting retrieve-only-relevant-
+tables loop — gated behind an extra + a `network`/`integration` test. `# research(2026-06):
+AutoLink agentic schema linking (arXiv 2511.17190); web-search current practice
+before building.` Then A2 (full user ontology), A3 (dynamic MCP), B2 (learned
+skills), B3 (reflexion). Docker is up; stores seeded.
 
 ---
+
+**Apply a ratified mapping — first adaptive Postgres slice closed, shipped 2026-06-07** ([ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md)).
+ADR-0020's "apply" step was the gap: the adapter existed but nothing wired a frozen
+`mapping.toml` so the *existing* pipeline used it. Now a ratified mapping under
+`ARIADNE_MAPPINGS` self-registers as a dataset (mirroring `ARIADNE_PROFILES`), so
+`--dataset <name>` resolves for `index`/`workup`/`eval` with zero changes to them;
+the source DSN is read **lazily from env** (off argv, per June-2026 secrets practice)
+so only `index` opens the source DB. `ariadne map` now stamps the `[dataset]` header
+and reads the DSN from env (one shared resolver; de-anti-patterns its old `--dsn`).
+Deterministic proof: a testcontainers test runs source PG → mapping → the real
+indexer → a traversable `(:Staff)-[:WORKS_IN]->(:Dept)` Neo4j edge; live-smoked the
+`map` + discovery CLI against the running `intel` DB (read-only, no LLM). TDD; 353
+unit + 3 integration green. `# research(2026-06): secrets off argv (ps/proc visible);
+sources behind a declarative layer queried via tools, not federated live.`
 
 **Trajectory eval grades observations, not just actions — shipped 2026-06-07** ([ADR-0024](./docs/architecture/decisions/0024-trajectory-grades-observations.md)).
 Found verifying ADR-0023: the planted-needle `trajectory` + supporting-fact scorer

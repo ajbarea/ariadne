@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from ariadne.introspect.postgres import Column, ForeignKey, SchemaSummary
 from ariadne.mapping.schema import (
+    DatasetHeader,
     EntityMapping,
     Mapping,
     RelationshipMapping,
     dump_mapping_toml,
+    load_dataset_header,
     load_mapping_toml,
     validate_mapping,
 )
@@ -92,3 +94,26 @@ def test_validate_flags_a_relationship_endpoint_table_not_mapped() -> None:
 def test_mapping_round_trips_through_toml() -> None:
     m = _valid()
     assert load_mapping_toml(dump_mapping_toml(m)) == m
+
+
+# ── [dataset] header: makes a frozen mapping.toml apply-able as a dataset (ADR-0025) ──
+
+
+def test_dataset_header_defaults_dsn_env_and_schema() -> None:
+    h = DatasetHeader(name="acme")
+    assert h.dsn_env == "ARIADNE_SOURCE_DSN"
+    assert h.schema == "public"
+
+
+def test_dump_with_header_emits_a_dataset_table() -> None:
+    text = dump_mapping_toml(
+        _valid(), header=DatasetHeader("acme", dsn_env="ACME_DSN", schema="hr")
+    )
+    assert load_dataset_header(text) == DatasetHeader("acme", dsn_env="ACME_DSN", schema="hr")
+    # the structural body still round-trips alongside the header
+    assert load_mapping_toml(text) == _valid()
+
+
+def test_load_dataset_header_is_none_without_a_header() -> None:
+    # a header-less draft (the existing dump) is still valid; only registration needs the header
+    assert load_dataset_header(dump_mapping_toml(_valid())) is None

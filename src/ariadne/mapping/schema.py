@@ -48,6 +48,20 @@ class Mapping:
     relationships: tuple[RelationshipMapping, ...] = field(default_factory=tuple)
 
 
+@dataclass(frozen=True)
+class DatasetHeader:
+    """The ``[dataset]`` header that makes a frozen ``mapping.toml`` apply-able (ADR-0025).
+
+    ``name`` is the dataset slug (``--dataset name``); ``dsn_env`` names the env var
+    holding the read-only source connection string (kept off argv); ``schema`` is the
+    Postgres schema the rows live in.
+    """
+
+    name: str
+    dsn_env: str = "ARIADNE_SOURCE_DSN"
+    schema: str = "public"
+
+
 def validate_mapping(mapping: Mapping, summary: SchemaSummary) -> list[str]:
     """Return structural errors (empty list = valid + loadable).
 
@@ -85,9 +99,17 @@ def validate_mapping(mapping: Mapping, summary: SchemaSummary) -> list[str]:
     return errors
 
 
-def dump_mapping_toml(mapping: Mapping) -> str:
-    """Serialize a mapping to human-editable TOML (the draft a human ratifies)."""
-    doc = {
+def dump_mapping_toml(mapping: Mapping, header: DatasetHeader | None = None) -> str:
+    """Serialize a mapping to human-editable TOML (the draft a human ratifies).
+
+    With a ``header``, prepends a ``[dataset]`` table so the draft is apply-able as a
+    registered dataset once ratified (ADR-0025); without one, the structural-only
+    form the validator/adapter already round-trip.
+    """
+    doc: dict = {}
+    if header is not None:
+        doc["dataset"] = {"name": header.name, "dsn_env": header.dsn_env, "schema": header.schema}
+    doc |= {
         "entities": [
             {
                 "table": e.table,
@@ -136,3 +158,15 @@ def load_mapping_toml(text: str) -> Mapping:
         for r in doc.get("relationships", [])
     )
     return Mapping(entities=entities, relationships=relationships)
+
+
+def load_dataset_header(text: str) -> DatasetHeader | None:
+    """Parse the optional ``[dataset]`` header, or ``None`` when the file has none."""
+    d = tomllib.loads(text).get("dataset")
+    if d is None:
+        return None
+    return DatasetHeader(
+        name=d["name"],
+        dsn_env=d.get("dsn_env", "ARIADNE_SOURCE_DSN"),
+        schema=d.get("schema", "public"),
+    )

@@ -552,9 +552,15 @@ items must not be hardened against one answer.
 > verifiable rewards (arXiv 2512.23760); Voyager/ProcMEM skill+procedural memory.`
 
 *Axis A — adaptivity:*
-- [ ] **A1 · Schema introspection** — a read-only generic connector introspects an
-      arbitrary store; the agent does iterative schema-linking (retrieve only the
-      relevant tables/columns, self-correcting query loop). `# research(2026-06):
+- [x] **A1 · Schema introspection → apply — shipped 2026-06-05/06-07.** Read-only
+      `information_schema` introspection → a (deterministic, injectable) mapper
+      proposes a `mapping.toml` → structural validation → **apply**: a ratified
+      mapping under `ARIADNE_MAPPINGS` self-registers as a dataset and the *existing*
+      indexer/workup/eval run unchanged on the user's Postgres
+      ([ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md),
+      [ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md)).
+      *Remaining:* the agentic **iterative schema-linking** mapper (LLM-backed, behind
+      the `SchemaMapper` seam, self-correcting query loop). `# research(2026-06):
       AutoLink agentic schema linking (arXiv 2511.17190).`
 - [ ] **A2 · Ontology / semantic layer** — a declarative TOML of the user's entity
       types + relationship vocabulary + an LLM-assisted mapping into it, using
@@ -565,19 +571,25 @@ items must not be hardened against one answer.
       dynamic-fastmcp / Spring AI / Docker Dynamic MCP.`
 
 *Axis B — self-improvement (bounded, audited):*
-- [ ] **B1 · Learned mappings (procedural memory)** — a ratified mapping is persisted
-      and reused on the next workup over that store (seeded by A1+A2).
+- [x] **B1 seed · Learned mappings (procedural memory) — shipped 2026-06-07.** A
+      ratified mapping persists as a `mapping.toml` under `ARIADNE_MAPPINGS` and is
+      re-discovered (reused) on the next workup over that store, with the source DSN
+      read lazily from env (off argv). *Remaining:* agent-driven refinement of a
+      persisted mapping from experience (needs B3).
 - [ ] **B2 · Learned analytic skills** — distil high-scoring workup trajectories into
       named, reusable, composable skills. `# research(2026-06): Voyager / ProcMEM.`
 - [ ] **B3 · Reflexion over eval** — the agent reflects on its own low-scoring eval
       dimensions (the harness is the verifiable reward; now surfaced in the report)
       and proposes a refined skill/mapping/query.
 
-> **First slice (next increment):** A1 + A2-into-the-existing-canonical-schema + the
-> B1 seed, on **Postgres** — introspect a real Postgres, agent proposes a mapping
-> into `person/org/site/document` + edges, human ratifies, freeze as `mapping.toml`,
-> existing indexer/workup/eval run unchanged on the user's data. Full ontology (A2),
-> dynamic MCP (A3), learned skills (B2), reflexion (B3) are later phases.
+> **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
+> **Postgres**): introspect a real Postgres → propose a mapping into the canonical
+> schema → human ratifies → freeze as `mapping.toml` → it self-registers under
+> `ARIADNE_MAPPINGS` and the existing indexer/workup/eval run unchanged on the user's
+> data ([ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md);
+> deterministic testcontainers proof: source PG → mapping → indexer → traversable
+> Neo4j edge). **Next:** the agentic LLM mapper (the rest of A1), then the full user
+> ontology (A2), dynamic MCP (A3), learned skills (B2), reflexion (B3).
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
