@@ -356,6 +356,14 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .elabelg{transition:opacity .15s}
 .elabelg:not(.show){opacity:0;pointer-events:none}
 .leg-rel{font-family:var(--mono);color:var(--thread);letter-spacing:.05em;font-size:10.5px}
+#netgraph{cursor:grab}
+.node.match circle{stroke-width:2.8}
+.node.match .nlabel{opacity:1}
+.gsearch{background:var(--panel);border:1px solid var(--line);color:var(--ink);font:inherit;
+  font-size:12px;padding:3px 10px;border-radius:6px;width:118px;outline:none;
+  transition:border-color .15s,width .2s}
+.gsearch::placeholder{color:var(--muted)}
+.gsearch:focus{border-color:var(--thread);width:158px}
 
 /* Evidence drawer */
 .drawer{position:fixed;right:0;top:0;bottom:0;width:min(460px,92vw);z-index:40;
@@ -468,6 +476,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
     <section class="card reveal" id="graph-card" style="animation-delay:.18s">
       <h2>Graph
         <span class="gtabs" id="gtabs">
+          <input id="net-search" class="gsearch" type="search" placeholder="Find a node…"
+            aria-label="Search the entity network" autocomplete="off" spellcheck="false">
           <button class="gtab" data-view="net">Entity network</button>
           <button class="gtab" data-view="prov">Provenance</button>
           <button class="fsbtn" id="fs-btn" title="Fullscreen (Esc to exit)" aria-label="Toggle fullscreen graph">&#9974;</button>
@@ -670,7 +680,7 @@ function renderNet(W,H){
   const sg=DATA.subgraph;
   if(!sg||!sg.nodes||!sg.nodes.length) return false;
   const gsvg=$("#netgraph"); gsvg.innerHTML="";
-  gsvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  gsvg.setAttribute("viewBox",`0 0 ${W} ${H}`); gsvg._baseVb=[0,0,W,H];
   const n=sg.nodes.length;
   const nodes=sg.nodes.map((d,i)=>{const a=i/n*2*Math.PI, R=Math.min(W,H)*0.33;
     return {...d,x:W/2+Math.cos(a)*R,y:H/2+Math.sin(a)*R};});
@@ -738,7 +748,7 @@ function renderNet(W,H){
   gsvg._clearFocus=clearFocus; gsvg._focus=applyFocus;  // reused by closeEntity + node search
 
   nodes.forEach(d=>{const g=mk("g",{class:"node"+((labelAll||d.target)?"":" lab-min"),
-      "data-node":d.id,transform:`translate(${d.x},${d.y})`});
+      "data-node":d.id,"data-name":String(d.name||"").toLowerCase(),transform:`translate(${d.x},${d.y})`});
     const r=d.target?15:6+Math.round(deg[d.id]/maxDeg*7);  // 6..13 by degree centrality
     if(d.target) g.appendChild(mk("circle",{r:r+5,fill:"none",stroke:"#e0a73c",
       "stroke-width":1.5,"stroke-dasharray":"3 3",opacity:.8}));
@@ -767,6 +777,7 @@ function showView(v){
   $("#netgraph").style.display=net?"block":"none";
   $("#graph").style.display=net?"none":"block";
   $("#legend").innerHTML=net?NET_LEGEND:PROV_LEGEND;
+  const sb=$("#net-search"); if(sb)sb.style.display=net?"":"none";  // search applies to the network only
   document.querySelectorAll(".gtab").forEach(b=>b.classList.toggle("on",b.dataset.view===(net?"net":"prov")));
 }
 document.querySelectorAll(".gtab").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
@@ -781,6 +792,38 @@ function setFs(on){gcard.classList.toggle("fs",on); gscrim.classList.toggle("ope
 fsb.addEventListener("click",()=>setFs(!gcard.classList.contains("fs")));
 gscrim.addEventListener("click",()=>setFs(false));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&gcard.classList.contains("fs"))setFs(false);});
+
+// ---- Node search: locate / highlight nodes by name, fade the rest (Linkurious-style) ----
+const netSearch=$("#net-search");
+if(netSearch) netSearch.addEventListener("input",()=>{
+  const ng=$("#netgraph"); if(!ng) return;
+  const q=netSearch.value.trim().toLowerCase(), nodes=[...ng.querySelectorAll(".node")];
+  if(!q){delete ng.dataset.pin; if(ng._clearFocus)ng._clearFocus();
+    nodes.forEach(o=>o.classList.remove("match")); return;}
+  ng.dataset.pin="search";  // suppress hover-trace while a query is active
+  let hitId=null,nHit=0;
+  nodes.forEach(o=>{const hit=(o.dataset.name||"").includes(q);
+    o.classList.toggle("match",hit); o.classList.toggle("dim",!hit); o.classList.remove("nbr","foc");
+    if(hit){nHit++;hitId=o.dataset.node;}});
+  ng.querySelectorAll(".edge").forEach(p=>{p.classList.add("dim");p.classList.remove("hot");});
+  if(nHit===1&&ng._focus) ng._focus(hitId);  // exactly one hit -> reveal its trace
+});
+
+// ---- Zoom + pan the network (wheel zoom toward cursor · drag to pan · dbl-click reset) ----
+(function(){const ng=$("#netgraph"); if(!ng) return;
+  const vb=()=>ng.getAttribute("viewBox").split(" ").map(Number), setVb=a=>ng.setAttribute("viewBox",a.join(" "));
+  ng.addEventListener("wheel",e=>{e.preventDefault(); const[x,y,w,h]=vb(), base=ng._baseVb||[0,0,w,h];
+    const r=ng.getBoundingClientRect(), mx=x+(e.clientX-r.left)/r.width*w, my=y+(e.clientY-r.top)/r.height*h;
+    const nw=Math.min(base[2]*1.05,Math.max(base[2]*0.15,w*(e.deltaY<0?0.86:1.163))), nh=nw*h/w;
+    setVb([mx-(mx-x)*nw/w, my-(my-y)*nh/h, nw, nh]);},{passive:false});
+  let drag=null;
+  ng.addEventListener("pointerdown",e=>{if(e.target.closest(".node"))return;
+    drag={x:e.clientX,y:e.clientY,v:vb()}; ng.style.cursor="grabbing";});
+  window.addEventListener("pointermove",e=>{if(!drag)return; const[x,y,w,h]=drag.v,r=ng.getBoundingClientRect();
+    setVb([x-(e.clientX-drag.x)/r.width*w, y-(e.clientY-drag.y)/r.height*h, w, h]);});
+  window.addEventListener("pointerup",()=>{if(drag){drag=null; ng.style.cursor="";}});
+  ng.addEventListener("dblclick",e=>{if(!e.target.closest(".node")&&ng._baseVb)setVb(ng._baseVb);});
+})();
 
 // ---- Evidence drawer (details-on-demand) ----
 function selectEvidence(id, chip){
