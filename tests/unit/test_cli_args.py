@@ -70,6 +70,7 @@ def test_main_does_not_override_exported_env(monkeypatch, tmp_path) -> None:
         return 0  # don't launch the real agent
 
     monkeypatch.setattr(cli, "run_workup", _stub_run_workup)
+    monkeypatch.setattr(cli, "workup_preflight", lambda *_a, **_k: None)  # stores assumed up
     # load_dotenv(override=False) must not clobber the already-exported key.
     assert main(["workup", "Alpha"]) == 0
     assert os.environ["ANTHROPIC_API_KEY"] == "from-shell"
@@ -114,5 +115,6 @@ def test_main_passes_strict_flag_to_run_workup(monkeypatch, tmp_path) -> None:
         return 0
 
     monkeypatch.setattr(cli, "run_workup", _stub_run_workup)
+    monkeypatch.setattr(cli, "workup_preflight", lambda *_a, **_k: None)  # stores assumed up
     assert main(["workup", "Alpha", "--strict"]) == 0
     assert captured.get("strict") is True

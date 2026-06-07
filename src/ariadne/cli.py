@@ -43,6 +43,7 @@ from ariadne.observability import (
     setup_telemetry,
     workup_span,
 )
+from ariadne.preflight import workup_preflight
 from ariadne.provenance.citations import citation_coverage, validate_citations
 from ariadne.provenance.governance import audit_read_only
 from ariadne.provenance.hook import make_provenance_hook
@@ -1097,6 +1098,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.command == "rubric":
         return _run_rubric(args.workup_dir, args.min)
+    # Fast-fail before the paid agent loop if a store the run needs isn't up (the #1
+    # first-run stumble): print how to start it, exit cleanly, spend nothing.
+    unreachable = workup_preflight(dict(os.environ), with_sql=args.sql, with_semantic=args.semantic)
+    if unreachable:
+        print(unreachable, file=sys.stderr)
+        return 2
     return asyncio.run(
         run_workup(
             args.entity,
