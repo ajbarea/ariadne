@@ -195,6 +195,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+adaptive = [
+    { name = "anthropic" },
+]
 data = [
     { name = "datasets" },
 ]
@@ -232,6 +235,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "anthropic", marker = "extra == 'adaptive'", specifier = ">=0.40" },
     { name = "anthropic", marker = "extra == 'rubric'", specifier = ">=0.40" },
     { name = "claude-agent-sdk", specifier = ">=0.1" },
     { name = "datasets", marker = "extra == 'data'", specifier = ">=3" },
@@ -249,7 +253,7 @@ requires-dist = [
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'eval'", specifier = ">=2.2" },
     { name = "transformers", marker = "extra == 'eval'", specifier = ">=4.45,<5" },
 ]
-provides-extras = ["data", "otel", "embed", "eval", "rubric"]
+provides-extras = ["data", "otel", "embed", "eval", "rubric", "adaptive"]
 
 [package.metadata.requires-dev]
 dev = [

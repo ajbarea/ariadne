@@ -220,6 +220,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     mp.add_argument(
         "--out", default="mapping.toml", help="Draft mapping path (default: mapping.toml)"
     )
+    mp.add_argument(
+        "--llm",
+        action="store_true",
+        help="Propose with the Claude schema mapper instead of the deterministic baseline "
+        "(needs the 'adaptive' extra + ANTHROPIC_API_KEY).",
+    )
     return parser.parse_args(argv)
 
 
@@ -239,13 +245,16 @@ def _run_map(
     *,
     dsn: str | None = None,
     dsn_env: str = "ARIADNE_SOURCE_DSN",
+    llm: bool = False,
 ) -> int:
-    """Introspect a Postgres store and write a draft ``mapping.toml`` (no API key).
+    """Introspect a Postgres store and write a draft ``mapping.toml``.
 
     The read-only *propose* step of propose -> ratify -> freeze. The source DSN is
-    read from ``$dsn_env`` (kept off argv); ``--dsn`` overrides. The draft carries a
-    ``[dataset]`` header so, once ratified under ``$ARIADNE_MAPPINGS``, it applies via
-    ``ariadne index --dataset <name>`` (ADR-0025).
+    read from ``$dsn_env`` (kept off argv); ``--dsn`` overrides. ``--llm`` proposes
+    with the Claude schema mapper (ADR-0026) instead of the deterministic baseline;
+    otherwise no API key is needed. The draft carries a ``[dataset]`` header so, once
+    ratified under ``$ARIADNE_MAPPINGS``, it applies via ``ariadne index --dataset
+    <name>`` (ADR-0025).
     """
     import psycopg
 
@@ -253,10 +262,23 @@ def _run_map(
     from ariadne.mapping.propose import propose_and_write
     from ariadne.mapping.schema import DatasetHeader
 
+    mapper = None
+    if llm:
+        # Key-guard before any source connection or anthropic import (mirrors the
+        # workup key-guard): a missing key exits cleanly, nothing is written.
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print(
+                "ANTHROPIC_API_KEY is not set — export it to use --llm (the Claude mapper).",
+                file=sys.stderr,
+            )
+            return 2
+        from ariadne.mapping.llm_mapper import ClaudeSchemaMapper
+
+        mapper = ClaudeSchemaMapper()
     dsn = dsn or resolve_source_dsn(dict(os.environ), dsn_env)
     header = DatasetHeader(name=name, dsn_env=dsn_env, schema=schema)
     with psycopg.connect(dsn) as conn:
-        mapping, errors = propose_and_write(conn, out, schema=schema, header=header)
+        mapping, errors = propose_and_write(conn, out, schema=schema, mapper=mapper, header=header)
     print(
         f"Proposed mapping -> {out}: {len(mapping.entities)} entit(ies), "
         f"{len(mapping.relationships)} relationship(s) from schema {schema!r} as dataset {name!r}."
@@ -769,7 +791,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "report":
         return _run_report(args.workup_dir)
     if args.command == "map":
-        return _run_map(args.name, args.out, args.schema, dsn=args.dsn, dsn_env=args.dsn_env)
+        return _run_map(
+            args.name, args.out, args.schema, dsn=args.dsn, dsn_env=args.dsn_env, llm=args.llm
+        )
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

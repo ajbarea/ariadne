@@ -8,19 +8,32 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Adaptive Ariadne — the agentic LLM mapper (the rest of A1).** The first Postgres
-slice (introspect → propose → validate → freeze → **apply**) shipped this session
-(see *Recently shipped*; [ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md)).
-What remains of A1 is the **agentic iterative schema-linking** mapper: a real
-Claude-backed `SchemaMapper` behind the existing Protocol seam (mirrors the injected
-rubric judge), proposing entity-type + intrinsic-vs-relational column routing instead
-of the deterministic `BaselineMapper`, with a self-correcting retrieve-only-relevant-
-tables loop — gated behind an extra + a `network`/`integration` test. `# research(2026-06):
-AutoLink agentic schema linking (arXiv 2511.17190); web-search current practice
-before building.` Then A2 (full user ontology), A3 (dynamic MCP), B2 (learned
-skills), B3 (reflexion). Docker is up; stores seeded.
+**Adaptive Ariadne — A2: the declarative user ontology.** A1 is complete (introspect
+→ propose [deterministic *and* LLM] → validate → freeze → apply; see *Recently
+shipped*). A2 is the next thread: today the mapper maps into the **open-string**
+canonical types (`person`/`org`/…); A2 lets a user declare *their own* entity-type +
+relationship vocabulary as a lightweight TOML ontology and has the mapper map into
+*that* (intrinsic-vs-relational routing), SHACL-validatable later. Builds directly on
+the `SchemaMapper` seam + the `[dataset]` header. `# research(2026-06): OntoKG
+(arXiv 2604.02618) + Anchor (arXiv 2606.01208); web-search current practice before
+building.` Then A3 (dynamic MCP), B2 (learned skills), B3 (reflexion over the eval
+harness). Docker is up; stores seeded; `adaptive` extra (anthropic) synced.
 
 ---
+
+**Agentic LLM schema mapper — A1 complete, shipped 2026-06-07** ([ADR-0026](./docs/architecture/decisions/0026-llm-schema-mapper.md)).
+The agentic half of A1: `ariadne map --llm` proposes the `mapping.toml` with a real
+Claude model (`mapping/llm_mapper.ClaudeSchemaMapper`) instead of the deterministic
+`BaselineMapper`. Structured output via **forced tool-use** (`propose_mapping`, mirrors
+`judge.py`) inside a **bounded validator-terminated retry loop** (`propose_with_repair`,
+mirrors `repair.py` — re-prompts with `validate_mapping`'s complaints; the gate, not the
+model, stops it). Injected `call_llm` seam → hermetic loop tests; real `anthropic` behind
+the new `adaptive` extra; key-guarded CLI; live test gated like the rubric judge. Live
+drive on the `intel` DB beat the baseline: dropped the `entity_attributes` key-value
+side-table, dropped `content_tsv`/`embedding` junk columns, picked `text` over `id` for
+the document name, typed `personnel`→`person`. Full AutoLink schema-*exploration*
+deferred (large schemas only). TDD; 364 unit + 1 live green. `# research(2026-06):
+structured output = schema + validator + repair loop; AutoLink arXiv:2511.17190 deferred.`
 
 **Apply a ratified mapping — first adaptive Postgres slice closed, shipped 2026-06-07** ([ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md)).
 ADR-0020's "apply" step was the gap: the adapter existed but nothing wired a frozen

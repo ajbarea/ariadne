@@ -559,9 +559,12 @@ items must not be hardened against one answer.
       indexer/workup/eval run unchanged on the user's Postgres
       ([ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md),
       [ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md)).
-      *Remaining:* the agentic **iterative schema-linking** mapper (LLM-backed, behind
-      the `SchemaMapper` seam, self-correcting query loop). `# research(2026-06):
-      AutoLink agentic schema linking (arXiv 2511.17190).`
+      The **agentic LLM mapper** also shipped (2026-06-07,
+      [ADR-0026](./docs/architecture/decisions/0026-llm-schema-mapper.md)): `ariadne map
+      --llm` proposes via forced tool-use inside a bounded validator-terminated retry
+      loop (vs the deterministic baseline). *Remaining (deferred, large schemas only):*
+      AutoLink-style schema *exploration* without seeing the full schema. `# research(2026-06):
+      AutoLink agentic schema linking (arXiv 2511.17190) — the large-schema path.`
 - [ ] **A2 · Ontology / semantic layer** — a declarative TOML of the user's entity
       types + relationship vocabulary + an LLM-assisted mapping into it, using
       intrinsic-vs-relational routing (attribute vs edge). SHACL-validatable later.
@@ -588,8 +591,11 @@ items must not be hardened against one answer.
 > `ARIADNE_MAPPINGS` and the existing indexer/workup/eval run unchanged on the user's
 > data ([ADR-0025](./docs/architecture/decisions/0025-applying-a-ratified-mapping.md);
 > deterministic testcontainers proof: source PG → mapping → indexer → traversable
-> Neo4j edge). **Next:** the agentic LLM mapper (the rest of A1), then the full user
-> ontology (A2), dynamic MCP (A3), learned skills (B2), reflexion (B3).
+> Neo4j edge) — and the agentic LLM mapper that proposes those drafts
+> ([ADR-0026](./docs/architecture/decisions/0026-llm-schema-mapper.md)). **A1 is now
+> complete.** **Next:** the full user ontology (A2 — map into a user-declared entity/
+> relationship vocabulary, not just the open-string canonical types), then dynamic MCP
+> (A3), learned skills (B2), reflexion over the eval harness (B3).
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
