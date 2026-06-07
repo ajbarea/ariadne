@@ -21,19 +21,38 @@ human-ratified and the eval gate it can never edit as the external verifiable re
 The **net-effect ratification comparator** (`ariadne compare`, [ADR-0031](./docs/architecture/decisions/0031-net-effect-ratification-comparator.md))
 gives that ratify step a *measured* verdict — see *Recently shipped*.
 
+Skills also **deepen from experience** now — `distil --into <skill>` (ADR-0032) revises an
+existing skill from a new certified run, ratified by `compare`; see *Recently shipped*.
+
 **Next candidates (all YAGNI until a consumer needs them):** the live wrapper that *produces*
 the paired runs for `compare` (orchestrate a workup with vs without the artifact) + an auto-ratify
 gate on its verdict; B2's multi-trajectory hierarchical consolidation (Trace2Skill across many
-runs), skill *composition* (`composes_with`), deepening an existing skill; B1's agent-driven
-refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis (the SkillTTA
-ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
-`validate_against_ontology`, an `ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges.
-Re-survey ROADMAP and overrule if something higher-value surfaces.
+runs), skill *composition* (`composes_with`); B1's agent-driven refinement of a persisted mapping
+(now unblocked by B3); test-time skill synthesis (the SkillTTA ephemeral track); A3 richer
+per-dataset tool families; A2's SHACL transpile of `validate_against_ontology`, an
+`ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges. Re-survey ROADMAP and overrule if
+something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
+
+**Deepen a skill from new experience — `distil --into`, shipped 2026-06-07** ([ADR-0032](./docs/architecture/decisions/0032-deepening-a-skill-from-new-experience.md)).
+Skills now improve across uses, not just get created once: `ariadne distil <run> --into <skill-dir>`
+does a **trace-conditioned, bounded, conflict-aware revision** of an existing skill from a new
+certified run (Trace2Skill's deepen mode / SkillRevise), integrating the *generalizable* lesson
+without hard-coding the run's specifics (the documented overfitting failure mode). **LLM-only** (a
+deterministic deepen could only append-and-bloat — the honest line); requires `--llm` + the
+certified-source gate (B2). Keeps the existing skill's identity; the revision is a *proposal* written
+to `skills-proposed/` (never overwrites the original) — **ratify by measuring it: `ariadne compare`
+the revised skill vs the original and adopt only on a net gain** (ADR-0031's held-out edit gate, the
+SkillOpt loop, human-in-loop). Live-smoked: deepened the real `entity-workup` from the `halberd` run
+— structure + 4-phase loop + citation discipline preserved, **0 hard-coded entity leaks**, 693→978
+words (integrated, not rewritten/bloated). Refactored shared `_trajectory_moves` + the
+incomplete-proposal guard out of create-mode (DRY). TDD; 462 unit green. `# research(2026-06):
+Trace2Skill deepen + overfitting failure mode (arXiv 2603.25158); SkillOpt bounded edits + held-out
+gate (arXiv 2605.23904); SkillRevise trace-conditioned revision (arXiv 2606.01139).`
 
 **Net-effect ratification comparator — shipped 2026-06-07** ([ADR-0031](./docs/architecture/decisions/0031-net-effect-ratification-comparator.md)).
 `ariadne compare --baseline RUN… --candidate RUN…` gives the ratify step a *measured* verdict:

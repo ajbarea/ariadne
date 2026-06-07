@@ -253,6 +253,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Generalize the trajectory into a transferable skill with the Claude distiller "
         "(needs the 'adaptive' extra + ANTHROPIC_API_KEY); else a deterministic record.",
     )
+    ds.add_argument(
+        "--into",
+        default=None,
+        metavar="SKILL_DIR",
+        help="Deepen this existing skill from the run instead of creating one (LLM-only, "
+        "ADR-0032); ratify after `ariadne compare` shows a net gain.",
+    )
 
     rf = sub.add_parser(
         "reflect",
@@ -368,23 +375,39 @@ def _run_map(
 
 
 def _run_distil(
-    run_dir: str, *, name: str | None = None, out: str = "skills-proposed", llm: bool = False
+    run_dir: str,
+    *,
+    name: str | None = None,
+    out: str = "skills-proposed",
+    llm: bool = False,
+    into: str | None = None,
 ) -> int:
-    """Distil an eval-certified workup into a draft analytic skill (B2, ADR-0029).
+    """Distil an eval-certified workup into a draft analytic skill (B2, ADR-0029/0032).
 
     The *propose* step of propose -> ratify -> freeze: only a run the eval harness scored
     ``grounded`` is a skill source (the external verifiable reward — the gate the loop may
     never edit). ``--llm`` generalizes the trajectory into transferable prose (the Trace2Skill
-    move) behind a key-guard + the ``adaptive`` extra; otherwise a deterministic record. The
-    draft lands under ``out/<name>/`` for a human to review and move into ``.claude/skills/``.
+    move) behind a key-guard + the ``adaptive`` extra; otherwise a deterministic record.
+    ``--into <skill-dir>`` *deepens* that existing skill from this run instead of creating one
+    (LLM-only, ADR-0032). The draft lands under ``out/<name>/`` for review; ratify after
+    ``ariadne compare`` shows a net gain.
     """
     from ariadne.learning.distil import (
         NotCertified,
+        distil_deepen,
         distil_deterministic,
         distil_with_llm,
         write_skill,
     )
     from ariadne.learning.runs import load_run
+
+    if into and not llm:
+        print(
+            "deepening (--into) requires --llm; the deterministic distiller can only create, "
+            "not integrate (ADR-0032).",
+            file=sys.stderr,
+        )
+        return 2
 
     distiller = None
     if llm:
@@ -400,9 +423,25 @@ def _run_distil(
 
         distiller = ClaudeSkillDistiller()
 
+    existing_skill_md = None
+    if into:
+        skill_md = Path(into) / "SKILL.md"
+        if not skill_md.is_file():
+            print(f"No SKILL.md under {into} to deepen.", file=sys.stderr)
+            return 2
+        existing_skill_md = skill_md.read_text(encoding="utf-8")
+
     run = load_run(run_dir)
     try:
-        if distiller is not None:
+        if existing_skill_md is not None and distiller is not None:
+            skill = distil_deepen(
+                run,
+                existing_skill_md=existing_skill_md,
+                call_llm=distiller.call_llm,
+                name=name,
+                model=distiller.model,
+            )
+        elif distiller is not None:
             skill = distil_with_llm(
                 run, call_llm=distiller.call_llm, name=name, model=distiller.model
             )
@@ -418,10 +457,16 @@ def _run_distil(
         f"Proposed skill -> {out_dir}/ "
         f"({skill.card.granularity}, prerequisites: {prereqs}, distilled_by {skill.card.distilled_by})."
     )
-    print(
-        f"Review/edit {out_dir}/SKILL.md, then ratify by moving it: "
-        f"mv {out_dir} .claude/skills/{skill.card.name}"
-    )
+    if into:
+        print(
+            f"Deepened `{skill.card.name}`. Ratify by measuring it: run a workup with the revised "
+            f"skill vs the original, then `ariadne compare` — adopt only on a net gain (ADR-0031)."
+        )
+    else:
+        print(
+            f"Review/edit {out_dir}/SKILL.md, then ratify by moving it: "
+            f"mv {out_dir} .claude/skills/{skill.card.name}"
+        )
     return 0
 
 
@@ -1010,7 +1055,7 @@ def main(argv: list[str] | None = None) -> int:
             ontology=args.ontology,
         )
     if args.command == "distil":
-        return _run_distil(args.run_dir, name=args.name, out=args.out, llm=args.llm)
+        return _run_distil(args.run_dir, name=args.name, out=args.out, llm=args.llm, into=args.into)
     if args.command == "reflect":
         return _run_reflect(args.run_dir, out=args.out, llm=args.llm)
     if args.command == "compare":

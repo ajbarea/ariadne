@@ -602,9 +602,10 @@ items must not be hardened against one answer.
       The keystone gate: distil **only** from a run the eval harness certified `grounded`
       (the external verifiable reward — the gate the loop may never edit). Deterministic
       records the trajectory into phase groups; `--llm` runs the Trace2Skill generalization
-      via forced tool-use. *Remaining (deferred): multi-trajectory consolidation, skill
-      composition (`composes_with`), deepening an existing skill, the automated net-effect
-      ratification check, and the SkillTTA ephemeral test-time track.* `# research(2026-06):
+      via forced tool-use. **`distil --into <skill>` also *deepens* an existing skill from a new
+      certified run** — a bounded trace-conditioned revision, ratified by `compare` (ADR-0032,
+      below). *Remaining (deferred): multi-trajectory consolidation, skill composition
+      (`composes_with`), and the SkillTTA ephemeral test-time track.* `# research(2026-06):
       Trace2Skill (arXiv 2603.25158); SkillGen verifier-gate (arXiv 2605.10999); structured
       store not a flat cache (SoK Agentic Skills arXiv 2602.20867); SkillTTA (arXiv 2605.16986)
       the rejected ephemeral alternative.`
@@ -636,6 +637,16 @@ items must not be hardened against one answer.
       negative-transfer-25% (SkillLens/SkillOpt arXiv 2605.23904); net-effect = repairs−regressions
       (arXiv 2511.11012); paired same-instance variance reduction (arXiv 2512.06710); disclose the
       harness (arXiv 2605.23950).`
+- [x] **Deepen a skill from new experience — `distil --into`, shipped 2026-06-07.** Skills improve
+      across uses: `distil <run> --into <skill>` does a bounded, conflict-aware, trace-conditioned
+      revision of an existing skill from a new certified run (Trace2Skill deepen / SkillRevise),
+      integrating the *generalizable* lesson without overfitting; **LLM-only**, proposes (never
+      overwrites), **ratified by `compare`** (SkillOpt's held-out edit gate)
+      ([ADR-0032](./docs/architecture/decisions/0032-deepening-a-skill-from-new-experience.md)).
+      Live-smoked on the real `entity-workup` skill — structure/discipline preserved, 0 entity
+      leaks. *Remaining (deferred): multi-run batch consolidation; a rejected-edit buffer.*
+      `# research(2026-06): SkillOpt bounded edits + held-out gate (arXiv 2605.23904); SkillRevise
+      trace-conditioned revision (arXiv 2606.01139).`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical

@@ -235,21 +235,37 @@ def _truncate_note(note: str, limit: int) -> str:
     return note if len(note) <= limit else note[:limit] + "\n...[truncated]"
 
 
-def build_distil_prompt(run: RunArtifacts, prereqs: tuple[str, ...]) -> str:
-    """The prompt that grounds the model in the real trajectory + the certifying score."""
+def _trajectory_moves(run: RunArtifacts) -> str:
+    """The ordered tool calls as numbered, phase-tagged lines (shared by create + deepen)."""
     moves = []
     for i, (phase, entries) in enumerate(move_sequence(run.provenance), 1):
         for entry in entries:
             query = query_text(entry)
             suffix = f": {truncate(query, 160)}" if query else ""
             moves.append(f"{i}. [{phase}] {entry.get('tool', '')}{suffix}")
+    return "\n".join(moves)
+
+
+def _require_proposal(proposal: dict[str, Any], required: tuple[str, ...]) -> None:
+    """A forced tool-call can come back truncated (max_tokens) with the large `body` missing;
+    fail with a clear, actionable error rather than a raw KeyError (caught live in B2)."""
+    missing = [k for k in required if not proposal.get(k)]
+    if missing:
+        raise RuntimeError(
+            f"the model returned an incomplete propose_skill call (missing/empty: "
+            f"{', '.join(missing)}); the response was likely truncated — raise max_tokens or retry."
+        )
+
+
+def build_distil_prompt(run: RunArtifacts, prereqs: tuple[str, ...]) -> str:
+    """The prompt that grounds the model in the real trajectory + the certifying score."""
     rel = _score_prose(_reliability(run.eval_scores))
     return (
         "Generalize this single high-scoring intelligence-analysis workup trajectory into a "
         "transferable, reusable analytic skill. An external eval certified it (the verifiable "
         f"reward): {rel}.\n\n"
         f"Capabilities used: {', '.join(prereqs)}.\n\n"
-        f"## Trajectory (ordered tool calls)\n" + "\n".join(moves) + "\n\n"
+        f"## Trajectory (ordered tool calls)\n{_trajectory_moves(run)}\n\n"
         f"## Analytic note it produced\n{_truncate_note(run.note, 2000)}\n\n"
         "Write the skill as a procedure an analyst-agent could follow on a *different* entity "
         "and store: the applicability conditions, the gather -> act -> verify -> synthesize "
@@ -276,15 +292,9 @@ def distil_with_llm(
     prereqs = prerequisites(run)
     source = _source(run)
     proposal = call_llm(build_distil_prompt(run, prereqs))
-    # A forced tool-call can come back truncated (max_tokens) with the large `body` field
-    # missing; fail with a clear, actionable error rather than a raw KeyError (caught live).
-    required = ("description", "body") if name else ("name", "description", "body")
-    missing = [k for k in required if not proposal.get(k)]
-    if missing:
-        raise RuntimeError(
-            f"distiller returned an incomplete propose_skill call (missing/empty: "
-            f"{', '.join(missing)}); the response was likely truncated — raise max_tokens or retry."
-        )
+    _require_proposal(
+        proposal, ("description", "body") if name else ("name", "description", "body")
+    )
     card = SkillCard(
         name=name or proposal["name"],
         description=proposal["description"],
@@ -293,6 +303,74 @@ def distil_with_llm(
         reliability=_reliability(run.eval_scores),
         source=source,
         distilled_by=f"llm:{model}",
+    )
+    return DistilledSkill(card=card, skill_md=_render_skill_md(card, proposal["body"]))
+
+
+# --- deepen: revise an existing skill from a new certified run (ADR-0032) ----------
+
+
+def parse_skill_md(text: str) -> tuple[str, str, str]:
+    """Parse a ``SKILL.md`` into ``(name, description, body)``; tolerates no frontmatter."""
+    if not text.startswith("---\n"):
+        return "", "", text.strip()
+    _, frontmatter, body = text.split("---\n", 2)
+    name = description = ""
+    for line in frontmatter.splitlines():
+        if line.startswith("name:"):
+            name = line.split(":", 1)[1].strip()
+        elif line.startswith("description:"):
+            description = line.split(":", 1)[1].strip().strip('"')
+    return name, description, body.strip()
+
+
+def build_deepen_prompt(
+    run: RunArtifacts, existing_name: str, existing_body: str, prereqs: tuple[str, ...]
+) -> str:
+    """Ground the model in the existing skill + the new certified run, for a bounded revision."""
+    rel = _score_prose(_reliability(run.eval_scores))
+    return (
+        "Deepen the existing analytic skill below by integrating the generalizable lesson from a "
+        f"new, eval-certified workup (the verifiable reward: {rel}). Make a **bounded, "
+        "conflict-aware revision**: preserve the existing skill's structure and strengths, fold in "
+        "only what the new run teaches, do NOT hard-code this run's specific entities, and do not "
+        f"bloat it. Capabilities the new run used: {', '.join(prereqs)}.\n\n"
+        f"## Existing skill: {existing_name}\n{existing_body}\n\n"
+        f"## New certified trajectory (ordered tool calls)\n{_trajectory_moves(run)}\n\n"
+        f"## The note it produced\n{_truncate_note(run.note, 1500)}\n\n"
+        "Submit the revised skill with the propose_skill tool — keep the same intent/identity, "
+        "improve the procedure."
+    )
+
+
+def distil_deepen(
+    run: RunArtifacts,
+    *,
+    existing_skill_md: str,
+    call_llm: Callable[[str], dict[str, Any]],
+    name: str | None = None,
+    model: str = DEFAULT_MODEL,
+) -> DistilledSkill:
+    """Revise an existing skill by integrating a new certified run's lesson (trace-conditioned).
+
+    LLM-only (a deterministic deepen could only append-and-bloat). Keeps the existing skill's
+    identity (``name``) unless overridden; structured metadata reflects the deepening run. The
+    revision is a *proposal* — ratify it after ``ariadne compare`` shows a net gain (ADR-0031).
+    """
+    certify(run)
+    prereqs = prerequisites(run)
+    source = _source(run)
+    existing_name, _existing_desc, existing_body = parse_skill_md(existing_skill_md)
+    proposal = call_llm(build_deepen_prompt(run, existing_name, existing_body, prereqs))
+    _require_proposal(proposal, ("description", "body"))
+    card = SkillCard(
+        name=name or existing_name or proposal.get("name", "entity-workup"),
+        description=proposal["description"],
+        granularity=granularity(prereqs),
+        prerequisites=prereqs,
+        reliability=_reliability(run.eval_scores),
+        source=source,
+        distilled_by=f"llm:{model}:deepen",
     )
     return DistilledSkill(card=card, skill_md=_render_skill_md(card, proposal["body"]))
 
