@@ -353,6 +353,18 @@ items must not be hardened against one answer.
       claims grounded; report card headless-confirmed.
       [ADR-0023](./docs/architecture/decisions/0023-measuring-citation-coverage-gain.md).
       `# research(2026-06): Coverage axis + Δcoverage = P-Cite − G-Cite (arXiv:2509.21557 Fig.3); Δ vs unrepaired baseline (Doctor-RAG arXiv:2604.00865 §5.1); claim-level ALiiCE deferred.`
+- [x] **Trajectory eval grades observations, not just actions (2026-06-07):** the
+      planted-needle `trajectory` + per-edge supporting-fact scorer scanned only the
+      query text, so it **false-negatived** an agent that walked the bridge via untyped
+      `MATCH (n)-[r]- RETURN type(r)` Cypher (the rel types land in the *response*).
+      `evaluation/_text.traversal_text` now grades the **(action + data-retrieval
+      observation)** pair — a returned edge proves the hop was walked — while excluding
+      schema-introspection observations (`CALL db.relationshipTypes`, the postgres
+      catalog tools) so enumerating the catalog can't false-*positive* a guess. The
+      live Halberd run that surfaced it re-scores `trajectory 0→1`, `grounded
+      False→True`, `sf_f1 0→1.0` (recall/coverage unchanged).
+      [ADR-0024](./docs/architecture/decisions/0024-trajectory-grades-observations.md).
+      `# research(2026-06): agentic-RAG trajectory eval grades observations, grounding judged vs what was retrieved (AgenticRAGTracer arXiv:2602.19127; SoK Agentic RAG arXiv:2603.07379).`
 - [x] **LLM-rubric scoring of the analytic standards + `--entail` flag (2026-06-04):**
       `evaluation/rubric.py` scores a note against four ICD-203 standards the
       mechanical gates cannot see (alternatives / argumentation / relevance /

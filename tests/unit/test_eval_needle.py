@@ -94,6 +94,46 @@ def test_report_carries_citation_coverage_of_the_note() -> None:
     assert report.citation_coverage == 0.5  # one of two claims cited
 
 
+def test_trajectory_credits_traversal_seen_in_the_observation() -> None:
+    # ADR-0024: an untyped `-[r]- RETURN type(r)` query walks the bridge but names the
+    # rel types only in the RESPONSE. Trajectory must credit that, not call it a guess.
+    note = "Halberd's Signals-Cell is co-located with Compound-Alpha."  # surfaces the needle
+    entries = [
+        {
+            "tool": "mcp__neo4j__read_neo4j_cypher",
+            "tool_input": {"query": "MATCH (h:Person {name:'Halberd'})-[r]-(o) RETURN type(r)"},
+            "response_excerpt": '[{"rel":"MEMBER_OF","oname":"Signals-Cell"}]',
+        },
+        {
+            "tool": "mcp__neo4j__read_neo4j_cypher",
+            "tool_input": {"query": "MATCH (u:Unit {name:'Signals-Cell'})-[r]-(o) RETURN type(r)"},
+            "response_excerpt": '[{"rel":"CO_LOCATED","oname":"Compound-Alpha"}]',
+        },
+    ]
+    report = score_workup(note, entries, HALBERD_FIXTURE)
+    assert report.trajectory == 1.0
+    assert report.grounded is True
+
+
+def test_schema_introspection_alone_is_not_traversal() -> None:
+    # `CALL db.relationshipTypes()` lists every rel type — catalog enumeration, not
+    # walking Halberd's path. It must NOT credit trajectory (a guess stays a guess).
+    note = "Halberd's Signals-Cell is co-located with Compound-Alpha."  # surfaced, not walked
+    entries = [
+        {
+            "tool": "mcp__neo4j__read_neo4j_cypher",
+            "tool_input": {
+                "query": "CALL db.relationshipTypes() YIELD relationshipType "
+                "RETURN collect(relationshipType)"
+            },
+            "response_excerpt": '["MEMBER_OF","CO_LOCATED","REPORTS_TO"]',
+        },
+    ]
+    report = score_workup(note, entries, HALBERD_FIXTURE)
+    assert report.trajectory == 0.0
+    assert report.grounded is False
+
+
 def test_traversal_counts_even_when_the_bridge_node_is_not_named_in_a_query() -> None:
     # The agent reaches the bridge node via relationships (a shortest path / *..4
     # hop) without querying it by name — the relationship types are the evidence

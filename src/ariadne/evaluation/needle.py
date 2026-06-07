@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ariadne.evaluation.reconcile import ReconciliationReport
 
-from ariadne.evaluation._text import all_present, fraction_present, statement_text
+from ariadne.evaluation._text import all_present, fraction_present, traversal_text
 from ariadne.evaluation.utilization import context_utilization
 from ariadne.provenance.citations import citation_coverage
 from ariadne.provenance.ledger import ProvenanceLedger
@@ -147,7 +147,10 @@ def _supporting_fact_scores(
 def score_workup(note: str, ledger_entries: list[dict], fixture: NeedleFixture) -> EvalReport:
     """Score a workup's note + ledger entries against ``fixture``."""
     note_lower = note.lower()
-    queries_lower = "\n".join(statement_text(e) for e in ledger_entries).lower()
+    # Trajectory + supporting-fact grade the (action, observation) pair: a rel type
+    # returned in the response proves the hop was walked even if the query never
+    # named it; schema-introspection observations are excluded (ADR-0024).
+    queries_lower = "\n".join(traversal_text(e) for e in ledger_entries).lower()
     recall = fraction_present(fixture.answer_markers, note_lower)
     trajectory = fraction_present(fixture.traversal_markers, queries_lower)
     queries_run = len(ledger_entries)

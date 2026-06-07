@@ -8,20 +8,30 @@ task ships, move its one-liner to ROADMAP and clear it from here.
 
 ## In flight
 
-**Nothing actively mid-edit.** The citation-coverage measurement
-([ADR-0023](./docs/architecture/decisions/0023-measuring-citation-coverage-gain.md))
-shipped this session — see *Recently shipped* below and ROADMAP Phase 4.
-
-**Next thread — Adaptive Ariadne, first Postgres slice ([ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)).**
-Hermetic core shipped 2026-06-05 (introspect → propose → validate → freeze(TOML)
-→ apply round-trip against fake rows). **Owed live work:** a psycopg `RowReader`,
-an `ariadne connect`/`map` CLI (connect → introspect → propose → write-draft →
-[human ratify] → validate → register), and a testcontainers integration test
-running the whole loop against a seeded Postgres → a grounded workup. Then A2
-(full user ontology), A3 (dynamic MCP), B2 (learned skills), B3 (reflexion).
-Docker is up again — the original blocker is gone.
+**Adaptive Ariadne — first Postgres slice ([ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)).**
+The next thread (two eval-integrity increments shipped first this session — see
+*Recently shipped*). Hermetic core shipped 2026-06-05 (introspect → propose →
+validate → freeze(TOML) → apply round-trip against fake rows). **Owed live work:**
+a psycopg `RowReader`, an `ariadne connect`/`map` CLI (connect → introspect →
+propose → write-draft → [human ratify] → validate → register), and a testcontainers
+integration test running the whole loop against a seeded Postgres → a grounded
+workup. Then A2 (full user ontology), A3 (dynamic MCP), B2 (learned skills), B3
+(reflexion). Docker is up — the original blocker is gone. Best started on fresh
+context (a large thread).
 
 ---
+
+**Trajectory eval grades observations, not just actions — shipped 2026-06-07** ([ADR-0024](./docs/architecture/decisions/0024-trajectory-grades-observations.md)).
+Found verifying ADR-0023: the planted-needle `trajectory` + supporting-fact scorer
+scanned only the query text, so an agent that walked the bridge via untyped
+`MATCH (n)-[r]- RETURN type(r)` Cypher scored `trajectory=0`/`grounded=False` (rel
+types land in the *response*). `evaluation/_text.traversal_text` now grades the
+(action + data-retrieval observation) pair, excluding schema-introspection
+observations (`CALL db.relationshipTypes`, postgres catalog tools) so enumeration
+can't false-positive a guess. The live Halberd run that surfaced it re-scores
+`trajectory 0→1`, `grounded False→True`, `sf_f1 0→1.0`. TDD; 343 tests green.
+`# research(2026-06): agentic-RAG trajectory eval grades observations (AgenticRAGTracer
+arXiv:2602.19127; SoK Agentic RAG arXiv:2603.07379).`
 
 **Citation-coverage measurement — shipped 2026-06-07** ([ADR-0023](./docs/architecture/decisions/0023-measuring-citation-coverage-gain.md)).
 The P-Cite repair loop's gain is now a *measured number*, not an exit code:
