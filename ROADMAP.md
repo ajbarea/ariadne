@@ -525,7 +525,10 @@ items must not be hardened against one answer.
       `socket.connect`/`connect_ex` and enforces a loopback-plus-allowlist policy — blocking (a CI
       gate that fails on new egress) or recording (a runtime audit). An **autouse fixture wraps the
       whole unit suite**, so the in-enclave code is *continuously proven* (490+ hermetic tests) to
-      make zero non-loopback egress, and any future reach-out fails the build. The network-axis
+      make zero non-loopback egress, and any future reach-out fails the build — **and a
+      testcontainers integration test wraps the *live* introspect → mapping → `load_graph` pipeline
+      against real Postgres + Neo4j**, asserting the real connectors reach only the declared enclave
+      stores (the runtime audit, on the actual pipeline). The network-axis
       sibling of `audit_read_only` (verify the posture, don't trust the config); free/hermetic; own
       primitive, no new dep. Scope stated honestly: connection-time TCP (every client Ariadne uses);
       DNS/UDP out of scope. TDD. `# research(2026-06): egress as a first-class allowlist + CI

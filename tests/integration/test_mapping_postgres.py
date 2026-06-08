@@ -13,6 +13,7 @@ pytest.importorskip("testcontainers")
 pytest.importorskip("psycopg")
 
 import os
+from urllib.parse import urlsplit
 
 import psycopg
 from neo4j import GraphDatabase
@@ -22,6 +23,7 @@ from ariadne.datasets.base import DATASETS, get_adapter
 from ariadne.datasets.canonical import Entity, Relationship
 from ariadne.datasets.load import load_graph
 from ariadne.datasets.mapping_source import discover_and_register
+from ariadne.egress import egress_guard
 from ariadne.introspect.postgres import introspect, postgres_row_reader
 from ariadne.mapping.adapter import MappingDrivenAdapter
 from ariadne.mapping.propose import baseline_mapping
@@ -94,7 +96,70 @@ def test_ratified_mapping_indexes_into_the_graph(
     ``ARIADNE_MAPPINGS`` is discovered as a dataset, its lazy reader opens the live
     source Postgres only at ``load()``, and the *existing* indexer loads it into Neo4j
     where the foreign key resolves to a typed, ``MATCH``-able edge."""
-    # A human-ratified mapping (canonical types chosen by hand, not the baseline guess).
+    _ratify_acme_mapping(tmp_path, monkeypatch, pg_conn["dsn"])
+
+    driver = GraphDatabase.driver(
+        neo4j_conn["uri"], auth=(neo4j_conn["username"], neo4j_conn["password"])
+    )
+    try:
+        # discover -> register; the lazy reader connects to the source DB only here, at load()
+        assert "acme" in discover_and_register(dict(os.environ))
+        load_graph(list(get_adapter("acme").load()), driver)  # the EXISTING indexer, unchanged
+        with driver.session() as session:
+            row = session.run(
+                "MATCH (s:Staff {name: 'Halberd'})-[:WORKS_IN]->(d:Dept) "
+                "RETURN d.name AS dept, s.salary AS salary"
+            ).single()
+        assert row is not None  # the FK became a real, traversable edge
+        assert row["dept"] == "Signals"
+        assert row["salary"] == "90"  # the ratified attribute column survived ingest
+    finally:
+        with driver.session() as session:  # keep the shared session graph clean
+            session.run("MATCH (n:Staff) DETACH DELETE n")
+            session.run("MATCH (n:Dept) DETACH DELETE n")
+        driver.close()
+        DATASETS.pop("acme", None)
+
+
+def test_real_pipeline_egresses_only_to_the_enclave_stores(
+    pg_conn, neo4j_conn, tmp_path, monkeypatch
+) -> None:
+    """Runtime egress audit (ADR-0033) on the LIVE pipeline: the ratified mapping's lazy
+    reader + the existing indexer, talking to real Postgres and Neo4j, connect ONLY to those
+    declared enclave stores. Verifies ADR-0012's single-seam claim on real connectors, not
+    just the hermetic unit surface — any connection elsewhere fails the audit."""
+    _ratify_acme_mapping(tmp_path, monkeypatch, pg_conn["dsn"])
+    pg_host = _dsn_host(pg_conn["dsn"])
+    neo4j_host = urlsplit(neo4j_conn["uri"]).hostname or "localhost"
+    driver = GraphDatabase.driver(
+        neo4j_conn["uri"], auth=(neo4j_conn["username"], neo4j_conn["password"])
+    )
+    try:
+        assert "acme" in discover_and_register(dict(os.environ))
+        adapter = get_adapter("acme")
+        # Both real connects — the lazy PG read at load() and the Neo4j write — happen here.
+        with egress_guard(allow_hosts=[pg_host, neo4j_host], block=False) as report:
+            load_graph(list(adapter.load()), driver)
+        assert report.ok, f"egress beyond {pg_host}/{neo4j_host}: {report.violations}"
+    finally:
+        with driver.session() as session:
+            session.run("MATCH (n:Staff) DETACH DELETE n")
+            session.run("MATCH (n:Dept) DETACH DELETE n")
+        driver.close()
+        DATASETS.pop("acme", None)
+
+
+def _dsn_host(dsn: str) -> str:
+    """The host token out of a libpq keyword DSN (``host=… port=… …``)."""
+    for tok in dsn.split():
+        if tok.startswith("host="):
+            return tok.removeprefix("host=")
+    return "localhost"
+
+
+def _ratify_acme_mapping(tmp_path, monkeypatch, dsn: str) -> None:
+    """Freeze a hand-ratified ``acme`` mapping under ``ARIADNE_MAPPINGS`` and point the lazy
+    reader at ``dsn`` — the shared apply-loop setup (ADR-0025), canonical types chosen by hand."""
     mapping = Mapping(
         entities=(
             EntityMapping(
@@ -121,26 +186,4 @@ def test_ratified_mapping_indexes_into_the_graph(
         encoding="utf-8",
     )
     monkeypatch.setenv("ARIADNE_MAPPINGS", str(tmp_path))
-    monkeypatch.setenv("ARIADNE_SOURCE_DSN", pg_conn["dsn"])
-
-    driver = GraphDatabase.driver(
-        neo4j_conn["uri"], auth=(neo4j_conn["username"], neo4j_conn["password"])
-    )
-    try:
-        # discover -> register; the lazy reader connects to the source DB only here, at load()
-        assert "acme" in discover_and_register(dict(os.environ))
-        load_graph(list(get_adapter("acme").load()), driver)  # the EXISTING indexer, unchanged
-        with driver.session() as session:
-            row = session.run(
-                "MATCH (s:Staff {name: 'Halberd'})-[:WORKS_IN]->(d:Dept) "
-                "RETURN d.name AS dept, s.salary AS salary"
-            ).single()
-        assert row is not None  # the FK became a real, traversable edge
-        assert row["dept"] == "Signals"
-        assert row["salary"] == "90"  # the ratified attribute column survived ingest
-    finally:
-        with driver.session() as session:  # keep the shared session graph clean
-            session.run("MATCH (n:Staff) DETACH DELETE n")
-            session.run("MATCH (n:Dept) DETACH DELETE n")
-        driver.close()
-        DATASETS.pop("acme", None)
+    monkeypatch.setenv("ARIADNE_SOURCE_DSN", dsn)

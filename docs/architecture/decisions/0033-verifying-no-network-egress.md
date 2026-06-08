@@ -65,9 +65,11 @@ real surface.
 
 ## Consequences
 
-- The ADR-0012 single-seam claim is now a *verified, regression-guarded* property of the
-  hermetic surface, not prose — and the same primitive is ready to wrap a live workup
-  (`block=False`) for the on-prem-store runtime audit when stores are up.
+- The ADR-0012 single-seam claim is now a *verified, regression-guarded* property at two
+  levels: continuously on the hermetic surface (the autouse unit gate) and on the **live
+  pipeline** — a testcontainers integration test wraps the real introspect → ratified mapping
+  → `load_graph` flow (`block=False`) and asserts the real Postgres + Neo4j connectors reach
+  only those declared enclave stores. Not prose anymore.
 - The guard is a deliberate monkeypatch; ty cannot model a class-method reassignment even
   with a matching signature, so the two patch lines carry a scoped `# ty: ignore`.
 - It does not replace network-layer enforcement (a default-deny egress policy in
