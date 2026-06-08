@@ -32,6 +32,20 @@ def test_response_excerpt_is_truncated() -> None:
     assert len(led.entries[0]["response_excerpt"]) <= 10
 
 
+def test_record_notes_original_length_when_truncated() -> None:
+    """A truncated excerpt records the full length so the report can warn the analyst."""
+    led = ProvenanceLedger(excerpt_chars=10)
+    led.record("t", {}, "x" * 500)
+    assert led.entries[0]["response_full_len"] == 500
+
+
+def test_record_omits_full_length_when_not_truncated() -> None:
+    """No metadata bloat when the whole response fit (the common case)."""
+    led = ProvenanceLedger(excerpt_chars=100)
+    led.record("t", {}, "short")
+    assert "response_full_len" not in led.entries[0]
+
+
 def test_write_jsonl_round_trips(tmp_path) -> None:
     led = ProvenanceLedger()
     led.record("t", {"a": 1}, "r")

@@ -450,6 +450,20 @@ items must not be hardened against one answer.
       ICD-203 rubric dimensions with bars and the judge's rationales. Makes the
       verifiable-reward signal legible in the human-facing product (groundwork for
       the audited self-improvement loop). TDD; headless-verified.
+- [x] **Analyst verification surface hardening (2026-06-08):** the report is where a human
+      *verifies* the agent's work — click a `[cite:gN]`, read the exact query + what it
+      returned, judge whether the claim holds — so the evidence drawer was hardened on the
+      three things that make-or-break that loop. (1) **Readable evidence:** `_clean_evidence`
+      unwraps the MCP transport envelope and pretty-prints the inner JSON/Python-literal
+      payload (raw fallback so nothing is lost; a Raw toggle still shows the literal wire
+      bytes) — the analyst reads data, not `[{'type':'text','text':…}]`. (2) **Truncation
+      transparency:** the ledger records `response_full_len` when it cuts an excerpt, and the
+      drawer warns *"showing first N of M characters — open the source to verify the
+      remainder"* so a silently-partial excerpt is never mistaken for the whole (the Kaminski
+      role inference is grounded in an email body that was being cut at 2 000 chars with no
+      signal). (3) **Re-runnability:** a copy-the-exact-query control so the analyst can run
+      the Cypher/SQL independently — the gold standard of manual verification. Extends the
+      ADR-0017 report; TDD; headless-verified on the real Kaminski run.
 - [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
       runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
       (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the

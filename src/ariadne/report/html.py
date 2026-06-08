@@ -14,6 +14,7 @@ details-on-demand.
 
 from __future__ import annotations
 
+import ast
 import html as _html
 import json
 import re
@@ -62,6 +63,48 @@ def _read_ledger(path: Path) -> list[dict]:
     return [
         json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
+
+
+def _loads_loose(s: str) -> Any:
+    """``json.loads`` with an ``ast.literal_eval`` fallback for Python-repr strings.
+
+    Neo4j evidence is persisted as ``str(<python list>)`` (single-quoted, not JSON);
+    postgres evidence is JSON. One loader handles both, returning ``None`` on anything
+    that is neither.
+    """
+    try:
+        return json.loads(s)
+    except (ValueError, TypeError):
+        try:
+            return ast.literal_eval(s)
+        except (ValueError, SyntaxError, TypeError):
+            return None
+
+
+def _clean_evidence(raw: str) -> str:
+    """Unwrap the MCP tool-result envelope so the analyst reads data, not transport.
+
+    Tool responses are persisted as the raw MCP envelope — ``[{"type":"text","text": …}]``
+    or ``{"result":[…]}`` — whose ``text`` payload is itself usually a JSON / Python-literal
+    string. Pull out the inner payload(s) and pretty-print any that parse as a structure.
+    Falls back to the original string on anything unexpected, so evidence is never lost.
+    """
+    if not raw:
+        return raw
+    obj = _loads_loose(raw)
+    items = obj.get("result") if isinstance(obj, dict) else obj
+    if not isinstance(items, list):
+        return raw
+    parts = [it["text"] for it in items if isinstance(it, dict) and isinstance(it.get("text"), str)]
+    if not parts:
+        return raw
+    return "\n".join(_pretty_payload(p) for p in parts)
+
+
+def _pretty_payload(text: str) -> str:
+    """Indent ``text`` when it parses as a JSON/Python-literal structure; else verbatim."""
+    obj = _loads_loose(text)
+    return json.dumps(obj, indent=2, ensure_ascii=False) if isinstance(obj, dict | list) else text
 
 
 def _inline(text: str) -> str:
@@ -206,13 +249,18 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
             or tool_input.get("sql")
             or json.dumps(tool_input, ensure_ascii=False)
         )
+        excerpt_raw = str(e.get("response_excerpt", ""))
+        full_len = e.get("response_full_len")
         ledger.append(
             {
                 "id": e.get("id", ""),
                 "tool": tool,
                 "source": _source_label(tool),
                 "query": query,
-                "excerpt": str(e.get("response_excerpt", "")),
+                "excerpt": _clean_evidence(excerpt_raw),
+                "excerpt_raw": excerpt_raw,
+                "full_len": full_len,
+                "truncated": bool(full_len) and full_len > len(excerpt_raw),
             }
         )
     return {
@@ -448,7 +496,15 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .srcbadge{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
   padding:3px 9px;border-radius:999px}
 .lbl{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
-  font-weight:700;margin:18px 0 7px}
+  font-weight:700;margin:18px 0 7px;display:flex;align-items:center;gap:10px}
+/* Drawer action chips (copy the exact query · toggle raw wire bytes) */
+.dbtn{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--soft);background:var(--panel2);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px;cursor:pointer;transition:all .15s}
+.dbtn:hover{color:var(--thread);border-color:var(--thread)}
+/* Evidence-truncation notice — never let an analyst verify against a silently-cut excerpt */
+.evtrunc{font-size:11.5px;line-height:1.5;color:var(--bad);background:#e8746e14;
+  border:1px solid #e8746e55;border-radius:9px;padding:9px 12px;margin:0 0 8px}
 .qbox{font-family:var(--mono);font-size:12.5px;line-height:1.55;color:var(--graph);white-space:pre-wrap;
   background:var(--qbg);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto}
 .exbox{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--soft);white-space:pre-wrap;
@@ -583,8 +639,11 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
   <div class="dh"><span class="gid" id="d-gid"></span><span class="srcbadge" id="d-src"></span>
     <button class="x" id="d-x" aria-label="Close">×</button></div>
   <div class="body">
-    <div class="lbl">Evidence query</div><div class="qbox" id="d-q"></div>
-    <div class="lbl">Returned excerpt</div><div class="exbox" id="d-ex"></div>
+    <div class="lbl">Evidence query<button class="dbtn" id="d-copy" type="button">Copy</button></div>
+    <div class="qbox" id="d-q"></div>
+    <div class="lbl">Returned excerpt<button class="dbtn" id="d-rawtgl" type="button" hidden>Raw</button></div>
+    <div class="evtrunc" id="d-trunc" hidden></div>
+    <div class="exbox" id="d-ex"></div>
   </div>
 </aside>
 <aside class="drawer" id="edrawer" aria-hidden="true">
@@ -911,7 +970,25 @@ function selectEvidence(id, chip){
   const e=byId[id]; if(!e) return;
   $("#d-gid").textContent=id;
   const sb=$("#d-src"); sb.textContent=e.source; sb.className="srcbadge bgs-"+e.source;
-  $("#d-q").textContent=e.query||"—"; $("#d-ex").textContent=e.excerpt||"—";
+  const q=e.query||"—"; $("#d-q").textContent=q;
+  // Copy the exact query so the analyst can re-run it independently (manual verification).
+  const cp=$("#d-copy"); cp.textContent="Copy";
+  cp.onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText(q):Promise.reject())
+    .then(()=>{cp.textContent="Copied ✓"; setTimeout(()=>cp.textContent="Copy",1400);})
+    .catch(()=>{cp.textContent="Copy failed";});};
+  // Evidence: cleaned (unwrapped) by default; a Raw toggle reveals the literal wire bytes.
+  let raw=false; const setEx=()=>{$("#d-ex").textContent=(raw?e.excerpt_raw:e.excerpt)||"—";};
+  const rt=$("#d-rawtgl");
+  if(e.excerpt_raw && e.excerpt_raw!==e.excerpt){rt.hidden=false; rt.textContent="Raw";
+    rt.onclick=()=>{raw=!raw; rt.textContent=raw?"Clean":"Raw"; setEx();};}
+  else{rt.hidden=true;}
+  raw=false; setEx();
+  // Truncation notice: a partial excerpt is a verification trap unless we say so.
+  const tn=$("#d-trunc");
+  if(e.truncated){tn.hidden=false;
+    tn.textContent=`⚠ Evidence truncated — showing the first ${(e.excerpt_raw||"").length.toLocaleString()} `
+      +`of ${(e.full_len||0).toLocaleString()} characters. Open the source to verify the remainder.`;}
+  else{tn.hidden=true;}
   closeEntity();  // never stack the evidence + entity drawers
   $("#drawer").classList.add("open"); $("#scrim").classList.add("open");
   $("#drawer").setAttribute("aria-hidden","false");

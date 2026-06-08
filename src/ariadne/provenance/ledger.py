@@ -22,15 +22,19 @@ class ProvenanceLedger:
     def record(self, tool: str, tool_input: dict[str, Any], response: str) -> str:
         """Record a tool call and return its assigned citation id (``gN``)."""
         cite_id = f"g{len(self._entries) + 1}"
-        self._entries.append(
-            {
-                "id": cite_id,
-                "ts": datetime.now(UTC).isoformat(),
-                "tool": tool,
-                "tool_input": tool_input,
-                "response_excerpt": str(response)[: self._excerpt_chars],
-            }
-        )
+        full = str(response)
+        entry: dict[str, Any] = {
+            "id": cite_id,
+            "ts": datetime.now(UTC).isoformat(),
+            "tool": tool,
+            "tool_input": tool_input,
+            "response_excerpt": full[: self._excerpt_chars],
+        }
+        # Record the original length only when truncated, so the report can warn the
+        # analyst that the evidence they're verifying against is partial.
+        if len(full) > self._excerpt_chars:
+            entry["response_full_len"] = len(full)
+        self._entries.append(entry)
         return cite_id
 
     @property
