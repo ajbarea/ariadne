@@ -687,8 +687,9 @@ items must not be hardened against one answer.
       ([ADR-0031](./docs/architecture/decisions/0031-net-effect-ratification-comparator.md)). A
       hard-gated regression (`grounded`/`citation_coverage`) forces *reject*; caveats for a differing
       harness + small N (stochastic eval). Reads `eval.json`, never recomputes a score (the eval stays
-      the single scorer). Exit code carries the verdict (ratify/neutral 0, reject 1). *Remaining
-      (deferred): the live wrapper that produces the paired runs + an auto-ratify gate.*
+      the single scorer). Exit code carries the verdict (ratify/neutral 0, reject 1). *The live
+      wrapper that produces the paired runs + the auto-ratify gate shipped as `ariadne ratify`
+      (ADR-0034, below).*
       `# research(2026-06): SkillGen net-gain gate (arXiv 2605.10999); can't-tell-by-reading /
       negative-transfer-25% (SkillLens/SkillOpt arXiv 2605.23904); net-effect = repairs−regressions
       (arXiv 2511.11012); paired same-instance variance reduction (arXiv 2512.06710); disclose the
@@ -703,6 +704,23 @@ items must not be hardened against one answer.
       leaks. *Remaining (deferred): multi-run batch consolidation; a rejected-edit buffer.*
       `# research(2026-06): SkillOpt bounded edits + held-out gate (arXiv 2605.23904); SkillRevise
       trace-conditioned revision (arXiv 2606.01139).`
+- [x] **Automated net-effect ratification — `ariadne ratify`, shipped 2026-06-08.** Closes ADR-0031's
+      named-but-deferred gap — it *produces* the paired runs `compare` measures. `ariadne ratify
+      <skill>` stages the candidate skill **OFF** (baseline) vs **ON** (candidate) as two ephemeral SDK
+      skill-*plugins*, runs N trials of each over the **same instance**, scores each with the needle
+      fixture, and feeds `compare`. Per **SkillTester** it gates on an **invocation check** — if the
+      candidate skill never fired in the candidate arm, the measured delta is ambient model variance,
+      not the skill, so the verdict **abstains** (three honest states: observed / not-fired / unrecorded
+      → caveat, never a false reject). `--apply` freezes a clean ratify into `.claude/skills/`; default
+      is propose-only (ADR-0020's human-keeps-judgment spine). Hermetic orchestration — the live workup +
+      scoring are injected seams (the `profiles --validate` pattern), so it is fully TDD'd without spend
+      ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md)). *Remaining
+      (deferred): the live execution itself (2N real workups, deliberate spend) + recording the
+      invocation signal into the run manifest (the SDK `PostToolUse`-fires-for-`Skill` contract is
+      confirmed; the gate rides an unobserved caveat until then); full counterfactual trace auditing.*
+      `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual Trace Auditing
+      (arXiv 2605.11946); matched baseline + invocation gate, ~14% help / 78% none / 8% harm — SkillTester
+      (arXiv 2603.28815).`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical
@@ -725,8 +743,11 @@ items must not be hardened against one answer.
 > `ariadne reflect` reflects on a *failing* run and proposes refinements, gold-free and
 > propose-only. The adaptive & self-improving epic of ADR-0020 is realized: the harness adapts
 > to a user's store *and* learns from experience, every change human-ratified, the eval gate it
-> can never edit as the external verifiable reward. Next candidates are the deferred items (the
-> automated net-effect ratification check; multi-trajectory consolidation) — all YAGNI.
+> can never edit as the external verifiable reward. The loop is now closed end to end — `ariadne
+> ratify` (2026-06-08, [ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md))
+> produces the paired runs `compare` measures and gates on whether the skill actually fired. Next
+> candidates are the deferred tail (`ratify`'s *live execution* + manifest-recording its invocation
+> signal; multi-trajectory consolidation) — all YAGNI.
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).

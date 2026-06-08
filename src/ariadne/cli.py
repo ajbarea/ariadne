@@ -291,6 +291,44 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     cmp.add_argument(
         "--out", default=None, help="Also write the structured comparison.json to this path"
     )
+
+    rt = sub.add_parser(
+        "ratify",
+        help="Produce paired with/without-skill runs + net their effect, auto-freeze (ADR-0034)",
+    )
+    rt.add_argument("candidate_skill", help="A proposed skill dir (e.g. skills-proposed/<name>)")
+    rt.add_argument("--entity", required=True, help="The entity / org node to work up each trial")
+    rt.add_argument(
+        "--dataset", default="synthetic", help="Dataset to work up (default: synthetic)"
+    )
+    rt.add_argument(
+        "--fixture",
+        default="halberd",
+        help="Planted-needle fixture to score each run (default: halberd)",
+    )
+    rt.add_argument(
+        "-n",
+        "--trials",
+        type=int,
+        default=3,
+        help="Trials per arm (default: 3; < 3 is caveated as noisy)",
+    )
+    rt.add_argument("--out", default="runs", help="Where the produced runs land (default: runs/)")
+    rt.add_argument(
+        "--base-skill",
+        action="append",
+        default=None,
+        dest="base_skill",
+        metavar="SKILL_DIR",
+        help="An always-on base skill dir (repeatable; default: .claude/skills/entity-workup)",
+    )
+    rt.add_argument("--sql", action="store_true", help="Give each workup the relational store")
+    rt.add_argument("--semantic", action="store_true", help="Give each workup the semantic leg")
+    rt.add_argument(
+        "--apply",
+        action="store_true",
+        help="Freeze the skill into .claude/skills/ on a clean ratify (else propose-only)",
+    )
     return parser.parse_args(argv)
 
 
@@ -574,6 +612,118 @@ def _run_compare(baseline: list[str], candidate: list[str], *, out: str | None =
         Path(out).write_text(json.dumps(comparison_dict(net), indent=2), encoding="utf-8")
         print(f"Wrote {out}")
     return 1 if net.verdict == "reject" else 0
+
+
+def _make_ratify_runner(*, with_sql: bool, with_semantic: bool):
+    """The live arm runner: one real workup per trial into an isolated dir, returning its run dir.
+
+    Each trial gets its own ``out_root/<arm>/trial-N`` so every trial's ``latest`` is distinct (a
+    shared root would have later trials clobber the pointer). Loads the arm's skills from its staged
+    plugin dir — the with/without-candidate toggle (ADR-0034). Gated: real workups cost API + stores.
+    """
+    seq = {"i": 0}
+
+    def runner(*, arm, entity: str, dataset: str, env: dict[str, str], out_root: Path) -> Path:
+        seq["i"] += 1
+        trial_root = Path(out_root) / arm.label / f"trial-{seq['i']}"
+        asyncio.run(
+            run_workup(
+                entity,
+                str(trial_root),
+                env,
+                dataset=dataset,
+                with_sql=with_sql,
+                with_semantic=with_semantic,
+                skills_plugin=arm.plugin_path,
+            )
+        )
+        return trial_root / dataset / slug(entity) / "latest"
+
+    return runner
+
+
+def _make_ratify_scorer():
+    """The live scorer: score a trial against the planted-needle fixture, persisting its eval.json
+    (the same eval `ariadne eval` runs — the single scorer; `compare` only reads the output)."""
+    from ariadne.evaluation.needle import FIXTURES, score_workup_dir
+
+    def scorer(run_dir, fixture: str) -> None:
+        report = score_workup_dir(str(run_dir), FIXTURES[fixture])
+        write_eval_json(str(run_dir), report, fixture)
+
+    return scorer
+
+
+def _run_ratify(
+    candidate_skill: str,
+    *,
+    entity: str,
+    dataset: str = "synthetic",
+    fixture: str = "halberd",
+    trials: int = 3,
+    out: str = "runs",
+    base_skills: list[str] | None = None,
+    apply_: bool = False,
+    with_sql: bool = False,
+    with_semantic: bool = False,
+    env: dict[str, str],
+    runner=None,
+    scorer=None,
+    skills_root: str | Path = Path(".claude/skills"),
+) -> int:
+    """Produce paired with/without-skill runs, net their effect, optionally freeze (ADR-0034).
+
+    The live, expensive end of propose -> ratify -> freeze: runs ``2 * trials`` real workups (the
+    candidate skill OFF vs ON) over the same instance and nets them via `compare`, gating on whether
+    the skill actually fired (SkillTester — else the delta is ambient variance). ``--apply`` freezes
+    the skill only on a clean ratify; default is propose-only. Exit code mirrors `compare`:
+    reject = 1, ratify / neutral / abstain = 0, incomparable = 2.
+    """
+    from ariadne.learning.netcheck import IncomparableRuns
+    from ariadne.learning.ratify import apply_ratification, render_ratification_md, run_ratify
+
+    if not (Path(candidate_skill) / "SKILL.md").is_file():
+        print(f"No SKILL.md under {candidate_skill} to ratify.", file=sys.stderr)
+        return 2
+    if runner is None:
+        if not env.get("ANTHROPIC_API_KEY"):
+            print(
+                "ANTHROPIC_API_KEY is not set — `ratify` runs live workups (real spend); export it.",
+                file=sys.stderr,
+            )
+            return 2
+        runner = _make_ratify_runner(with_sql=with_sql, with_semantic=with_semantic)
+    if scorer is None:
+        scorer = _make_ratify_scorer()
+
+    try:
+        outcome = run_ratify(
+            candidate_skill=candidate_skill,
+            entity=entity,
+            dataset=dataset,
+            fixture=fixture,
+            n=trials,
+            env=env,
+            out_root=out,
+            base_skills=base_skills or [".claude/skills/entity-workup"],
+            runner=runner,
+            scorer=scorer,
+        )
+    except IncomparableRuns as exc:
+        print(f"Cannot ratify: {exc}", file=sys.stderr)
+        return 2
+
+    print(render_ratification_md(outcome))
+    if apply_:
+        if outcome.verdict == "ratify":
+            dest = apply_ratification(candidate_skill, skills_root=skills_root)
+            print(f"Applied — froze `{outcome.expected_skill}` to {dest} (ratified on a net gain).")
+        else:
+            print(
+                f"Not applied — verdict is {outcome.verdict!r}, not a clean ratify.",
+                file=sys.stderr,
+            )
+    return 1 if outcome.verdict == "reject" else 0
 
 
 def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | None = None) -> int:
@@ -881,6 +1031,7 @@ def build_options(
     model: str | None = None,
     max_turns: int | None = None,
     max_thinking_tokens: int | None = None,
+    skills_plugin: str | Path | None = None,
 ) -> ClaudeAgentOptions:
     hook = make_provenance_hook(ledger)
     mcp_servers: dict[str, McpServerConfig] = {"neo4j": neo4j_stdio_config(env)}
@@ -906,12 +1057,22 @@ def build_options(
         extra["max_turns"] = max_turns
     if max_thinking_tokens is not None:
         extra["max_thinking_tokens"] = max_thinking_tokens
+    # Skills: the project `entity-workup` by default (the SDK auto-allows the Skill tool and sets
+    # setting_sources). `ratify` (ADR-0034) instead points the workup at a staged per-arm plugin
+    # dir to toggle a candidate skill in/out — then the Skill tool must be allowed explicitly so
+    # the plugin's skills can fire, and project skills are left out for clean arm isolation.
+    if skills_plugin is not None:
+        extra["plugins"] = [{"type": "local", "path": str(skills_plugin)}]
+        extra["skills"] = []
+        if "Skill" not in allowed_tools:
+            allowed_tools = [*allowed_tools, "Skill"]
+    else:
+        extra["skills"] = ["entity-workup"]
     return ClaudeAgentOptions(
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,
         system_prompt=_SYSTEM_PROMPT,
         permission_mode="default",
-        skills=["entity-workup"],  # SDK auto-allows Skill tool and sets setting_sources
         hooks={"PostToolUse": matchers},
         **extra,
     )
@@ -981,6 +1142,7 @@ async def run_workup(
     profile: str = "default",
     strict: bool = False,
     repair: bool = True,
+    skills_plugin: str | Path | None = None,
 ) -> int:
     from ariadne.datasets.base import get_adapter
     from ariadne.profiles import load_profiles, resolve_profile
@@ -996,6 +1158,7 @@ async def run_workup(
         model=prof.model,
         max_turns=prof.envelope.max_turns,
         max_thinking_tokens=prof.envelope.max_thinking_tokens,
+        skills_plugin=skills_plugin,
     )
     verifier = None
     if with_entail:
@@ -1186,6 +1349,20 @@ def main(argv: list[str] | None = None) -> int:
         return _run_reflect(args.run_dir, out=args.out, llm=args.llm)
     if args.command == "compare":
         return _run_compare(args.baseline, args.candidate, out=args.out)
+    if args.command == "ratify":
+        return _run_ratify(
+            args.candidate_skill,
+            entity=args.entity,
+            dataset=args.dataset,
+            fixture=args.fixture,
+            trials=args.trials,
+            out=args.out,
+            base_skills=args.base_skill,
+            apply_=args.apply,
+            with_sql=args.sql,
+            with_semantic=args.semantic,
+            env=dict(os.environ),
+        )
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
             "ANTHROPIC_API_KEY is not set — export it to run the live agent loop.",

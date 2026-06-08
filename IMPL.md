@@ -24,14 +24,18 @@ gives that ratify step a *measured* verdict — see *Recently shipped*.
 Skills also **deepen from experience** now — `distil --into <skill>` (ADR-0032) revises an
 existing skill from a new certified run, ratified by `compare`; see *Recently shipped*.
 
-**Next candidates (all YAGNI until a consumer needs them):** the live wrapper that *produces*
-the paired runs for `compare` (orchestrate a workup with vs without the artifact) + an auto-ratify
-gate on its verdict; B2's multi-trajectory hierarchical consolidation (Trace2Skill across many
-runs), skill *composition* (`composes_with`); B1's agent-driven refinement of a persisted mapping
-(now unblocked by B3); test-time skill synthesis (the SkillTTA ephemeral track); A3 richer
-per-dataset tool families; A2's SHACL transpile of `validate_against_ontology`, an
-`ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges. Re-survey ROADMAP and overrule if
-something higher-value surfaces.
+The loop is now closed end to end: `ariadne ratify` (ADR-0034) *produces* the paired runs `compare`
+measures — see *Recently shipped*.
+
+**Next candidates (all YAGNI until a consumer needs them):** `ariadne ratify`'s deferred tail — the
+*live execution* itself (2N real workups against live stores, deliberate spend) and recording the
+skill-invocation signal into the run manifest so the SkillTester gate is signal-effective live (the
+SDK contract is confirmed; until then it rides the unobserved caveat); B2's multi-trajectory
+hierarchical consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`);
+B1's agent-driven refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis
+(the SkillTTA ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
+`validate_against_ontology`, an `ARIADNE_ONTOLOGIES` registry, multi-`domain`/`range` edges.
+Re-survey ROADMAP and overrule if something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
@@ -99,6 +103,27 @@ multi-axis model-card presentation over an average (AI model cards 2026).`
 > under *Alternatives considered* is uncited. The unified verdict makes that visible at a glance
 > where the four scattered dashboard cards buried it — exactly the verification-ease win the fold
 > was for.
+
+---
+
+**Automated net-effect ratification — `ariadne ratify`, shipped 2026-06-08** ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md)).
+`compare` measured the ratify step, but a human had to hand-produce the paired runs (run the workup
+with the candidate skill, then without, N times each); `ariadne ratify <skill>` closes that gap end
+to end. It stages the candidate skill **OFF** (baseline) vs **ON** (candidate) as two ephemeral SDK
+skill-*plugins* (`plugins=[{type:local,path}]` — no working-tree mutation), runs N trials of each
+over the same `(dataset, entity, fixture)` instance, scores each with the needle fixture, and feeds
+`compare`. Per **SkillTester** it gates on an **invocation check** — if the candidate skill never
+fired in the candidate arm, the measured delta is ambient model variance, not the skill, so the
+verdict **abstains** rather than ratify (three honest states: observed / signal-present-but-not-fired
+/ signal-unrecorded → a caveat, never a false reject). `--apply` freezes a clean ratify into
+`.claude/skills/`; default is propose-only (ADR-0020's human-keeps-judgment spine). The orchestration
+is **hermetic** — the live workup + scoring are injected seams (the `profiles --validate` pattern) —
+so it is fully TDD'd without spend. *Deferred (named):* the live execution itself (2N real workups,
+deliberate spend) and recording the invocation signal into the run manifest (the gate rides an
+unobserved caveat until then; the SDK `PostToolUse`-fires-for-`Skill` contract is web-confirmed). TDD;
+523 unit green. `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual
+Trace Auditing (arXiv 2605.11946); matched baseline + invocation gate, ~14% help / 78% none / 8% harm
+— SkillTester (arXiv 2603.28815).`
 
 ---
 

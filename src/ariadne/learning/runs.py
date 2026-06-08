@@ -56,6 +56,20 @@ def load_run(run_dir: str | Path) -> RunArtifacts:
     )
 
 
+def skills_invoked(run: RunArtifacts) -> set[str] | None:
+    """The skill names a run recorded as invoked, or ``None`` if no signal was recorded.
+
+    ``None`` (the manifest has no ``skills_invoked`` key) means the instrument is absent — a legacy
+    run, or recording not yet wired (ADR-0034) — and is deliberately distinct from an empty set
+    (recorded, none fired). The invocation gate treats ``None`` as *unobserved* (a caveat, never a
+    false reject) and a non-matching set as *not invoked* (the confound SkillTester guards against).
+    """
+    if not run.manifest:
+        return None
+    raw = run.manifest.get("skills_invoked")
+    return None if raw is None else set(raw)
+
+
 def tool_family(tool: str) -> str:
     """The MCP server a tool belongs to: ``mcp__<server>__<name>`` -> ``<server>``."""
     parts = tool.split("__")

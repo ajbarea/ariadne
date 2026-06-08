@@ -50,3 +50,18 @@ def test_model_and_envelope_set_when_given() -> None:
     assert cfg.model == "fast-local"
     assert cfg.max_turns == 12
     assert cfg.max_thinking_tokens == 0  # 0 is a real value, not "omitted"
+
+
+def test_no_skills_plugin_keeps_project_skill_default() -> None:
+    cfg = build_options(ledger=ProvenanceLedger(), env={})
+    assert cfg.skills == ["entity-workup"]  # default: the project .claude/skills/ skill
+    assert not getattr(cfg, "plugins", None)
+
+
+def test_skills_plugin_loads_the_arm_and_allows_the_skill_tool() -> None:
+    # ratify (ADR-0034) toggles the candidate skill in/out by pointing the workup at a staged
+    # plugin dir per arm — the SDK `plugins=` loader, with the Skill tool allowed so it can fire.
+    cfg = build_options(ledger=ProvenanceLedger(), env={}, skills_plugin="/tmp/arm/candidate")
+    assert cfg.plugins == [{"type": "local", "path": "/tmp/arm/candidate"}]
+    assert "Skill" in (cfg.allowed_tools or [])
+    assert not cfg.skills  # the plugin supplies the skills; don't also pull project skills
