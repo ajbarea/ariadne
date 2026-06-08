@@ -61,7 +61,17 @@ _NONSTANDARD = (
 )
 _NONSTANDARD_RE = re.compile(r"\b(" + "|".join(_NONSTANDARD) + r")\b", re.IGNORECASE)
 
-_CONFIDENCE_RE = re.compile(r"\b(?:low|moderate|high)\s+confidence\b", re.IGNORECASE)
+# An ICD-203 analytic-confidence statement in either word order: the adjacent
+# "<level> confidence", or "confidence … is/: <level>" (label-first), which is how
+# notes actually phrase it ("Analytic confidence: HIGH", "confidence in that basis is
+# **high**"). The label-first arm allows a short qualifying phrase, a copula/colon/dash,
+# and markdown bold before the level. research(2026-06): ICD-203 confidence ∈
+# {low, moderate, high}; matching both orders stops a spurious "no confidence" advisory.
+_CONFIDENCE_RE = re.compile(
+    r"\b(?:low|moderate|high)\s+confidence\b"
+    r"|\bconfidence\b(?:\s+\w+){0,5}?\s*(?:is|are|:|—|–|=)\s*\**\s*(?:low|moderate|high)\b",
+    re.IGNORECASE,
+)
 
 # Inference/reasoning connectives that mark an analytic JUDGMENT (vs a sourced
 # fact). Heuristic; pairs with is_estimative (WEP/hedge/confidence).

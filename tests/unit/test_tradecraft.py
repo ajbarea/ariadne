@@ -32,6 +32,26 @@ def test_detects_analytic_confidence_statement() -> None:
     assert report.has_confidence_statement is True
 
 
+def test_detects_confidence_stated_label_first() -> None:
+    # The phrasings real notes actually use — "confidence" before the level, which the
+    # adjacent-only "<level> confidence" regex missed (spurious "no confidence" advisory).
+    for note in (
+        "Analytic confidence: HIGH [cite:g1].",
+        "Analytic confidence in that basis is **high** [cite:g1].",
+        "Our confidence here is low.",
+        "Confidence — moderate.",
+    ):
+        assert lint_estimative_language(note).has_confidence_statement is True, note
+
+
+def test_confidence_without_a_level_is_not_a_statement() -> None:
+    # "confidence" alone (no low/moderate/high) is not an ICD-203 confidence statement.
+    assert (
+        lint_estimative_language("We have confidence the data loaded.").has_confidence_statement
+        is False
+    )
+
+
 def test_clean_note_has_no_findings() -> None:
     report = lint_estimative_language("Halberd is a member of Signals-Cell [cite:g1].")
     assert report.standard_terms == []
