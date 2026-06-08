@@ -59,6 +59,7 @@ ADR is where the *comparison* lives.
 | [0030](0030-reflexion-over-the-eval-harness.md) | Reflexion over the eval harness — `ariadne reflect`, grounded and gold-free (B3) | Accepted |
 | [0031](0031-net-effect-ratification-comparator.md) | Net-effect ratification comparator — `ariadne compare`, measure don't read | Accepted |
 | [0032](0032-deepening-a-skill-from-new-experience.md) | Deepening a skill from new experience — `distil --into`, bounded and compare-gated | Accepted |
+| [0033](0033-verifying-no-network-egress.md) | Verifying the air-gapped posture — a network-egress guard (`egress_guard` + autouse CI gate) | Accepted |
 
 ## Template
 

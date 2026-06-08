@@ -516,8 +516,21 @@ items must not be hardened against one answer.
       or self-hostable, and the local-first embedder/multimodal choices (ADR-0007/
       0008) pre-empt the classic embedding-egress leak. Per-component swap table +
       rationale: [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md).
-      Open follow-ups: a no-egress CI guard; signed open-weight model-bundle import.
+      Open follow-up: signed open-weight model-bundle import.
       `# research(2026-06): air-gapped LLM agent deployment — LiteLLM/vLLM proxy, egress as first-class.`
+- [x] **No-egress guard — the air-gapped posture is now *verified*, not asserted (2026-06-08)**
+      ([ADR-0033](./docs/architecture/decisions/0033-verifying-no-network-egress.md)). ADR-0012
+      claims the cloud↔air-gapped fork is a single seam (the model at `ANTHROPIC_BASE_URL`) with
+      everything else in-enclave — but nothing checked it. `ariadne.egress.egress_guard` intercepts
+      `socket.connect`/`connect_ex` and enforces a loopback-plus-allowlist policy — blocking (a CI
+      gate that fails on new egress) or recording (a runtime audit). An **autouse fixture wraps the
+      whole unit suite**, so the in-enclave code is *continuously proven* (490+ hermetic tests) to
+      make zero non-loopback egress, and any future reach-out fails the build. The network-axis
+      sibling of `audit_read_only` (verify the posture, don't trust the config); free/hermetic; own
+      primitive, no new dep. Scope stated honestly: connection-time TCP (every client Ariadne uses);
+      DNS/UDP out of scope. TDD. `# research(2026-06): egress as a first-class allowlist + CI
+      fail-on-new-egress (air-gapped LLM blueprint); connect-level interception (getaddrinfo bypasses
+      socket-class patching, PySocks #22); allowed_hosts shape per agent-airlock.`
 - [x] **Published to PyPI as `ariadne-sensemaking` (2026-06-08).** `uvx ariadne-sensemaking`
       installs + runs the MCP server without a local checkout (the last distribution step from
       [ADR-0009](./docs/architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md)).
