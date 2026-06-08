@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Literal
 
 from ariadne.datasets.base import register
 from ariadne.datasets.canonical import Canonical, Document, Entity
+from ariadne.datasets.streaming import bounded_stream, stall_guarded, stall_timeout_s
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -114,10 +115,8 @@ class WorldSpeechAdapter:
         return ds
 
     def _rows(self):
-        for taken, row in enumerate(self._stream()):
-            yield row
-            if taken + 1 >= self.limit:
-                break
+        guarded = stall_guarded(self._stream, stall_timeout=stall_timeout_s())
+        yield from bounded_stream(guarded, self.limit)
 
     def load(self):
         return map_utterances(self._rows())

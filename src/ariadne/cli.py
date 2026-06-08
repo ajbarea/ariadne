@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -826,6 +827,21 @@ def _run_profiles(env: dict[str, str]) -> int:
     return 0
 
 
+def _hard_exit(code: int) -> None:
+    """Flush stdio and hard-exit the process with ``code``.
+
+    research(2026-06): HF streaming can leave the interpreter unable to exit — a known
+    upstream bug (datasets#7467; the gc.collect fix in PR #8176 covers only the parquet
+    path on pyarrow<=24, not the audio stream worldspeech uses). After ``index`` the
+    canonical records are already durably committed to the live stores, so this one-shot
+    loader hard-exits rather than hang on wedged library threads (``_run_index`` emits no
+    spans/metrics, so nothing is lost). A module-level seam so tests can neutralize it.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(code)
+
+
 def _run_index(dataset: str, env: dict[str, str], semantic: bool = False) -> int:
     """Load a dataset's canonical records into the live stores (graph + documents)."""
     import psycopg
@@ -1130,7 +1146,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "eval":
         return _run_eval(args.workup_dir, args.fixture, reconcile=args.reconcile)
     if args.command == "index":
-        return _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
+        # Hard-exit on *either* path (clean load, or a stall TimeoutError from the guard)
+        # so a wedged HF streaming thread can never hang interpreter shutdown. See _hard_exit.
+        try:
+            rc = _run_index(args.dataset, dict(os.environ), semantic=args.semantic)
+        except BaseException:
+            traceback.print_exc()
+            _hard_exit(1)
+            raise  # unreachable in the real CLI; _hard_exit is a no-op only under test
+        _hard_exit(rc)
+        return rc
     if args.command == "profiles":
         if args.validate:
             return _validate_profile(

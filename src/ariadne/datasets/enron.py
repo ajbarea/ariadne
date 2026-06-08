@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Literal
 
 from ariadne.datasets.base import register
 from ariadne.datasets.canonical import Canonical, Document, Entity, Relationship
+from ariadne.datasets.streaming import bounded_stream, stall_guarded, stall_timeout_s
 from ariadne.evaluation.needle import FIXTURES, NeedleFixture, SupportingFact
 
 if TYPE_CHECKING:
@@ -128,15 +129,16 @@ class EnronAdapter:
         return load_dataset(_DATASET, split="train", streaming=True)
 
     def _rows(self):
-        prefix = f"{self.mailbox}/" if self.mailbox else None
-        taken = 0
-        for row in self._stream():
-            if prefix and not str(row.get("file_name") or "").startswith(prefix):
-                continue
-            yield row
-            taken += 1
-            if taken >= self.limit:
-                break
+        predicate = None
+        if self.mailbox:
+            prefix = f"{self.mailbox}/"
+
+            def in_mailbox(row) -> bool:
+                return str(row.get("file_name") or "").startswith(prefix)
+
+            predicate = in_mailbox
+        guarded = stall_guarded(self._stream, stall_timeout=stall_timeout_s())
+        yield from bounded_stream(guarded, self.limit, predicate=predicate)
 
     def load(self):
         return map_messages(self._rows())

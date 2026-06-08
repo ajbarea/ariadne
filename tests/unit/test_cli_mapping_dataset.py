@@ -50,5 +50,8 @@ def test_main_discovers_user_datasets_before_parsing(tmp_path, monkeypatch, _res
         return 0
 
     monkeypatch.setattr("ariadne.cli._run_index", _fake_index)
+    # index hard-exits to dodge the HF streaming interpreter-hang; neutralize that
+    # so main() returns here instead of terminating the test runner.
+    monkeypatch.setattr("ariadne.cli._hard_exit", lambda code: None)
     assert main(["index", "--dataset", "acme"]) == 0
     assert seen["dataset"] == "acme"
