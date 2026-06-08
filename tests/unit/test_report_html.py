@@ -46,6 +46,48 @@ def _make_workup(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def test_report_carries_the_folded_assurance_verdict(tmp_path: Path) -> None:
+    # A run whose governance.json embeds the folded verdict renders the banner:
+    # the data island carries the verdict and the page has the banner element.
+    workup = _make_workup(tmp_path)
+    (workup / "governance.json").write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "write_attempts": [],
+                "profile": {"egress": "enclave"},
+                "verdict": {
+                    "status": "advisory",
+                    "ok": True,
+                    "axes": [
+                        {
+                            "key": "read_only",
+                            "label": "Read-only contract",
+                            "pillar": "security",
+                            "tier": "hard",
+                            "status": "pass",
+                            "detail": "read-only upheld",
+                        },
+                        {
+                            "key": "tradecraft",
+                            "label": "ICD-203 tradecraft",
+                            "pillar": "quality",
+                            "tier": "advisory",
+                            "status": "advisory",
+                            "detail": "1 non-standard hedge(s)",
+                        },
+                    ],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    html = render_report(workup)
+    assert 'id="verdict-banner"' in html
+    data = extract_report_data(workup)
+    assert data["governance"]["verdict"]["status"] == "advisory"
+
+
 def test_extract_pulls_entity_note_and_ledger(tmp_path: Path) -> None:
     data = extract_report_data(_make_workup(tmp_path))
     assert data["entity"] == "Halberd"

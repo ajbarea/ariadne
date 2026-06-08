@@ -80,6 +80,41 @@ def test_governance_json_records_profile(tmp_path) -> None:
     assert payload["profile"]["max_thinking_tokens"] == 0
 
 
+def test_write_outputs_folds_a_governance_verdict(tmp_path) -> None:
+    # When all four signals are present, governance.json carries the folded,
+    # weakest-link assurance verdict (status + ok + per-axis model-card sections).
+    from ariadne.profiles import Envelope, Profile
+    from ariadne.provenance.citations import citation_coverage
+
+    led = ProvenanceLedger()
+    led.record("mcp__neo4j__read_neo4j_cypher", {"query": "MATCH (n) RETURN n"}, "r")
+    note = "Halberd is likely the cell lead [cite:g1]. Low confidence overall."
+    report = validate_citations(note, led)
+    governance = audit_read_only(led.entries)
+    tradecraft = lint_estimative_language(note)
+    prof = Profile(name="default", model="m", egress="enclave", envelope=Envelope(max_turns=None))
+
+    write_outputs(
+        tmp_path,
+        entity="Halberd",
+        note=note,
+        ledger=led,
+        report=report,
+        tradecraft=tradecraft,
+        governance=governance,
+        profile=prof,
+        coverage_after=citation_coverage(note),
+    )
+
+    verdict = json.loads((tmp_path / "governance.json").read_text())["verdict"]
+    assert verdict["status"] in ("pass", "advisory", "fail")
+    assert verdict["ok"] is True  # read-only + citations both clean here
+    keys = {a["key"] for a in verdict["axes"]}
+    assert {"read_only", "citations", "tradecraft", "egress"} == keys
+    egress_axis = next(a for a in verdict["axes"] if a["key"] == "egress")
+    assert egress_axis["status"] == "enclave"
+
+
 def test_write_outputs_persists_repair_coverage_gain(tmp_path) -> None:
     # The repair loop's measured gain lands in citations.json (ADR-0023): raw G-Cite
     # baseline -> post-repair coverage, the Δ, and the covered/total counts + passes.

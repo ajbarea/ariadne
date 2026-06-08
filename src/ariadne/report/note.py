@@ -77,4 +77,16 @@ def write_outputs(
                 "max_turns": profile.envelope.max_turns,
                 "max_thinking_tokens": profile.envelope.max_thinking_tokens,
             }
+        # Fold the four signals into one weakest-link assurance verdict when the
+        # quality axes are present too (the normal workup path supplies all four).
+        if tradecraft is not None and profile is not None:
+            from ariadne.provenance.assurance import build_verdict
+
+            payload["verdict"] = build_verdict(
+                governance=governance,
+                citations=report,
+                coverage=coverage_after,
+                tradecraft=tradecraft,
+                egress=profile.egress,
+            ).to_payload()
         (out_dir / "governance.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")

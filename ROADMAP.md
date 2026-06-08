@@ -408,8 +408,18 @@ items must not be hardened against one answer.
       `cli.workup_exit_code` (a strict breach outranks analytic-quality failures);
       shared `ProvenanceLedger.read_jsonl` loader (dedup'd with the eval scorer).
       `# research(2026-06): distinct exit 3 for a policy/security gate, not a reused 1.`
-- [ ] Extend the harness further: more needle fixtures; fold governance signals
-      into a single gate/metric; restricted-data access governance (Phase C).
+- [x] **Unified governance/assurance verdict (2026-06-08):** the four signals
+      (read-only audit · citation gate · ICD-203 tradecraft · egress posture) fold into one
+      `GovernanceVerdict` (`provenance/assurance.py`), **weakest-link not averaged** — a hard-gate
+      breach is FAIL, a tradecraft finding is ADVISORY, egress is a descriptive posture. Persisted
+      to `governance.json`; `ariadne governance` prints the multi-axis label + gates weakest-link
+      (read-only 3 > citations 1 > advisory/clean 0); the report shows one assurance banner above the
+      dashboard cards (model-card pattern). `# research(2026-06): composite single-number assurance
+      scores mislead — weakest-link gating over distinct safety-vs-quality dimensions (Kili "AI
+      Benchmarks 2026"; Frontier Safety Frameworks eval arXiv:2512.01166); multi-axis model-card
+      presentation over an average.`
+- [ ] Extend the harness further: more needle fixtures; restricted-data access
+      governance (Phase C).
 - [x] **`entity-workup` skill-prompt improvement (2026-06-04):** the note template
       gained **Alternatives considered** (analysis of competing hypotheses) +
       **Implications** sections and an explicit analytic-confidence sentence; the

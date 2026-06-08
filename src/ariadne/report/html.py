@@ -438,6 +438,20 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
   letter-spacing:.06em;padding:3px 9px;border-radius:999px;border:1px solid currentColor}
 .pill.ok{color:var(--ok)} .pill.bad{color:var(--bad)}
+.verdict{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:24px;padding:14px 18px;
+  border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.verdict .hd{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.verdict .big{font-size:13px;font-weight:800;letter-spacing:.1em;padding:4px 13px;border-radius:999px;
+  border:1.5px solid currentColor}
+.verdict.pass .big{color:var(--ok)} .verdict.advisory .big{color:var(--thread)}
+.verdict.fail .big{color:var(--bad)}
+.verdict .axes{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;margin-left:auto}
+.verdict .ax{display:inline-flex;align-items:center;gap:7px;padding:3px 11px;border-radius:999px;
+  border:1px solid var(--line);color:var(--soft)}
+.verdict .ax .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.verdict .ax.pass .dot{background:var(--ok)} .verdict .ax.fail .dot{background:var(--bad)}
+.verdict .ax.advisory .dot{background:var(--thread)}
 
 /* Layout */
 /* single-column report: full-width bands stack cleanly (no tall-left / blank-right) */
@@ -656,6 +670,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
     <h1 class="entity"><small>Target entity</small><span id="entity">__ENTITY_TITLE__</span></h1>
   </div>
 
+  <section class="verdict reveal" id="verdict-banner" style="display:none;animation-delay:.04s"></section>
+
   <section class="dash reveal" id="dash" style="animation-delay:.05s"></section>
 
   <div class="grid">
@@ -821,6 +837,22 @@ document.querySelectorAll("#dash .stat").forEach(card=>{
   card.addEventListener("click",()=>card.classList.toggle("open"));
   card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();card.classList.toggle("open");}});
 });
+
+// ---- Assurance verdict banner: the folded, weakest-link governance verdict ----
+// One trust answer over read-only (security) + citations (sourcing) + tradecraft
+// (calibration) + egress (isolation). The dashboard cards below are the drill-down.
+const verdict = (DATA.governance||{}).verdict || null;
+if(verdict){
+  const vb=$("#verdict-banner");
+  vb.classList.add(verdict.status);  // pass | advisory | fail
+  const axStatus=a=>(a.tier==="posture")?"":a.status;  // posture dot stays neutral
+  const axes=(verdict.axes||[]).map(a=>
+    `<span class="ax ${axStatus(a)}" title="${a.detail}"><span class="dot"></span>${a.label}</span>`
+  ).join("");
+  vb.innerHTML=`<span class="hd">Assurance <span class="big">${verdict.status}</span></span>`
+    +`<span class="axes">${axes}</span>`;
+  vb.style.display="flex";
+}
 
 // ---- Provenance flow: entity -> source(s) -> evidence (tiered, always legible) ----
 const SRC_COLORS={graph:"#69b6d6",relational:"#b58ce0",text:"#76d3a4",evidence:"#7c8190"};

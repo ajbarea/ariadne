@@ -623,28 +623,99 @@ def _run_eval(workup_dir: str, fixture_name: str = "halberd", reconcile: str | N
     return 0 if report.grounded else 1
 
 
-def _run_governance(workup_dir: str) -> int:
-    """Re-audit a persisted workup's ledger for read-only violations (offline gate).
+def _load_unified_verdict(workup_dir: Path, governance: GovernanceReport):
+    """Fold the four persisted signals into one verdict, or None if quality artifacts absent.
 
-    Recomputes from ``provenance.jsonl`` rather than trusting ``governance.json`` —
-    the same verify-don't-trust posture the audit itself takes. Gates by default:
-    exit 3 on a read-only contract breach, like ``eval`` (no API key needed).
+    The read-only axis uses the *freshly recomputed* ``governance`` audit (verify-
+    don't-trust); the citation / tradecraft / egress axes are read from the run's own
+    persisted artifacts (those gates already ran at workup time, so the recorded
+    result is authoritative). Returns None when ``citations.json`` is missing, so a
+    ledger-only dir degrades to the plain read-only gate.
+    """
+    from ariadne.provenance.assurance import build_verdict
+    from ariadne.provenance.citations import CitationReport, CoverageStats
+    from ariadne.provenance.tradecraft import TradecraftReport
+
+    cit_path = Path(workup_dir) / "citations.json"
+    if not cit_path.exists():
+        return None
+    cit = json.loads(cit_path.read_text(encoding="utf-8"))
+    citations = CitationReport(
+        ok=cit.get("ok", False),
+        cited=cit.get("cited", []),
+        dangling=cit.get("dangling", []),
+        unused=cit.get("unused", []),
+        uncited=cit.get("uncited", []),
+        unsupported=cit.get("unsupported", []),
+    )
+    cov_block = cit.get("coverage")
+    coverage = (
+        CoverageStats(
+            cov_block.get("covered", 0), cov_block.get("total", 0), cov_block.get("after")
+        )
+        if cov_block
+        else None
+    )
+
+    tc_path = Path(workup_dir) / "tradecraft.json"
+    tc = json.loads(tc_path.read_text(encoding="utf-8")) if tc_path.exists() else {}
+    tradecraft = TradecraftReport(
+        standard_terms=[tuple(t) for t in tc.get("standard_terms", [])],
+        nonstandard_terms=tc.get("nonstandard_terms", []),
+        has_confidence_statement=tc.get("has_confidence_statement", False),
+    )
+
+    gov_path = Path(workup_dir) / "governance.json"
+    gov = json.loads(gov_path.read_text(encoding="utf-8")) if gov_path.exists() else {}
+    egress = gov.get("profile", {}).get("egress", "inherit")
+
+    return build_verdict(
+        governance=governance,
+        citations=citations,
+        coverage=coverage,
+        tradecraft=tradecraft,
+        egress=egress,
+    )
+
+
+def _run_governance(workup_dir: str) -> int:
+    """Re-audit a persisted workup and report the unified assurance verdict (offline gate).
+
+    Recomputes the read-only audit from ``provenance.jsonl`` rather than trusting
+    ``governance.json`` — the same verify-don't-trust posture the audit takes — then
+    folds it with the run's persisted citation / tradecraft / egress signals into one
+    weakest-link verdict. Gating precedence mirrors the live workup: a read-only
+    breach exits 3 (security outranks all), a persisted citation failure exits 1
+    (analytic), advisory/clean exits 0. No API key needed.
     """
     ledger_path = Path(workup_dir) / "provenance.jsonl"
     if not ledger_path.exists():
         print(f"No provenance.jsonl in {workup_dir!r} — nothing to audit.", file=sys.stderr)
         return 2
     report = audit_read_only(ProvenanceLedger.read_jsonl(ledger_path))
-    if report.ok:
+    verdict = _load_unified_verdict(Path(workup_dir), report)
+
+    if verdict is not None:
+        print(f"Assurance verdict — {workup_dir}: {verdict.status.upper()}")
+        for axis in verdict.axes:
+            mark = {"pass": "ok", "fail": "FAIL", "advisory": "advisory"}.get(axis.status, "·")
+            print(f"  [{mark:<8}] {axis.label:<20} {axis.detail}")
+    elif report.ok:
+        # Ledger-only dir (e.g. a committed fixture): plain read-only OK message.
         print(f"Governance OK — {workup_dir}: read-only contract upheld.")
-        return 0
-    verbs = sorted({w["verb"] for w in report.write_attempts})
-    print(
-        f"GOVERNANCE FAILED — {workup_dir}: read-only contract violated, "
-        f"write verbs in the ledger {verbs}.",
-        file=sys.stderr,
-    )
-    return 3
+
+    if not report.ok:
+        verbs = sorted({w["verb"] for w in report.write_attempts})
+        print(
+            f"GOVERNANCE FAILED — {workup_dir}: read-only contract violated, "
+            f"write verbs in the ledger {verbs}.",
+            file=sys.stderr,
+        )
+        return 3
+    if verdict is not None and not verdict.ok:
+        print(f"GOVERNANCE FAILED — {workup_dir}: citation gate failed.", file=sys.stderr)
+        return 1
+    return 0
 
 
 def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:

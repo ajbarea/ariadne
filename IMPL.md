@@ -38,6 +38,36 @@ manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
 
+**Unified governance/assurance verdict — Phase 4 fold, shipped 2026-06-08.** The four
+governance signals — read-only audit (security), citation gate (sourcing), ICD-203 tradecraft
+(calibration), egress posture (isolation) — folded into one analyst-facing `GovernanceVerdict`
+(`provenance/assurance.py`). **Weakest-link, never averaged**: a hard-gate breach (read-only /
+citations) is FAIL, an advisory finding (tradecraft) is ADVISORY, the egress posture is descriptive
+and never moves the status — a single composite number would let a strong analytic-quality score
+mask a safety-gate breach. Persisted into `governance.json` (a `verdict` block: status + ok + the
+per-axis model-card sections); `ariadne governance` now prints the unified multi-axis label and gates
+weakest-link (read-only breach exit 3 > citation fail exit 1 > advisory/clean 0), recomputing the
+read-only axis fresh from the ledger (verify-don't-trust) while reading the run's own persisted
+citation/tradecraft/egress results; the report renders one assurance banner above the dashboard
+(model-card pattern — summary verdict + the existing four cards as the drill-down, color-coded
+green/amber/red, headless-verified). TDD; 514 unit green. `# research(2026-06): composite
+single-number assurance scores mislead; weakest-link gating over distinct safety-vs-quality
+dimensions is the 2026 standard (Kili "AI Benchmarks 2026"; "Evaluating Frontier Safety Frameworks"
+arXiv:2512.01166 — assurance is the weakest-treated dimension, so it must not be averaged away);
+multi-axis model-card presentation over an average (AI model cards 2026).`
+
+> Smoke finding (free, no API): the on-disk `workups/halberd` run scores **reconciliation 2/2 +
+> grounded=true** and its note surfaces *both* planted needles (the Halberd↔Wren shared-cover tie
+> and the Talon Compound-Beta conflict) as its lead finding — so the prior handoff's "cross-store
+> miss" was **stochastic run-to-run variance, not a reproducible bug** (N=1 either way proves
+> nothing; reliability characterization needs paired live workups + `compare` = real API spend,
+> deferred). But that same run's **citation gate is FAIL**: the "Decisive finding:" summary line
+> under *Alternatives considered* is uncited. The unified verdict makes that visible at a glance
+> where the four scattered dashboard cards buried it — exactly the verification-ease win the fold
+> was for.
+
+---
+
 **Deepen a skill from new experience — `distil --into`, shipped 2026-06-07** ([ADR-0032](./docs/architecture/decisions/0032-deepening-a-skill-from-new-experience.md)).
 Skills now improve across uses, not just get created once: `ariadne distil <run> --into <skill-dir>`
 does a **trace-conditioned, bounded, conflict-aware revision** of an existing skill from a new
