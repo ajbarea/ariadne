@@ -8,7 +8,7 @@
 [![uv](https://img.shields.io/badge/uv-package_manager-DE5FE9?style=flat-square)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
 
-📖 **Docs:** <https://ajbarea.github.io/ariadne/>
+**Docs:** <https://ajbarea.github.io/ariadne/>
 
 > Ariadne gave Theseus the thread that let him traverse the Labyrinth and find
 > his way back out. This project is that thread: a single line of reasoning that
@@ -24,31 +24,31 @@
 ## The problem
 
 Intelligence about a single entity (a person, a unit, an organizational node)
-is scattered across **heterogeneous systems** — graph databases, structured
-relational stores, and unstructured repositories — and across **modalities** —
+is scattered across heterogeneous systems — graph databases, structured
+relational stores, and unstructured repositories — and across modalities:
 metadata, free text, imagery, and video. No single query interface spans that
 range. Analysts pivot manually between systems, losing context and momentum at
-every transition. The hard part isn't access; it's **coherent, multi-hop
-reasoning** across representations, where the decisive link between two facts
+every transition. The hard part isn't access; it's coherent, multi-hop
+reasoning across representations, where the decisive link between two facts
 may exist only through an implicit organizational relationship buried in a
 different store and a different modality.
 
 ## The approach
 
-Use an agentic AI harness — the **Claude Agent SDK** — as a *unifying analytic
+Use an agentic AI harness — the Claude Agent SDK — as a *unifying analytic
 interface*, not a replacement for existing infrastructure. The harness is an
-**orchestration layer** that dispatches specialized tools and skills to
+orchestration layer that dispatches specialized tools and skills to
 retrieve, interpret, and synthesize across graph, structured, and unstructured
 sources in one coordinated workflow.
 
 **Central research question:** given the harness and its UI, what specific
-**tools, skills, and hooks** are necessary to support a rigorous end-to-end
-analytic workflow targeting entities within an organizational hierarchy — and
+tools, skills, and hooks are necessary to support a rigorous end-to-end
+analytic workflow targeting entities within an organizational hierarchy, and
 what is the *minimum viable toolset* that demonstrates real analytic value?
 
 ## Deliverable
 
-A working prototype that takes a **target entity or organizational node** as
+A working prototype that takes a target entity or organizational node as
 input and, through a coordinated sequence of tool invocations, surfaces relevant
 evidence from across all available data structures and modalities, synthesizing
 findings into a coherent analytic product. Success is measured by the harness's
@@ -61,16 +61,24 @@ ability to:
 
 ## SCADS umbrella role
 
-Ariadne is conceived as an **umbrella effort** within SCADS. It does not
-duplicate sibling-project work; it defines **integration interfaces** so that
+Ariadne is conceived as an umbrella effort within SCADS. It does not
+duplicate sibling-project work; it defines integration interfaces so that
 contributions from other SCADS projects — graph-extraction pipelines, entity-
 resolution models, multimodal indexing schemes — can be surfaced as callable
 tools within the harness. It is both a standalone research contribution and a
 unifying demonstration layer for the SCADS portfolio.
 
+## Install
+
+```bash
+pip install ariadne-sensemaking      # or: uv add ariadne-sensemaking
+```
+
+This installs the `ariadne` CLI and the `ariadne-sensemaking` MCP server entry point.
+
 ## Use from any AI CLI
 
-The `ariadne` MCP server exposes the `workup` tool to any MCP client — Claude
+The `ariadne` MCP server exposes the `workup` tool to any MCP client: Claude
 Code, Copilot, Gemini CLI, Cursor, Windsurf, and others. Two install paths:
 
 **Claude Code (one-click):** add this repo's marketplace, then install the
@@ -84,31 +92,20 @@ plugin:
 This bundles the Ariadne MCP server + the `analyst-workup` skill into Claude Code
 in a single step. A workup is then available via the `ariadne` server tool.
 
-**Any other MCP client:** add the server directly to the client's MCP config.
-From a local checkout (works now):
+**Any other MCP client:** point the client's MCP config at the published
+package, and `uvx` will fetch and run it with no clone or manual install:
 
 ```json
 {
   "mcpServers": {
-    "ariadne": { "command": "python", "args": ["-m", "ariadne.mcp_server"] }
+    "ariadne": { "command": "uvx", "args": ["ariadne-sensemaking"] }
   }
 }
 ```
 
-Or have `uvx` run it for you (no clone, no manual install) straight from the repo:
-
-```json
-{
-  "mcpServers": {
-    "ariadne": {
-      "command": "uvx",
-      "args": ["--from", "git+https://github.com/ajbarea/ariadne", "ariadne-sensemaking"]
-    }
-  }
-}
-```
-
-Once it's published to PyPI the short form works too: `"args": ["ariadne-sensemaking"]`.
+To track an unreleased commit instead, point `uvx` at the repo with
+`"args": ["--from", "git+https://github.com/ajbarea/ariadne", "ariadne-sensemaking"]`;
+to run from a local checkout, use `"command": "python", "args": ["-m", "ariadne.mcp_server"]`.
 
 Config caveat: the tool is portable; the data is not. Point the server at your
 stores (`NEO4J_*` / `DATABASE_URI`) and set `ANTHROPIC_API_KEY` per install.

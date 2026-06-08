@@ -5,7 +5,7 @@ description = "Sensemaking harness for nonatomic entities: an agentic analytic i
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = { text = "MIT" }
-authors = [{ name = "AJ Barea", email = "ajb6289@rit.edu" }]
+authors = [{ name = "AJ Barea", email = "ajbareaa@gmail.com" }]
 keywords = [
     "agentic-ai",
     "sensemaking",
@@ -14,6 +14,18 @@ keywords = [
     "claude-agent-sdk",
     "model-context-protocol",
     "intelligence-analysis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
     # research(2026-06): Claude Agent SDK is the harness (orchestrator–worker loop,
@@ -84,7 +96,10 @@ ariadne-sensemaking = "ariadne.mcp_server:main"
 ariadne-mcp = "ariadne.mcp_server:main"
 
 [project.urls]
+Documentation = "https://ajbarea.github.io/ariadne/"
 Repository = "https://github.com/ajbarea/ariadne"
+Issues = "https://github.com/ajbarea/ariadne/issues"
+Changelog = "https://github.com/ajbarea/ariadne/releases"
 
 [dependency-groups]
 dev = [
