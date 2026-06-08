@@ -68,8 +68,12 @@ _NONSTANDARD_RE = re.compile(r"\b(" + "|".join(_NONSTANDARD) + r")\b", re.IGNORE
 # and markdown bold before the level. research(2026-06): ICD-203 confidence ∈
 # {low, moderate, high}; matching both orders stops a spurious "no confidence" advisory.
 _CONFIDENCE_RE = re.compile(
-    r"\b(?:low|moderate|high)\s+confidence\b"
-    r"|\bconfidence\b(?:\s+\w+){0,5}?\s*(?:is|are|:|—|–|=)\s*\**\s*(?:low|moderate|high)\b",
+    r"\b(?:low|moderate|high)\s+confidence\b"  # "<level> confidence"
+    # "confidence … : <level>" — a colon/dash strongly marks a label→value, so allow a
+    # bounded gap (incl. a parenthetical like "(H1)") between them, stopping at sentence end
+    r"|\bconfidence\b[^.?!\n]{0,40}?[:—–=]\s*\**\s*(?:low|moderate|high)\b"
+    # "confidence … is/are <level>" — tighter word-gap (the copula is weaker evidence)
+    r"|\bconfidence\b(?:\s+\w+){0,5}?\s+(?:is|are)\s+\**(?:low|moderate|high)\b",
     re.IGNORECASE,
 )
 

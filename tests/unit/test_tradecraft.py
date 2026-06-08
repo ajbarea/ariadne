@@ -40,6 +40,8 @@ def test_detects_confidence_stated_label_first() -> None:
         "Analytic confidence in that basis is **high** [cite:g1].",
         "Our confidence here is low.",
         "Confidence — moderate.",
+        # label-value form with a parenthetical between 'confidence' and the colon
+        "Analytic confidence in the decisive finding (H1): moderate. [cite:g1]",
     ):
         assert lint_estimative_language(note).has_confidence_statement is True, note
 
