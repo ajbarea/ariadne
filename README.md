@@ -81,9 +81,8 @@ plugin:
 # then: /plugin install ariadne
 ```
 
-This bundles the MCP server (`ariadne-mcp`) + the `analyst-workup` skill into
-Claude Code in a single step. A workup is then available via the `ariadne`
-server tool.
+This bundles the Ariadne MCP server + the `analyst-workup` skill into Claude Code
+in a single step. A workup is then available via the `ariadne` server tool.
 
 **Any other MCP client:** add the server directly to the client's MCP config.
 From a local checkout (works now):
@@ -96,15 +95,20 @@ From a local checkout (works now):
 }
 ```
 
-Once Ariadne is published to PyPI, the `uvx` form will also work:
+Or have `uvx` run it for you (no clone, no manual install) straight from the repo:
 
 ```json
 {
   "mcpServers": {
-    "ariadne": { "command": "uvx", "args": ["--from", "ariadne", "ariadne-mcp"] }
+    "ariadne": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/ajbarea/ariadne", "ariadne-sensemaking"]
+    }
   }
 }
 ```
+
+Once it's published to PyPI the short form works too: `"args": ["ariadne-sensemaking"]`.
 
 Config caveat: the tool is portable; the data is not. Point the server at your
 stores (`NEO4J_*` / `DATABASE_URI`) and set `ANTHROPIC_API_KEY` per install.

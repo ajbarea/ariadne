@@ -1,0 +1,34 @@
+name: release
+
+# Publish to PyPI via trusted publishing (OIDC) when a GitHub Release is published.
+# No stored token: PyPI is configured to trust this repo + workflow. Before the first
+# release, add a pending publisher at https://pypi.org/manage/account/publishing/ with
+#   PyPI project name: ariadne-sensemaking
+#   Owner:             ajbarea
+#   Repository:        ariadne
+#   Workflow filename: release.yml
+# (leave the environment blank, matching this workflow). Then cut a GitHub Release.
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  pypi:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # mint the short-lived OIDC token PyPI trusts; no long-lived secret
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false # don't leave the checkout token in the workspace
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: false # no cache for a publish job (cache-poisoning hardening)
+      - name: Build the sdist + wheel
+        run: uv build
+      - name: Publish to PyPI (trusted publishing)
+        run: uv publish --trusted-publishing always

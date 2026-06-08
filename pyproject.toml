@@ -1,7 +1,7 @@
 [project]
-name = "ariadne"
+name = "ariadne-sensemaking"
 version = "0.1.0"
-description = "Sensemaking harness for nonatomic entities — an agentic analytic interface over heterogeneous, multimodal data (SCADS)"
+description = "Sensemaking harness for nonatomic entities: an agentic analytic interface over heterogeneous, multimodal data (SCADS)"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = { text = "MIT" }
@@ -78,6 +78,9 @@ adaptive = ["anthropic>=0.40"]
 
 [project.scripts]
 ariadne = "ariadne.__main__:main"
+# The MCP server entry point. `ariadne-sensemaking` matches the PyPI distribution name so
+# `uvx ariadne-sensemaking` runs the server directly; `ariadne-mcp` is kept as an alias.
+ariadne-sensemaking = "ariadne.mcp_server:main"
 ariadne-mcp = "ariadne.mcp_server:main"
 
 [project.urls]
