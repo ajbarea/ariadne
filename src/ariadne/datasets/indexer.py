@@ -33,6 +33,11 @@ def index_graph(records: Iterable[Canonical]) -> list[str]:
             stmt = f"MERGE (n:{label(rec.type)} {{id: {rec.id!r}}}) SET n.name = {rec.name!r}"
             if rec.attributes:
                 stmt += ", " + _props(rec.attributes, "n")
+            if rec.aliases:
+                # List property so the subgraph resolver can match on alias membership
+                # (ADR-0016 Tier-1 exact-key) and the `aliases` key exists in the graph
+                # — without it the resolver's `n.aliases` clause warns "key does not exist".
+                stmt += ", n.aliases = [" + ", ".join(repr(a) for a in rec.aliases) + "]"
             out.append(stmt)
         elif isinstance(rec, Relationship):
             stmt = (

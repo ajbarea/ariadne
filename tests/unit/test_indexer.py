@@ -14,6 +14,24 @@ def test_entity_becomes_idempotent_merge_keyed_on_id() -> None:
     assert "alias" in cy[0] and "H1" in cy[0]
 
 
+def test_entity_aliases_persist_as_a_list_property() -> None:
+    # The canonical Entity carries `aliases` for resolution (ADR-0016); the indexer
+    # must write them to the graph so the subgraph resolver's `n.aliases` clause is
+    # live (and so the property key exists — no Neo4j "key does not exist" warning).
+    cy = index_graph(
+        [Entity(id="person:Ruth", type="person", name="Babe Ruth", aliases=("ruthba01", "George"))]
+    )
+    stmt = cy[0]
+    assert "n.aliases = [" in stmt
+    assert "'ruthba01'" in stmt and "'George'" in stmt
+
+
+def test_entity_without_aliases_omits_the_property() -> None:
+    # No empty list written when there are no aliases — keeps the MERGE clean.
+    cy = index_graph([Entity(id="person:X", type="person", name="X")])
+    assert "aliases" not in cy[0]
+
+
 def test_relationship_matches_endpoints_by_id_then_merges_edge() -> None:
     cy = index_graph(
         [

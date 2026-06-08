@@ -7,10 +7,10 @@ CREATE (sig:Unit {name: 'Signals-Cell', echelon: 3});
 CREATE (log:Unit {name: 'Logistics-Cell', echelon: 3});
 CREATE (site:Site {name: 'Compound-Alpha'});
 
-CREATE (halberd:Person {name: 'Halberd', alias: 'H1'});
-CREATE (wren:Person {name: 'Wren', alias: 'W4'});
-CREATE (talon:Person {name: 'Talon', alias: 'T2'});
-CREATE (osprey:Person {name: 'Osprey', alias: 'O7'});
+CREATE (halberd:Person {name: 'Halberd', alias: 'H1', aliases: ['H1']});
+CREATE (wren:Person {name: 'Wren', alias: 'W4', aliases: ['W4']});
+CREATE (talon:Person {name: 'Talon', alias: 'T2', aliases: ['T2']});
+CREATE (osprey:Person {name: 'Osprey', alias: 'O7', aliases: ['O7']});
 
 MATCH (ops:Unit {name:'Operations-Wing'}), (hq:Unit {name:'Directorate-HQ'})
 CREATE (ops)-[:REPORTS_TO]->(hq);
