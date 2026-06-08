@@ -271,4 +271,5 @@ subagent fan-out (provenance blocker dissolved by the SDK) ·
 [ADR-0016](./docs/architecture/decisions/0016-entity-resolution-across-stores.md)
 entity resolution (tiered, ingestion-first).
 
-Blocked on AJ: Phase C / Avocado (licensed data), PyPI publish (token + name).
+Blocked on AJ: Phase C / Avocado (licensed data). (PyPI publish shipped 2026-06-08 as
+`ariadne-sensemaking`, via trusted publishing — see ROADMAP.)

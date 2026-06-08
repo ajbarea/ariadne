@@ -1,9 +1,9 @@
 # Architecture
 
-Design notes for Ariadne's harness. The shape below is now implemented through
-the heterogeneous-retrieval and rigor phases; the [Decision log](decisions/index.md)
-records each contestable choice, and the [Roadmap](../roadmap.md) tracks what is
-built versus planned.
+Design notes for Ariadne's harness. The shape below is implemented end to end, from
+heterogeneous retrieval and analytic rigor through distribution and an adaptive,
+self-improving harness; the [Decision log](decisions/index.md) records each contestable
+choice, and the [Roadmap](../roadmap.md) tracks what is built versus planned.
 
 ## Building blocks
 
@@ -95,7 +95,28 @@ for the full design.
 Ariadne is consumable as an MCP server (the `workup` tool runs the full harness
 and returns a cited analytic note) from any MCP client, with a Claude Code
 plugin wrapper for one-click install and slash-command UX, per
-[ADR-0009](decisions/0009-distribute-as-mcp-server-and-plugin.md).
+[ADR-0009](decisions/0009-distribute-as-mcp-server-and-plugin.md). It is published to PyPI as
+`ariadne-sensemaking` (`uvx ariadne-sensemaking`).
+
+## Adaptive & self-improvement
+
+Beyond the built-in datasets, Ariadne can **adapt** to a user's own store and **improve from
+experience**, without eroding the read-only, citation-gated, human-ratified spine
+([ADR-0020](decisions/0020-adaptive-self-improving-ariadne.md)). Everything rides one
+lifecycle, **propose, ratify, freeze**: the agent proposes a declarative artifact, a human
+ratifies it, and it freezes as config the deterministic gates keep checking. The loop edits
+only those ratified artifacts, never its own gates, scorers, or code.
+
+- **Adapt (Axis A):** introspect a real Postgres, propose a mapping into the canonical schema
+  (deterministic or LLM), ratify it, and the existing indexer / workup / eval run unchanged on
+  the user's data (`ariadne map`); plus a declarative user ontology and a dynamic MCP surface
+  that activates a ratified store at runtime.
+- **Learn (Axis B):** distil a high-scoring workup into a reusable analytic skill
+  (`ariadne distil`), reflect on a low-scoring one and propose grounded, gold-free refinements
+  (`ariadne reflect`), deepen an existing skill from a new run (`distil --into`), and measure
+  whether a learned change actually helps before adopting it (`ariadne compare`: repairs net of
+  regressions on the same eval instance). The eval harness is the external verifiable reward the
+  loop can never edit.
 
 ## Still open
 

@@ -83,5 +83,6 @@ which is why they are P0/P1 and not aspirations.
   the deliberate over-investment in C-spec the brief asks for.
 - **The live edge is P2 deployment validation** (ADR-0012: which open-weight model
   clears the eval bar), exactly where current work sits.
-- **Nothing in P0/P1 is blocked.** The remaining blocked items (licensed Avocado
-  data, PyPI publish) are P2 and gated on access/credentials, not on engineering.
+- **Nothing in P0/P1 is blocked.** The one remaining blocked item (licensed Avocado
+  data) is P2 and gated on data access, not on engineering. The PyPI publish has shipped
+  (`ariadne-sensemaking`).

@@ -494,9 +494,12 @@ items must not be hardened against one answer.
       rationale: [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md).
       Open follow-ups: a no-egress CI guard; signed open-weight model-bundle import.
       `# research(2026-06): air-gapped LLM agent deployment — LiteLLM/vLLM proxy, egress as first-class.`
-- [ ] **Publish to PyPI** so `uvx ariadne-mcp` installs without a local checkout
-      (the one remaining distribution step from ADR-0009). Blocked on AJ: needs a
-      PyPI token + a non-`ariadne` package name (taken by the GraphQL lib).
+- [x] **Published to PyPI as `ariadne-sensemaking` (2026-06-08).** `uvx ariadne-sensemaking`
+      installs + runs the MCP server without a local checkout (the last distribution step from
+      [ADR-0009](./docs/architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md)).
+      `ariadne` and `ariadne-mcp` were both taken on PyPI, so the distribution is
+      `ariadne-sensemaking` (the import package stays `ariadne`); published via GitHub **trusted
+      publishing** (OIDC, no stored token) on a release — `.github/workflows/release.yml`.
 - [x] **Observability — traces + metrics for the MCP server / harness (2026-06-03).** [ADR-0010](./docs/architecture/decisions/0010-observability-opentelemetry.md).
       `# research(2026-06):` instrument with **OpenTelemetry GenAI semantic
       conventions** (CNCF-backed, adopted by Datadog/Google/AWS/Azure) — the

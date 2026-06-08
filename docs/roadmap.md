@@ -43,10 +43,18 @@ still-open items as unsettled; don't harden code against one answer.
 | **2** | Heterogeneous retrieval | mostly complete: Postgres SQL connector + hybrid (full-text + vector, RRF) wired into the loop; dataset-agnostic seam; subagent fan-out deferred ([ADR-0005](architecture/decisions/0005-defer-subagent-fan-out.md)) |
 | **3** | Multimodal fusion | planned: multimodal-to-text extraction; cross-modal evidence fusion |
 | **4** | Rigor, eval & integration | mostly complete: citation gate, ICD-203 tradecraft lint, planted-needle + rubric eval, reconciliation scoring, read-only governance gate, SCADS integration interfaces |
-| **5** | Deployment hardening | in progress: cloud-vs-air-gapped fork resolved ([ADR-0012](architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)); OpenTelemetry observability; model profiles ([ADR-0013](architecture/decisions/0013-user-selectable-model-profiles.md)); open-weight validation + PyPI publish remain |
+| **5** | Deployment hardening | mostly complete: cloud-vs-air-gapped fork resolved ([ADR-0012](architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)); OpenTelemetry observability; model profiles ([ADR-0013](architecture/decisions/0013-user-selectable-model-profiles.md)); published to PyPI as `ariadne-sensemaking` via trusted publishing; open-weight validation remains |
+| **6** | Adaptive & self-improving harness | first slices complete ([ADR-0020](architecture/decisions/0020-adaptive-self-improving-ariadne.md)): adapt to a user's own Postgres (introspect, propose a mapping, ratify, run the existing pipeline unchanged); a declarative user ontology; a dynamic MCP surface; and bounded, audited self-improvement, `distil` / `reflect` / `compare` / `distil --into` (learn from a good run, reflect on a poor one, measure net effect, deepen a skill) on a propose-ratify-freeze spine |
 
 ## Recently shipped
 
+- **2026-06-08**: Published to PyPI as `ariadne-sensemaking` (GitHub trusted publishing);
+  first-run UX polish (corrected quickstart paths, surfaced the interactive report,
+  actionable run-dir errors, pre-flight store-reachability before the live loop).
+- **2026-06-07**: Adaptive & self-improving harness (Phase 6, first slices): schema
+  introspection into a ratified mapping that the existing pipeline runs unchanged; a
+  declarative user ontology; a dynamic MCP surface; and bounded, audited self-improvement
+  (`distil`, `reflect`, `compare`, `distil --into`) on a propose-ratify-freeze spine.
 - **2026-06-04/05**: LLM-rubric analytic-standards eval, reconciliation scoring,
   read-only governance hard-fail gate, user-selectable model profiles, SCADS
   integration interfaces + reusable workflow patterns, OpenTelemetry observability.
