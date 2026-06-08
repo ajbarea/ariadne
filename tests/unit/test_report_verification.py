@@ -13,7 +13,12 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from ariadne.report.html import _clean_evidence, extract_report_data, render_report
+from ariadne.report.html import (
+    _clean_evidence,
+    _eval_caveats,
+    extract_report_data,
+    render_report,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -118,6 +123,75 @@ def test_report_has_copy_query_affordance(tmp_path: Path) -> None:
     html = render_report(tmp_path)
     assert "clipboard" in html.lower()
     assert "copy" in html.lower()
+
+
+# ---- Result legibility: turn below-ideal eval scores into analyst caveats ----
+
+
+def test_eval_caveats_empty_without_an_eval() -> None:
+    assert _eval_caveats(None) == []
+
+
+def test_eval_caveats_flags_unhandled_reconciliation() -> None:
+    """0/2 cross-store cases is the halberd run's real signal — say what it means."""
+    cav = _eval_caveats(
+        {
+            "grounded": True,
+            "recall": 1.0,
+            "trajectory": 1.0,
+            "reconciliation": {"handled": 0, "total": 2, "reconciliation": 0.0},
+        }
+    )
+    assert len(cav) == 1
+    assert "0 of 2" in cav[0]
+    assert "cross-store" in cav[0].lower()
+
+
+def test_eval_caveats_flags_not_grounded() -> None:
+    cav = _eval_caveats({"grounded": False, "recall": 1.0, "trajectory": 1.0})
+    assert any("grounded" in c.lower() for c in cav)
+
+
+def test_eval_caveats_flags_partial_recall() -> None:
+    cav = _eval_caveats({"grounded": True, "recall": 0.5, "trajectory": 1.0})
+    assert any("recall" in c.lower() for c in cav)
+
+
+def test_eval_caveats_silent_on_a_clean_run() -> None:
+    """A fully-grounded run with every planted case handled raises no caveat (no noise)."""
+    cav = _eval_caveats(
+        {
+            "grounded": True,
+            "recall": 1.0,
+            "trajectory": 1.0,
+            "pivot_burden": 6.7,
+            "context_utilization": 0.55,
+            "reconciliation": {"handled": 2, "total": 2, "reconciliation": 1.0},
+        }
+    )
+    assert cav == []
+
+
+def test_report_renders_eval_caveats(tmp_path: Path) -> None:
+    """The rendered eval panel surfaces the caveats so a polished note can't hide a miss."""
+    _write_workup(tmp_path, excerpt="data")
+    (tmp_path / "eval.json").write_text(
+        json.dumps(
+            {
+                "entity": "Halberd",
+                "grounded": True,
+                "recall": 1.0,
+                "trajectory": 1.0,
+                "fixture": "halberd",
+                "reconciliation": {"handled": 0, "total": 2, "reconciliation": 0.0},
+            }
+        ),
+        encoding="utf-8",
+    )
+    data = extract_report_data(tmp_path)
+    assert data["evaluation_caveats"]  # derived into the payload
+    html = render_report(tmp_path)
+    assert "evcav" in html  # the caveat block the eval panel renders
 
 
 def _write_workup(tmp_path: Path, *, excerpt: str, full_len: int | None = None) -> None:

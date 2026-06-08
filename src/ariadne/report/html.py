@@ -107,6 +107,48 @@ def _pretty_payload(text: str) -> str:
     return json.dumps(obj, indent=2, ensure_ascii=False) if isinstance(obj, dict | list) else text
 
 
+def _eval_caveats(evaluation: dict | None) -> list[str]:
+    """Plain-language analyst caveats for below-ideal *verifiable-reward* eval scores.
+
+    A polished, confident note can hide a real miss the eval already caught — the halberd
+    run scores ``grounded`` yet handled 0/2 planted cross-store reconciliation cases (it
+    found Halberd's cover employer but never pivoted to who else shares it). A bare "0%" in
+    the panel reads as noise; this turns it into "the agent may have missed a non-obvious
+    cross-store tie." Derived only from the public scores, never the held-out gold, so it
+    stays gold-free; descriptive dimensions (pivot burden, context utilization) are not
+    defects and are never flagged.
+    """
+    if not evaluation:
+        return []
+    out: list[str] = []
+    if evaluation.get("grounded") is False:
+        out.append(
+            "Not grounded — the decisive finding was not confirmed against retrieved evidence "
+            "(surfaced and traversed). Treat the headline judgment as unverified."
+        )
+    recall = evaluation.get("recall")
+    if isinstance(recall, int | float) and not isinstance(recall, bool) and recall < 1.0:
+        out.append(
+            f"Needle recall {round(recall * 100)}% — the agent surfaced only part of the "
+            "planted ground-truth evidence; some facts were missed."
+        )
+    traj = evaluation.get("trajectory")
+    if isinstance(traj, int | float) and not isinstance(traj, bool) and traj < 1.0:
+        out.append(
+            f"Partial trajectory {round(traj * 100)}% — not every required hop was walked, so "
+            "the path to the finding is incomplete."
+        )
+    rec = evaluation.get("reconciliation") or {}
+    total, handled = rec.get("total") or 0, rec.get("handled") or 0
+    if total and handled < total:
+        out.append(
+            f"{handled} of {total} planted cross-store reconciliation case(s) handled — the "
+            "agent may have missed a non-obvious cross-store tie or an inter-store conflict; "
+            "re-check the cross-source findings."
+        )
+    return out
+
+
 def _inline(text: str) -> str:
     """Escape one line of note prose, then re-introduce code/bold/italic + cite chips."""
     s = _html.escape(text)
@@ -263,6 +305,7 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
                 "truncated": bool(full_len) and full_len > len(excerpt_raw),
             }
         )
+    evaluation = _load_json(d / "eval.json")
     return {
         "entity": entity,
         "note_html": _render_note_html(note),
@@ -277,7 +320,8 @@ def extract_report_data(workup_dir: str | Path) -> dict[str, Any]:
         "reconciliation": _extract_reconciliation(note),
         "utilization": context_utilization(note, ledger),
         # Optional, present only when `ariadne eval` / `ariadne rubric` were run.
-        "evaluation": _load_json(d / "eval.json"),
+        "evaluation": evaluation,
+        "evaluation_caveats": _eval_caveats(evaluation),
         "rubric": _load_json(d / "rubric.json"),
     }
 
@@ -544,6 +588,10 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .evsub{font-family:var(--sans);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--muted);font-weight:700;padding:16px 22px 0}
 .evgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:12px;padding:11px 22px 4px}
+/* Eval caveats — below-ideal verifiable-reward scores, in plain language for the analyst */
+.evcav{margin:14px 22px 4px;border:1px solid #e0a73c44;background:#e0a73c12;border-radius:11px;padding:6px 15px 12px}
+.evcav-h{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--thread);font-weight:700;padding:10px 0 4px}
+.evcav-i{font-size:12.5px;line-height:1.5;color:var(--soft);padding:7px 0 0;margin-top:6px;border-top:1px solid var(--line)}
 .evm{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
 .evm .ek{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .evm .ev{font-family:var(--serif);font-size:21px;margin-top:6px;line-height:1}
@@ -1098,6 +1146,11 @@ if(EV||RB){
     body+=`<div class="evsub">Planted-needle eval · fixture ${esc(EV.fixture||"—")}</div>`
       +`<div class="evgrid">${cells.join("")}</div>`;
   }
+  // Below-ideal verifiable-reward scores as plain-language caveats — a polished note
+  // must not hide a miss the eval already caught (e.g. an un-surfaced cross-store tie).
+  const CAV=DATA.evaluation_caveats||[];
+  if(CAV.length){body+=`<div class="evcav"><div class="evcav-h">⚑ Where this run fell short of ground truth</div>`
+    +CAV.map(c=>`<div class="evcav-i">${esc(c)}</div>`).join("")+`</div>`;}
   if(RB){
     const dims=(RB.dimensions||[]).map(d=>`<div class="rdim"><div class="rh">`
       +`<span class="rk">${esc(d.key)}</span><span class="rs">${esc(String(d.score))}/5</span></div>`

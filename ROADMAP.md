@@ -464,6 +464,16 @@ items must not be hardened against one answer.
       signal). (3) **Re-runnability:** a copy-the-exact-query control so the analyst can run
       the Cypher/SQL independently — the gold standard of manual verification. Extends the
       ADR-0017 report; TDD; headless-verified on the real Kaminski run.
+- [x] **Eval shortfalls made legible to the analyst (2026-06-08):** a polished, confident note
+      can hide a real miss the eval already caught — the flagship Halberd run scores `grounded`
+      yet handled **0/2** planted cross-store reconciliation cases (it found Halberd's cover
+      employer but never pivoted to who else shares it, missing the Halberd↔Wren tie). A bare
+      "Reconciliation 0%" in the panel read as noise; `_eval_caveats` now derives plain-language
+      caveats from the *public* verifiable-reward scores (grounded / recall / trajectory /
+      reconciliation) — never the held-out gold, so it stays gold-free — and the eval panel
+      renders a *"Where this run fell short of ground truth"* block. Descriptive dimensions
+      (pivot burden, context utilization) are never flagged. Turns the eval's own honest
+      self-assessment into something the human can act on. TDD; headless-verified.
 - [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
       runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
       (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the
