@@ -186,9 +186,22 @@ def _render_table(header: list[str], rows: list[list[str]], aligns: list[str]) -
     """A GFM table -> ``<table>``; cells run through ``_inline`` so cites/bold survive.
 
     Rows are padded/truncated to the header's column count (GFM behaviour), so a ragged
-    note table still renders as a clean grid.
+    note table still renders as a clean grid. A header cell that is *only* a ``[cite:gN]``
+    with no body beneath it is an authoring artifact (a table-level citation stuffed into a
+    header) — drop that phantom column and hoist its citation into a caption, so the chip
+    stays clickable instead of rendering an empty trailing column.
     """
     ncol = len(header)
+
+    def has_body(col: int) -> bool:
+        return any(col < len(r) and r[col].strip() for r in rows)
+
+    def cite_only(text: str) -> bool:
+        return bool(_CITE_RE.search(text)) and not _CITE_RE.sub("", text).strip()
+
+    phantom = {i for i in range(ncol) if cite_only(header[i]) and not has_body(i)}
+    keep = [i for i in range(ncol) if i not in phantom]
+    hoisted = "".join(header[i] for i in sorted(phantom))
 
     def cell(tag: str, text: str, i: int) -> str:
         a = aligns[i] if i < len(aligns) else ""
@@ -196,10 +209,14 @@ def _render_table(header: list[str], rows: list[list[str]], aligns: list[str]) -
 
     def tr(cells: list[str], tag: str) -> str:
         padded = (cells + [""] * ncol)[:ncol]
-        return "<tr>" + "".join(cell(tag, c, i) for i, c in enumerate(padded)) + "</tr>"
+        return "<tr>" + "".join(cell(tag, padded[i], i) for i in keep) + "</tr>"
 
+    caption = f'<caption class="tcap">Source: {_inline(hoisted)}</caption>' if hoisted else ""
     body = "".join(tr(r, "td") for r in rows)
-    return f'<table class="ntable"><thead>{tr(header, "th")}</thead><tbody>{body}</tbody></table>'
+    return (
+        f'<table class="ntable">{caption}'
+        f"<thead>{tr(header, 'th')}</thead><tbody>{body}</tbody></table>"
+    )
 
 
 def _render_note_html(note: str) -> str:
@@ -450,6 +467,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
   text-transform:uppercase;border-bottom:1.5px solid var(--muted)}
 .note .ntable tbody tr:hover{background:var(--panel2)}
 .note .ntable tbody tr:last-child td{border-bottom:none}
+.note .ntable caption.tcap{caption-side:bottom;text-align:left;font-size:11px;color:var(--muted);
+  padding:7px 2px 0;letter-spacing:.02em}
 .note code{font-family:var(--mono);font-size:.84em;background:var(--panel2);border:1px solid var(--line);
   padding:1px 5px;border-radius:5px;color:var(--soft)}
 .nsec{border-top:1px solid var(--line)} .nsec:first-of-type{border-top:none}

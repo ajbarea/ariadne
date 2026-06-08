@@ -361,6 +361,31 @@ def test_a_lone_pipe_line_is_not_mistaken_for_a_table() -> None:
     assert "a|b" in html
 
 
+def test_cite_only_header_column_becomes_a_caption_not_a_phantom_column() -> None:
+    """An agent that stuffs a table-level citation into a header cell (real Enron note bug)
+    leaves a header column with no body beneath it. Drop the phantom column and hoist the
+    citation to a caption so it stays clickable instead of rendering an empty third column."""
+    note = (
+        "## Top correspondents\n"
+        "| Contact | Count | [cite:g18] |\n"
+        "|---|---|---|\n"
+        "| vkaminski@aol.com | 1,007 |\n"
+        "| shirley.crenshaw@enron.com | 456 |\n"
+    )
+    html = _render_note_html(note)
+    assert html.count("</th>") == 2  # the phantom 3rd column is gone
+    assert html.count("</td>") == 4  # two rows x two real columns, no empty filler cells
+    assert 'class="tcap"' in html  # citation hoisted to a caption
+    assert 'data-cite="g18"' in html  # and still a clickable chip
+
+
+def test_cite_only_header_is_kept_when_the_column_has_data() -> None:
+    """A cite-only header over a populated column is a real column, not an artifact — keep it."""
+    html = _render_note_html("## T\n| A | [cite:g1] |\n|---|---|\n| x | y |\n")
+    assert html.count("</th>") == 2  # both columns kept
+    assert 'class="tcap"' not in html
+
+
 def test_write_report_emits_report_html(tmp_path: Path) -> None:
     out = write_report(_make_workup(tmp_path))
     assert out == tmp_path / "report.html"

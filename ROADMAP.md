@@ -463,7 +463,10 @@ items must not be hardened against one answer.
       role inference is grounded in an email body that was being cut at 2 000 chars with no
       signal). (3) **Re-runnability:** a copy-the-exact-query control so the analyst can run
       the Cypher/SQL independently — the gold standard of manual verification. Extends the
-      ADR-0017 report; TDD; headless-verified on the real Kaminski run.
+      ADR-0017 report; TDD; headless-verified on the real Kaminski run. Also hardened the GFM
+      table renderer: a header column that is *only* a `[cite:gN]` with no body beneath it (an
+      authoring artifact in the Kaminski "Top correspondents" table) is dropped and its citation
+      hoisted to a `Source:` caption, instead of rendering an empty phantom column.
 - [x] **Eval shortfalls made legible to the analyst (2026-06-08):** a polished, confident note
       can hide a real miss the eval already caught — the flagship Halberd run scores `grounded`
       yet handled **0/2** planted cross-store reconciliation cases (it found Halberd's cover
