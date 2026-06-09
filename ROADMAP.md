@@ -609,6 +609,65 @@ items must not be hardened against one answer.
   > branch where we serve models ourselves (not the cloud frontier-model path).
   > Consider when sizing on-prem inference. Same caveat: unreleased research.
 
+- [ ] **Subscription-auth consumption path — let plugin users run on their Claude
+      subscription, not a separate API key (PLANNED — important, not yet implemented;
+      analysis 2026-06-09).** Anthropic split Agent-SDK usage into its own billing pool,
+      so as of the **2026-06-15** policy a user can run a third-party Agent-SDK app on
+      their **Claude Pro/Max/Team/Enterprise** plan's monthly Agent-SDK credit — no
+      separate per-token API bill. The goal: a plugin whose *core* workup charges nothing
+      beyond the user's existing subscription. **Verdict: feasible, with one hard
+      boundary.** Ariadne talks to Claude on two surfaces that fall on opposite sides:
+      - **✅ Subscription-capable — the main loop (`claude_agent_sdk.query`).** `cli.py`
+        workup (`run_workup`, the `query()` async loop) + citation-repair caller. Runs on
+        the user's subscription credit when no API key is present and Claude Code is
+        logged in (subscription OAuth, or `CLAUDE_CODE_OAUTH_TOKEN` from `claude
+        setup-token` for headless). No call-site change needed.
+      - **❌ Never subscription — the 4 raw `anthropic.Anthropic()` sites.** The raw
+        Messages API is always API-billed. `mapping/llm_mapper.py` (`ClaudeSchemaMapper`,
+        `--llm`), `evaluation/judge.py` (`ClaudeAnalyticJudge`, `--rubric`),
+        `learning/distil.py` (`ClaudeSkillDistiller`, `--llm`), `learning/reflect.py`
+        (`ClaudeReflector`, `--llm`) — all forced-tool-use `messages.create()` behind the
+        optional `rubric`/`adaptive` extras. These are the only hard API-key dependency.
+
+      **Two code blockers, both in `cli.py`:** (1) the `ANTHROPIC_API_KEY` preflight
+      guards (~lines 420, 490, 566, 698, 944, 1387) hard-fail (`return 2`) when the key is
+      absent — backwards for the subscription path, where absence is the *normal* case;
+      (2) **env-var precedence is a footgun** — if `ANTHROPIC_API_KEY` is set *at all*,
+      the Agent SDK / Claude Code use it and bill per-token, silently bypassing the
+      subscription credit, so "support both by leaving the key around" defeats the goal.
+
+      **Recommended architecture (decided direction):** invert the guards so the main
+      `query()` loop defaults to subscription auth (proceed when no key, complain only
+      when *neither* a key nor a subscription credential exists; never set
+      `ANTHROPIC_API_KEY` ourselves); **demote the 4 raw calls to an explicit,
+      documented "API-key-only, billed-to-API (not your subscription)" tier** that
+      degrades gracefully when the key is absent — core workup is subscription-only, the
+      adaptive/rubric features are a labeled paid add-on. *Optional later:* consolidate
+      the 4 near-identical raw sites onto one helper, or onto the Agent SDK / MCP
+      `sampling/createMessage` for a fully subscription-only build — but `query()` is a
+      heavyweight agent loop where raw `messages.create(tool_choice=…)` is the right tool
+      for single-shot structured JSON, and **MCP sampling can't do tool use** (all 4 sites
+      depend on forced tool-use), so neither is a clean swap today. **Caveats to document:**
+      the Agent-SDK credit is a fixed, non-rollover monthly pool that can't dip into
+      general subscription limits (a few deep workups can drain a $20 Pro credit — heavy /
+      production / shared-automation users still want an API key, per Anthropic's own
+      guidance); per-user, not transferable; and the enabling policy carries an
+      **Anthropic-announced effective date of 2026-06-15** — as of the 2026-06-09 analysis
+      the support page reads *"not yet active — it begins on a future date,"* so **verify the
+      policy actually shipped (re-check the support article) before relying on it**;
+      pre-announced rollouts can slip. (Before this policy, subscription-SDK use was
+      disallowed — Feb 2026 ban, June reversal.)
+      Ties to [ADR-0009](./docs/architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md)
+      (plugin/MCP distribution) and [ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)
+      (the `ANTHROPIC_BASE_URL` auth seam). Owe an ADR when this is picked up.
+      `# research(2026-06): Agent SDK runs on the subscription Agent-SDK credit pool as of
+      2026-06-15 (Pro/Max/Team/Enterprise, fixed monthly, non-rollover); raw /v1/messages
+      is always API-billed; ANTHROPIC_API_KEY presence forces API billing over subscription;
+      CLAUDE_CODE_OAUTH_TOKEN via claude setup-token for headless; MCP sampling uses host
+      auth but no tool-use. Sources: support.claude.com "Use the Claude Agent SDK with your
+      Claude plan"; code.claude.com Authentication; platform.claude.com API Authentication;
+      VentureBeat/Register Feb-ban→June-reversal coverage.`
+
 ### Phase 6 — Adaptive & self-improving harness
 
 > **Epic.** Move Ariadne from *code-extensible* (a maintainer hand-writes a

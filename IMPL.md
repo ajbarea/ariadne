@@ -39,6 +39,18 @@ Re-survey ROADMAP and overrule if something higher-value surfaces.
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
 
+> **Queued — important, deliberately NOT in flight: subscription-auth consumption path.**
+> Make the *core* workup run on the plugin user's Claude subscription (Pro/Max/Team/
+> Enterprise Agent-SDK credit, **Anthropic-announced effective date 2026-06-15 — not yet
+> active as of the 2026-06-09 analysis; verify it actually shipped before relying on it**)
+> instead of a separate per-token API key.
+> Verdict from the 2026-06-09 analysis: **feasible** — the `claude_agent_sdk.query()` main
+> loop is subscription-capable; the 4 raw `anthropic.Anthropic()` sites (judge / mapper /
+> distil / reflect) can *never* be and become a documented API-key-only tier. Blockers:
+> invert the `ANTHROPIC_API_KEY` preflight guards in `cli.py`, and never let the key be set
+> (its presence forces API billing). **Full plan + file:line + caveats in ROADMAP.md → Phase 5.**
+> Not started; owe an ADR when picked up. Flagged here so a repo audit sees it immediately.
+
 ---
 
 **`ariadne ratify` live execution — the deferred deliberate-spend tail, run 2026-06-09**
