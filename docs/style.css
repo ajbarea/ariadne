@@ -568,13 +568,110 @@ body.hero-page .md-header {
   opacity: 0.88;
 }
 
+/* ---- Dataset funnel — heterogeneous sources converging through one adapter
+   seam into the canonical stores. A convergence idiom (many -> one -> out). -- */
+.md-typeset .figure-funnel {
+  position: relative;
+  width: 100%;
+  max-width: 36rem;
+  aspect-ratio: 1 / 0.5;
+  margin: 2rem auto 2.4rem;
+}
+
+.md-typeset .figure-funnel .flines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.figure-funnel .flines line {
+  stroke: color-mix(in srgb, var(--ari-thread) 42%, transparent);
+  stroke-width: 1;
+}
+
+.figure-funnel .flines .out {
+  stroke: var(--ari-thread);
+  stroke-width: 1.6;
+}
+
+.md-typeset .figure-funnel .src,
+.md-typeset .figure-funnel .seam,
+.md-typeset .figure-funnel .sink {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 30%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 72%, transparent);
+}
+
+.figure-funnel .src {
+  width: 8.6rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.74rem;
+}
+
+.figure-funnel .src b {
+  color: var(--ari-heading);
+  font-weight: 600;
+}
+
+.figure-funnel .src .mod {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.figure-funnel .seam {
+  width: 7rem;
+  padding: 0.6rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ari-heading);
+  border-color: color-mix(in srgb, var(--ari-thread) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ari-thread) 12%, transparent);
+}
+
+.figure-funnel .seam small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.62rem;
+  opacity: 0.72;
+}
+
+.figure-funnel .sink {
+  width: 8.2rem;
+  padding: 0.55rem 0.5rem;
+  font-size: 0.76rem;
+  color: var(--ari-ink);
+  border-color: color-mix(in srgb, var(--ari-scarlet) 38%, transparent);
+}
+
+.figure-funnel .sink b { color: var(--ari-heading); }
+
+.figure-funnel .src-1 { left: 15%; top: 15%; }
+.figure-funnel .src-2 { left: 15%; top: 38%; }
+.figure-funnel .src-3 { left: 15%; top: 62%; }
+.figure-funnel .src-4 { left: 15%; top: 85%; }
+.figure-funnel .seam  { left: 52%; top: 50%; }
+.figure-funnel .sink  { left: 86%; top: 50%; }
+
+@media (max-width: 600px) {
+  .md-typeset .figure-funnel { max-width: 22rem; aspect-ratio: 1 / 0.9; }
+  .figure-funnel .src { width: 7rem; }
+}
+
 /* ---- Canonical schema — an ER/data-model figure (tables + typed links).
    A different idiom again: DB-style tables, not nodes-and-arrows. ----------- */
 .md-typeset .schema-model {
   position: relative;
   width: 100%;
   max-width: 34rem;
-  aspect-ratio: 1 / 0.72;
+  aspect-ratio: 1 / 0.85;
   margin: 2rem auto 2.4rem;
 }
 
@@ -624,14 +721,15 @@ body.hero-page .md-header {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ari-thread) 12%, transparent);
 }
 
-.schema-model .tbl-entity { left: 50%; top: 40%; z-index: 2; }
-.schema-model .tbl-attribute { left: 16%; top: 22%; }
-.schema-model .tbl-document { left: 84%; top: 22%; }
-.schema-model .tbl-relationship { left: 50%; top: 88%; z-index: 2; }
+.md-typeset .schema-model .tbl-entity { left: 50%; top: 44%; z-index: 2; }
+.md-typeset .schema-model .tbl-attribute { left: 12%; top: 12%; width: 7.2rem; }
+.md-typeset .schema-model .tbl-document { left: 88%; top: 12%; width: 7.2rem; }
+.md-typeset .schema-model .tbl-relationship { left: 50%; top: 86%; z-index: 2; }
 
 .md-typeset .schema-model .rel-label {
   position: absolute;
   transform: translate(-50%, -50%);
+  z-index: 4; /* above every table so a connector label is never buried */
   font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.04em;

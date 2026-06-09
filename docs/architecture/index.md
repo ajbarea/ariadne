@@ -76,18 +76,18 @@ change. Governance (access-control, PII gating) attaches at the canonical layer
 once, not per dataset.
 
 <div class="schema-model" markdown="0">
-  <svg class="links" viewBox="0 0 100 72" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-    <line x1="50" y1="28.8" x2="16" y2="15.8"></line>
-    <line x1="50" y1="28.8" x2="84" y2="15.8"></line>
-    <line x1="50" y1="28.8" x2="50" y2="63.4"></line>
+  <svg class="links" viewBox="0 0 100 85" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="50" y1="37.4" x2="12" y2="10.2"></line>
+    <line x1="50" y1="37.4" x2="88" y2="10.2"></line>
+    <line x1="50" y1="37.4" x2="50" y2="73.1"></line>
   </svg>
   <div class="tbl tbl-attribute"><div class="tbl-h">Attribute</div><div class="tbl-r">key</div><div class="tbl-r">value</div></div>
   <div class="tbl tbl-document"><div class="tbl-h">Document</div><div class="tbl-r">text</div><div class="tbl-r">source</div></div>
   <div class="tbl tbl--hub tbl-entity"><div class="tbl-h">Entity</div><div class="tbl-r">name</div><div class="tbl-r">type</div><div class="tbl-r">aliases[]</div></div>
   <div class="tbl tbl-relationship"><div class="tbl-h">Relationship</div><div class="tbl-r">type</div><div class="tbl-r">source &rarr; Entity</div><div class="tbl-r">target &rarr; Entity</div></div>
-  <div class="rel-label" style="left: 33%; top: 31%;">1 : N</div>
-  <div class="rel-label" style="left: 67%; top: 31%;">mentions</div>
-  <div class="rel-label" style="left: 50%; top: 64%;">source · target</div>
+  <div class="rel-label" style="left: 30%; top: 27%;">1 : N</div>
+  <div class="rel-label" style="left: 70%; top: 27%;">mentions</div>
+  <div class="rel-label" style="left: 50%; top: 65%;">source · target</div>
 </div>
 
 **Free-text retrieval** is hybrid: Postgres full-text (`tsvector` GIN,
@@ -96,12 +96,25 @@ Fusion. The agent reaches it through the in-process `mcp__ariadne__hybrid_search
 tool (opt-in `--semantic`), per
 [ADR-0007](decisions/0007-hybrid-retrieval-fulltext-first.md).
 
-A **second adapter** (the Enron email corpus, via HF streaming) plugs in through
-the same canonical schema with no change to the agent, connectors, or eval
-harness, proving the seam generalizes beyond the synthetic graph. See
-[ADR-0006](decisions/0006-dataset-agnostic-pipeline.md) for the decision record
-and the [pipeline design spec](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)
-for the full design.
+The same seam takes any source. Four adapters spanning four modalities map into
+one canonical schema with no change to the agent, connectors, or eval harness
+([ADR-0006](decisions/0006-dataset-agnostic-pipeline.md); [pipeline design spec](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)).
+
+<div class="figure-funnel" markdown="0">
+  <svg class="flines" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <line x1="15" y1="7.5" x2="52" y2="25"></line>
+    <line x1="15" y1="19" x2="52" y2="25"></line>
+    <line x1="15" y1="31" x2="52" y2="25"></line>
+    <line x1="15" y1="42.5" x2="52" y2="25"></line>
+    <line class="out" x1="52" y1="25" x2="86" y2="25"></line>
+  </svg>
+  <div class="src src-1"><b>synthetic</b><span class="mod">graph</span></div>
+  <div class="src src-2"><b>enron</b><span class="mod">email · text</span></div>
+  <div class="src src-3"><b>lahman</b><span class="mod">relational</span></div>
+  <div class="src src-4"><b>worldspeech</b><span class="mod">audio</span></div>
+  <div class="seam">adapter<small>one seam</small></div>
+  <div class="sink"><b>canonical schema</b><br>Neo4j + Postgres</div>
+</div>
 
 ## Distribution
 
