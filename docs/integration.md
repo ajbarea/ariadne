@@ -41,7 +41,7 @@ The contract:
 Reference families: `graph/neo4j_server.py`, `relational/postgres_server.py`,
 `unstructured/search_tool.py`. Decisions:
 [ADR-0002](architecture/decisions/0002-official-mcp-connectors-over-hand-rolled.md)
-(prefer the sibling's own battle-tested server over a hand-rolled wrapper),
+(prefer the sibling's own maintained server over a hand-rolled wrapper),
 [ADR-0009](architecture/decisions/0009-distribute-as-mcp-server-and-plugin.md)
 (Ariadne itself is also an MCP server, so siblings compose symmetrically).
 

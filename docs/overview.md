@@ -12,11 +12,10 @@ designed to interoperate:
 - **relational stores** for records, attributes, and facts
 - **unstructured repositories** for free text, documents, and transcripts
 
-The content spans modalities as well: metadata, free text, imagery, and video. The
-barrier is not getting into any one store. It is reasoning across all of them at
-once, because the evidence that links two facts often exists only through an
-implicit organizational relationship, sitting in a different store and a different
-format than either fact.
+The content spans modalities too: metadata, text, imagery, and video. The barrier
+isn't getting into any one store; it's reasoning across all of them at once. The
+evidence linking two facts often exists only through an implicit organizational
+relationship, sitting in a different store and format than either fact.
 
 ## The approach
 

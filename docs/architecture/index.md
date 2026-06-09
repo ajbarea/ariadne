@@ -30,18 +30,17 @@ and the dataset-abstraction approach ([ADR-0006](decisions/0006-dataset-agnostic
 ## Emerging shape (from the research)
 
 The [best-practice research](../research/best-practice-architecture.md) points to
-an **orchestrator-worker** design: a lead agent runs the canonical *gather
-context → take action → verify → repeat* loop and dispatches parallel,
-context-isolated subagents (each restricted to one source) that retrieve via MCP
-connectors and hand back only their findings. **GraphRAG** is the core
-capability for traversing organizational hierarchies; multimodal evidence is
-fused **agentically** by converting imagery/video to structured text before
-reasoning over it.
+an **orchestrator-worker** design: a lead agent runs the *gather → act → verify →
+repeat* loop and dispatches context-isolated subagents (one per source) that
+retrieve via MCP and hand back only their findings. **GraphRAG** traverses
+organizational hierarchies; multimodal evidence is fused **agentically** by
+converting imagery/video to structured text before reasoning over it.
 
-The current implementation runs this loop as a **single lead agent** querying the
-stores directly; parallel subagent fan-out is deferred until a design pass
-resolves the provenance and shared-context reconciliation costs
-([ADR-0005](decisions/0005-defer-subagent-fan-out.md)). The diagram below shows
+Today the loop runs as a **single lead agent** querying the stores directly.
+Subagent fan-out is deferred as YAGNI (trigger: store count ≥4 or a measured
+latency bottleneck; the provenance blocker is dissolved now that the SDK hook
+fires inside subagents) per [ADR-0005](decisions/0005-defer-subagent-fan-out.md)
+and [ADR-0015](decisions/0015-subagent-fan-out-design.md). The diagram below shows
 the target shape.
 
 <div class="arch-diagram" markdown="0">
@@ -100,12 +99,11 @@ plugin wrapper for one-click install and slash-command UX, per
 
 ## Adaptive & self-improvement
 
-Beyond the built-in datasets, Ariadne can **adapt** to a user's own store and **improve from
-experience**, without eroding the read-only, citation-gated, human-ratified spine
-([ADR-0020](decisions/0020-adaptive-self-improving-ariadne.md)). Everything rides one
-lifecycle, **propose, ratify, freeze**: the agent proposes a declarative artifact, a human
-ratifies it, and it freezes as config the deterministic gates keep checking. The loop edits
-only those ratified artifacts, never its own gates, scorers, or code.
+Beyond the built-in datasets, Ariadne **adapts** to a user's own store and **improves from
+experience** ([ADR-0020](decisions/0020-adaptive-self-improving-ariadne.md)). Everything rides
+one lifecycle, **propose → ratify → freeze**: the agent proposes a declarative artifact, a human
+ratifies it, it freezes as config the gates keep checking. The loop's hard boundary: it edits
+only ratified artifacts, never the gate it is scored against.
 
 - **Adapt (Axis A):** introspect a real Postgres, propose a mapping into the canonical schema
   (deterministic or LLM), ratify it, and the existing indexer / workup / eval run unchanged on
@@ -124,9 +122,9 @@ The pieces not yet built or still settling:
 
 - **Multimodal fusion** (Phase 3): image/video/OCR extraction and cross-modal
   evidence fusion.
-- **Subagent fan-out**: parallel per-source workers, deferred pending a
-  provenance and shared-context redesign
-  ([ADR-0005](decisions/0005-defer-subagent-fan-out.md)).
+- **Subagent fan-out**: parallel per-source workers, deferred as YAGNI until store
+  count ≥4 or a measured latency bottleneck (design specified in
+  [ADR-0015](decisions/0015-subagent-fan-out-design.md)).
 - **Entity resolution across stores**: currently a stable shared key per entity;
   a richer resolver remains an open research question.
 - **Open-weight validation**: which self-hostable model clears the eval bar

@@ -24,14 +24,13 @@
 ## The problem
 
 Intelligence about a single entity (a person, a unit, an organizational node)
-is scattered across heterogeneous systems — graph databases, structured
-relational stores, and unstructured repositories — and across modalities:
-metadata, free text, imagery, and video. No single query interface spans that
-range. Analysts pivot manually between systems, losing context and momentum at
-every transition. The hard part isn't access; it's coherent, multi-hop
-reasoning across representations, where the decisive link between two facts
-may exist only through an implicit organizational relationship buried in a
-different store and a different modality.
+is scattered across heterogeneous systems (graph, relational, and unstructured
+stores) and modalities (metadata, text, imagery, video). No single interface
+spans that range, so analysts pivot between systems by hand and lose the thread
+at every step. The hard part isn't access; it's multi-hop reasoning across
+representations, where the decisive link between two facts often exists only
+through an implicit organizational relationship buried in another store and
+another modality.
 
 ## The approach
 
@@ -236,13 +235,16 @@ make docs        # uv run --with zensical zensical serve
 
 Ariadne works up an entity end to end: graph, relational, full-text, and semantic
 retrieval; a citation-gated analytic note; a self-contained interactive report;
-planted-needle and ICD-203 evaluation; and a read-only governance gate. Beyond the
-built-in datasets it **adapts** to a user's own Postgres (introspect, propose a
-mapping, ratify, then run the existing pipeline unchanged) and **learns from
-experience** (distil a skill from a high-scoring run, reflect on a low-scoring one,
-deepen a skill from a new run, and use `ariadne compare` to measure whether a learned
-change actually helps before adopting it). See [`IMPL.md`](./IMPL.md) for what's in
-flight and [`ROADMAP.md`](./ROADMAP.md) for the build order.
+planted-needle and ICD-203 evaluation; and a read-only governance gate.
+
+Beyond the built-in datasets it **adapts** to your own Postgres (introspect, propose
+a mapping, ratify, then run the existing pipeline unchanged) and **learns from
+experience** (distil a skill from a strong run, reflect on a weak one, deepen a
+skill, and use `ariadne compare` to measure whether a learned change actually helps
+before adopting it).
+
+See [`IMPL.md`](./IMPL.md) for what's in flight and [`ROADMAP.md`](./ROADMAP.md) for
+the build order.
 
 ## License
 
