@@ -103,12 +103,12 @@ Changelog = "https://github.com/ajbarea/ariadne/releases"
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0",
+    "pytest>=9.0.3",
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
     "pytest-xdist>=3.6",
     "hypothesis>=6.140",
-    "ruff>=0.15",
+    "ruff>=0.15.14",
     "ty>=0.0.39,<0.1",
     "zensical>=0.0.24",
     "testcontainers[neo4j,postgres]>=4.14.2",
