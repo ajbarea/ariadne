@@ -736,6 +736,24 @@ items must not be hardened against one answer.
       `# research(2026-06): hooks don't fire for Skill — prompt-expansion bypasses the tool pipeline
       (anthropics/claude-code#43630 closed not-planned); observe the streamed Skill ToolUseBlock (the
       transcript-parse workaround, inline on the live stream).`
+- [x] **Ratify staged-arm skills contract fix — shipped 2026-06-08** ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
+      `ratify` stages each arm as a `--plugin-dir` plugin, but `build_options` *also* set `skills=[]`
+      on the arm — and a June-2026 re-verification of the SDK contract (re-check the primary source,
+      don't trust the prose) found `skills=[]` is an empty **allowlist** (the SDK docstring: "to
+      suppress every skill from the listing, use `[]`"; unlisted skills are "rejected by the Skill
+      tool"), *not* "don't pull project skills". So the staged candidate could **never fire**: every
+      run would abstain on the *signal-present-but-never-invoked* state, silently — the whole feature
+      broken behind green hermetic tests. Fix: the arm sets `skills="all"` (enable the staged skills;
+      the SDK auto-allows the `Skill` tool) + `setting_sources=[]` (the staged plugin is the sole
+      skill source — clean arm isolation, the documented "load skills from a specific path via the
+      plugins option"), and the stager writes a minimal `.claude-plugin/plugin.json` so `--plugin-dir`
+      recognizes the dir + pins the `plugin:skill` namespace. Hermetic option-contract tests + an
+      executable integration assertion (the staged skill fires + records `plugin:`-stripped under the
+      new flags, free when run with stores+key) — closes the one blocking correctness risk on the
+      deferred live execution. TDD; 564 unit green. `# research(2026-06): claude-agent-sdk skills= is
+      an allowlist/context filter, [] rejects every skill (SDK ClaudeAgentOptions.skills docstring
+      v0.2.87); plugin skills namespaced plugin:skill, plugin manifest optional but name-pinning;
+      setting_sources=[] + plugins= load skills from a path (code.claude.com/docs agent-sdk).`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical
@@ -762,8 +780,11 @@ items must not be hardened against one answer.
 > ratify` (2026-06-08, [ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md))
 > produces the paired runs `compare` measures and gates on whether the skill actually fired — and that
 > firing is now **recorded** off the message stream into the manifest (2026-06-08), so the gate is
-> signal-effective. Next candidates are the deferred tail (`ratify`'s *live execution*, which also
-> validates the recording live; multi-trajectory consolidation) — all YAGNI.
+> signal-effective — and the staged-arm skills **allowlist contract** that gates whether the candidate
+> can even fire is now fixed (2026-06-08): the arm's `skills=[]` rejected every skill, so it could
+> never fire; → `skills="all"` + `setting_sources=[]` + a staged plugin manifest. Next candidates are
+> the deferred tail (`ratify`'s *live execution* — the deliberate spend, which also live-validates the
+> recording + the staged firing; multi-trajectory consolidation) — all YAGNI.
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).

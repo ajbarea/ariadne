@@ -128,6 +128,28 @@ Adopt **option 3**, in `src/ariadne/learning/ratify.py` + an `ariadne ratify` co
 > pipeline) — anthropics/claude-code#43630 closed not-planned; observe the streamed Skill
 > ToolUseBlock (the transcript-parse workaround, inline on the live stream).`
 
+> **Follow-up — the staged-arm skills contract fix, shipped 2026-06-08.** Staging via `plugins=`
+> loads the candidate skill to disk, but `build_options` also set `skills=[]` on the arm — and a
+> June-2026 re-verification of the SDK contract (the standing rule: re-check the primary source,
+> don't trust the prose) found that `skills=[]` is an empty *allowlist*, not "don't add project
+> skills": the SDK's own `ClaudeAgentOptions.skills` docstring (v0.2.87) says *"to suppress every
+> skill from the listing, use `[]`"*, and unlisted skills are *"rejected by the Skill tool"*. So the
+> staged candidate could **never fire** — every `ratify` run would land in the
+> *signal-present-but-never-invoked* state and **abstain on everything**, silently. The fix: the arm
+> sets `skills="all"` (enable the staged skills; the SDK then auto-allows the bare `Skill` tool) and
+> `setting_sources=[]` (the staged plugin is the *sole* skill source — no project/user skill leaks
+> into the measured arm, the documented *"use the plugins option to load skills from a specific
+> path"*), and the stager writes a minimal `.claude-plugin/plugin.json` so `--plugin-dir` recognizes
+> the dir and the plugin name — hence its skills' `plugin:skill` namespace — is pinned, not derived
+> implicitly. The option contract is pinned by hermetic tests; the CLI-level confirmation (the staged
+> skill actually fires under these flags and is recorded `plugin:`-stripped, so `check_invocation`'s
+> `expected` matches) is an executable integration assertion that runs free when the suite runs with
+> stores + key — folding in the live-stream validation deferred above. `# research(2026-06):
+> claude-agent-sdk skills= is an allowlist/context filter, [] rejects every skill (SDK
+> ClaudeAgentOptions.skills docstring, v0.2.87); plugin skills are namespaced plugin:skill and a
+> plugin manifest is optional but pins the name; restrict filesystem discovery with setting_sources=[]
+> and load skills from a path via plugins= (code.claude.com/docs agent-sdk skills + plugins).`
+
 Sources: Counterfactual Trace Auditing of LLM agent skills — with-skill vs without-skill paired
 runs, effect visible under saturation/cancellation
 ([arXiv 2605.11946](https://arxiv.org/html/2605.11946)); SkillTester — matched baseline with the

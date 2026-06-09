@@ -18,6 +18,7 @@ real ones; tests supply fakes), so producing-and-measuring is testable without s
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import tempfile
@@ -100,6 +101,11 @@ def _stage_plugin(root: Path, label: str, skills: dict[str, Path]) -> ArmSpec:
     skills_dir.mkdir(parents=True, exist_ok=True)
     for name, src in skills.items():
         shutil.copytree(src, skills_dir / name, dirs_exist_ok=True)
+    # A minimal manifest so `--plugin-dir` recognizes the dir as a plugin and the plugin name (the
+    # staged skills' `plugin:skill` namespace) is pinned, not implicitly derived from a temp dir.
+    manifest_dir = root / ".claude-plugin"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    (manifest_dir / "plugin.json").write_text(json.dumps({"name": label}), encoding="utf-8")
     return ArmSpec(label=label, plugin_path=root)
 
 

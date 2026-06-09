@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 
 import pytest
 from neo4j import GraphDatabase
 
 from ariadne.cli import run_workup
+from ariadne.learning.ratify import stage_arms
 
 pytestmark = pytest.mark.integration
+
+_PROJECT_SKILL = Path(__file__).resolve().parents[2] / ".claude" / "skills" / "entity-workup"
 
 
 def test_seed_has_planted_multihop_link(neo4j_conn) -> None:
@@ -79,4 +83,40 @@ async def test_live_workup_produces_cited_note(neo4j_conn, tmp_path) -> None:
     assert isinstance(manifest.get("skills_invoked"), list), "manifest must record skills_invoked"
     assert "entity-workup" in manifest["skills_invoked"], (
         f"entity-workup not observed in the stream (got {manifest.get('skills_invoked')})"
+    )
+
+
+@pytest.mark.asyncio
+async def test_live_ratify_arm_fires_the_staged_skill(neo4j_conn, tmp_path) -> None:
+    """Key-gated: the `ratify` per-arm staging path actually fires its staged skill (ADR-0034).
+
+    The live validation of the ADR-0034 contract fix. `ratify` runs each workup arm against a
+    *staged plugin* (`skills_plugin=`), not the project `.claude/skills/`: `build_options` sets
+    `skills="all"` + `setting_sources=[]` so the staged plugin is the sole, enabled skill source.
+    The earlier `skills=[]` was an empty allowlist that rejected *every* skill — the candidate
+    could never fire and the SkillTester invocation gate abstained on everything. This proves the
+    whole chain over the real harness: the manifest-staged plugin loads via `--plugin-dir`, its
+    skill is enabled and fired (as `<plugin>:entity-workup`), and the stream-recorder strips the
+    `plugin:` namespace back to the bare `name`, so `check_invocation`'s `expected` matches.
+    """
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        pytest.skip("no ANTHROPIC_API_KEY — live agent run skipped")
+
+    env = {
+        **os.environ,
+        "NEO4J_URI": neo4j_conn["uri"],
+        "NEO4J_USERNAME": neo4j_conn["username"],
+        "NEO4J_PASSWORD": neo4j_conn["password"],
+    }
+
+    # Stage entity-workup through the real ratify stager (manifest + same-name replace path), then
+    # run the candidate arm exactly as `ratify`'s runner does — off the project skills, on the plugin.
+    _, candidate = stage_arms(_PROJECT_SKILL, [_PROJECT_SKILL], tmp_path / "arms")
+    out_root = tmp_path / "run"
+    await run_workup("Halberd", str(out_root), env, skills_plugin=candidate.plugin_path)
+
+    manifest = json.loads((out_root / "halberd" / "manifest.json").read_text())
+    assert "entity-workup" in (manifest.get("skills_invoked") or []), (
+        "the staged skill never fired under skills='all' + setting_sources=[] "
+        f"(got {manifest.get('skills_invoked')}) — the ratify invocation gate would abstain"
     )

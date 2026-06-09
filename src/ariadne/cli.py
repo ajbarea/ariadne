@@ -1058,15 +1058,18 @@ def build_options(
         extra["max_turns"] = max_turns
     if max_thinking_tokens is not None:
         extra["max_thinking_tokens"] = max_thinking_tokens
-    # Skills: the project `entity-workup` by default (the SDK auto-allows the Skill tool and sets
-    # setting_sources). `ratify` (ADR-0034) instead points the workup at a staged per-arm plugin
-    # dir to toggle a candidate skill in/out — then the Skill tool must be allowed explicitly so
-    # the plugin's skills can fire, and project skills are left out for clean arm isolation.
+    # Skills: the project `entity-workup` by default — the SDK auto-allows the Skill tool and
+    # defaults setting_sources to user+project, discovering `.claude/skills/`. `ratify` (ADR-0034)
+    # instead points the workup at a staged per-arm plugin to toggle a candidate skill in/out:
+    # `setting_sources=[]` makes that plugin the SOLE skill source (no project skill leaks into the
+    # measured arm — the docs' "use the plugins option to load skills from a specific path"), and
+    # `skills="all"` ENABLES the staged skills. `skills=[]` would be an empty allowlist the SDK
+    # rejects *every* skill against, so the candidate could never fire and the SkillTester gate
+    # would abstain on everything — allowing the bare Skill tool does not fix that (ADR-0034 fix).
     if skills_plugin is not None:
         extra["plugins"] = [{"type": "local", "path": str(skills_plugin)}]
-        extra["skills"] = []
-        if "Skill" not in allowed_tools:
-            allowed_tools = [*allowed_tools, "Skill"]
+        extra["skills"] = "all"
+        extra["setting_sources"] = []
     else:
         extra["skills"] = ["entity-workup"]
     return ClaudeAgentOptions(

@@ -28,9 +28,11 @@ The loop is now closed end to end: `ariadne ratify` (ADR-0034) *produces* the pa
 measures — see *Recently shipped*.
 
 **Next candidates (all YAGNI until a consumer needs them):** `ariadne ratify`'s last deferred tail —
-the *live execution* itself (2N real workups against live stores, deliberate spend), which also
-*validates* the now-wired invocation recording (that the streamed `Skill` block appears live + its
-exact `input` key — see *Recently shipped*); B2's multi-trajectory
+the *live execution* itself (2N real workups against live stores, deliberate spend). The blocking
+correctness risk it carried is now **closed** — the staged-arm skills allowlist contract was fixed
+(the arm set `skills=[]`, which rejected every skill, so the candidate could never fire; see *Recently
+shipped*) — so what remains is the deliberate spend, which also live-validates the staged skill fires +
+records (the streamed `Skill` block + its exact `input` key); B2's multi-trajectory
 hierarchical consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`);
 B1's agent-driven refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis
 (the SkillTTA ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
@@ -39,6 +41,29 @@ Re-survey ROADMAP and overrule if something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
+
+---
+
+**Ratify staged-arm skills contract fix — the invocation gate can now observe a firing, shipped 2026-06-08**
+([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
+`ariadne ratify` stages each arm as a `--plugin-dir` plugin, but `build_options` also set `skills=[]`
+on the arm — and a June-2026 re-verification of the SDK contract (the standing rule: re-check the
+primary source) found `skills=[]` is an empty **allowlist** ("to suppress every skill from the
+listing, use `[]`"; unlisted skills are "rejected by the Skill tool"), *not* "don't pull project
+skills". So the staged candidate could **never fire**: every run would land in the
+*signal-present-but-never-invoked* state and **abstain on everything**, silently — the whole feature
+broken with green hermetic tests. Fix: the arm now sets `skills="all"` (enable the staged skills; the
+SDK auto-allows the `Skill` tool) + `setting_sources=[]` (the staged plugin is the *sole* skill source
+— clean arm isolation, the documented "load skills from a specific path via the plugins option"), and
+the stager writes a minimal `.claude-plugin/plugin.json` so `--plugin-dir` recognizes the dir and pins
+the `plugin:skill` namespace. Verified by hermetic option-contract tests + an executable integration
+assertion that the staged skill fires and records `plugin:`-stripped under the new flags (runs free
+when the suite runs with stores+key — folding in the live-stream validation the recording slice
+deferred). Closes the one blocking correctness risk on `ratify`'s deferred live execution. TDD; 564
+unit green. `# research(2026-06): claude-agent-sdk skills= is an allowlist/context filter, [] rejects
+every skill (SDK ClaudeAgentOptions.skills docstring v0.2.87); plugin skills namespaced plugin:skill,
+manifest optional but name-pinning; setting_sources=[] + plugins= load skills from a path
+(code.claude.com/docs agent-sdk skills + plugins).`
 
 ---
 

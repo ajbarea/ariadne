@@ -100,6 +100,20 @@ def test_stage_arms_plugin_root_is_parent_of_skills(tmp_path: Path) -> None:
         assert arm.plugin_path.name != "skills"
 
 
+def test_stage_arms_writes_a_plugin_manifest(tmp_path: Path) -> None:
+    # `--plugin-dir` must recognize each staged arm as a Claude Code plugin. The manifest is
+    # technically optional (the CLI can auto-discover skills/ and derive a name from the dir), but
+    # writing a minimal `.claude-plugin/plugin.json` removes that dependency on implicit behavior
+    # and pins the plugin name — hence its skills' `plugin:skill` namespace — explicitly.
+    base = _make_skill(tmp_path / "base", "entity-workup")
+    cand = _make_skill(tmp_path / "proposed", "closing-citation-audit")
+    baseline, candidate = stage_arms(cand, [base], tmp_path / "work")
+    for arm in (baseline, candidate):
+        manifest = arm.plugin_path / ".claude-plugin" / "plugin.json"
+        assert manifest.is_file()
+        assert json.loads(manifest.read_text())["name"] == arm.plugin_path.name
+
+
 # --- check_invocation (the SkillTester gate, three states) ---------------------------
 
 

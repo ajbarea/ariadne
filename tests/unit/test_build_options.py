@@ -56,12 +56,19 @@ def test_no_skills_plugin_keeps_project_skill_default() -> None:
     cfg = build_options(ledger=ProvenanceLedger(), env={})
     assert cfg.skills == ["entity-workup"]  # default: the project .claude/skills/ skill
     assert not getattr(cfg, "plugins", None)
+    assert cfg.setting_sources is None  # normal path: SDK defaults discovery to user+project
 
 
-def test_skills_plugin_loads_the_arm_and_allows_the_skill_tool() -> None:
+def test_skills_plugin_enables_the_staged_arm_in_isolation() -> None:
     # ratify (ADR-0034) toggles the candidate skill in/out by pointing the workup at a staged
-    # plugin dir per arm — the SDK `plugins=` loader, with the Skill tool allowed so it can fire.
+    # plugin dir per arm. Two things must hold for the arm to be a clean measurement:
+    #   * the staged plugin is the SOLE skill source — `setting_sources=[]` so no project/user
+    #     skill leaks into the measured arm (the docs' "use the plugins option to load skills
+    #     from a specific path");
+    #   * the staged skills are ENABLED — `skills="all"`. The old `skills=[]` was an empty
+    #     *allowlist* the SDK rejects every skill against, so the candidate could never fire and
+    #     the SkillTester invocation gate would abstain on everything (ADR-0034 contract fix).
     cfg = build_options(ledger=ProvenanceLedger(), env={}, skills_plugin="/tmp/arm/candidate")
     assert cfg.plugins == [{"type": "local", "path": "/tmp/arm/candidate"}]
-    assert "Skill" in (cfg.allowed_tools or [])
-    assert not cfg.skills  # the plugin supplies the skills; don't also pull project skills
+    assert cfg.skills == "all"
+    assert cfg.setting_sources == []
