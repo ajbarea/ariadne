@@ -24,6 +24,15 @@
      readable. Until the file exists the pure-CSS gradient hero stands alone. */
   --hero-bg-image: url('assets/hero.png');
 
+  /* Semantic surface vars (resolved per color scheme below) — default to dark
+     so the site is unchanged if no scheme block applies. */
+  --ari-bg: var(--ari-obsidian);
+  --ari-bg-alt: var(--ari-indigo);
+  --ari-panel: var(--ari-indigo-light);
+  --ari-ink: var(--ari-ink);                  /* body text on brand surfaces */
+  --ari-heading: var(--ari-thread-light); /* accent headings / labels */
+  --ari-halo: var(--ari-obsidian);     /* ring behind nodes = page base */
+
   /* Material overrides */
   --md-primary-fg-color: var(--ari-thread);
   --md-primary-fg-color--light: var(--ari-thread-light);
@@ -33,9 +42,46 @@
 
 [data-md-color-scheme="slate"] {
   --md-hue: 250;
-  --md-default-bg-color: var(--ari-obsidian);
-  --md-default-bg-color--light: var(--ari-indigo);
+  --md-default-bg-color: var(--ari-bg);
+  --md-default-bg-color--light: var(--ari-bg-alt);
   --md-typeset-a-color: var(--ari-thread-light);
+}
+
+/* Light "parchment" counterpart to the obsidian Labyrinth (header toggle). The
+   golden thread stays the accent; surfaces and ink flip, accent gold darkens so
+   it reads on cream. */
+[data-md-color-scheme="default"] {
+  --ari-bg: #faf6ec;
+  --ari-bg-alt: #f1e7d2;
+  --ari-panel: #ffffff;
+  --ari-ink: #2b2545;
+  --ari-heading: #835f1b;
+  --ari-halo: #faf6ec;
+  --ari-thread-light: #9a7324; /* darker gold so accents + gradients read on cream */
+  --ari-mist: rgba(131, 95, 27, 0.07);
+  --md-default-bg-color: var(--ari-bg);
+  --md-default-bg-color--light: #fffdf8;
+  --md-typeset-a-color: var(--ari-thread-deep);
+}
+
+/* Gradients tuned for dark; in light mode run them darker so they read on cream. */
+[data-md-color-scheme="default"] .md-typeset .hero h1 {
+  background: linear-gradient(135deg, #5a4416 0%, var(--ari-thread-deep) 55%, #a8742e 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  filter: none;
+}
+
+[data-md-color-scheme="default"] .stat-num {
+  background: linear-gradient(135deg, var(--ari-thread-deep) 0%, #6e521b 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+/* The gold primary CTA keeps dark text in both modes; the hero scrim is the
+   page base in both. */
+[data-md-color-scheme="default"] .md-typeset .hero .hero-subtitle {
+  text-shadow: none;
 }
 
 /* ---- Hero ---------------------------------------------------------------- */
@@ -67,23 +113,23 @@ body.hero-page .md-content__inner {
   padding: 6rem 8vw 5rem;
   margin: -1.2rem -0.8rem 0;
   overflow: hidden;
-  background-color: var(--ari-obsidian);
+  background-color: var(--ari-bg);
   background:
     /* Light scrim only on the far left for headline legibility. The art already
        carries its own dark-left negative space, so this fades out by ~52% and
        leaves the right half of the image (thread + nodes) fully visible. */
     linear-gradient(to right,
-      var(--ari-obsidian) 0%,
-      color-mix(in srgb, var(--ari-obsidian) 80%, transparent) 20%,
-      color-mix(in srgb, var(--ari-obsidian) 24%, transparent) 38%,
+      var(--ari-bg) 0%,
+      color-mix(in srgb, var(--ari-bg) 80%, transparent) 20%,
+      color-mix(in srgb, var(--ari-bg) 24%, transparent) 38%,
       transparent 48%),
     /* Gentle bottom fade so the hero blends into the page below. */
     linear-gradient(to bottom,
       transparent 60%,
-      color-mix(in srgb, var(--ari-obsidian) 55%, transparent) 88%,
-      var(--ari-obsidian) 100%),
+      color-mix(in srgb, var(--ari-bg) 55%, transparent) 88%,
+      var(--ari-bg) 100%),
     var(--hero-bg-image, none) right center / cover no-repeat,
-    linear-gradient(160deg, var(--ari-indigo) 0%, var(--ari-obsidian) 70%);
+    linear-gradient(160deg, var(--ari-bg-alt) 0%, var(--ari-bg) 70%);
 }
 
 /* A faint woven-thread grid evoking the Labyrinth, biased to the LEFT (text)
@@ -132,7 +178,7 @@ body.hero-page .md-content__inner {
   opacity: 0.9;
   margin-bottom: 2rem;
   max-width: 32ch;
-  color: #ece6f5;
+  color: var(--ari-ink);
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
 }
 
@@ -189,7 +235,7 @@ body.hero-page .md-content__inner {
 .hero-buttons .md-button:not(.md-button--primary) {
   border: 1px solid color-mix(in srgb, var(--ari-thread-light) 35%, transparent) !important;
   color: var(--ari-thread-light) !important;
-  background: color-mix(in srgb, var(--ari-obsidian) 55%, transparent) !important;
+  background: color-mix(in srgb, var(--ari-bg) 55%, transparent) !important;
   font-size: 0.85rem !important;
   font-weight: 600 !important;
   padding: 0.6rem 1.35rem !important;
@@ -198,8 +244,8 @@ body.hero-page .md-content__inner {
 
 .hero-buttons .md-button:not(.md-button--primary):hover {
   border-color: var(--ari-thread-light) !important;
-  color: #fff !important;
-  background: color-mix(in srgb, var(--ari-indigo-light) 55%, transparent) !important;
+  color: var(--ari-ink) !important;
+  background: color-mix(in srgb, var(--ari-panel) 70%, transparent) !important;
 }
 
 .hero-modes {
@@ -225,7 +271,7 @@ body.hero-page .md-content__inner {
 }
 
 .hero-modes a:hover {
-  color: #fff7e6;
+  color: var(--ari-heading);
   border-bottom-color: var(--ari-thread);
 }
 
@@ -339,7 +385,7 @@ html.js-ready .landing-section.visible {
 }
 
 .landing-section--cta .section-title {
-  color: #fff7e6;
+  color: var(--ari-heading);
 }
 
 .landing-section--cta .section-lead {
@@ -353,7 +399,7 @@ html.js-ready .landing-section.visible {
 /* Drop the header/hero seam: on the landing page the header shares the
    hero's obsidian so there's no color line at the very top. */
 body.hero-page .md-header {
-  background-color: var(--ari-obsidian);
+  background-color: var(--ari-bg);
 }
 
 /* Feature grid for the landing page. Balanced 2x2 so no quadrant is left empty. */
@@ -374,7 +420,7 @@ body.hero-page .md-header {
   border: 1px solid var(--glass-border, color-mix(in srgb, var(--ari-thread) 18%, transparent));
   border-radius: 0.9rem;
   padding: 1.5rem;
-  background: color-mix(in srgb, var(--ari-indigo-light) 35%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 35%, transparent);
   transition: border-color 0.25s ease, transform 0.25s ease;
 }
 
@@ -418,7 +464,7 @@ body.hero-page .md-header {
   margin: 2rem 0 0.5rem;
   padding: 1.1rem 1.4rem;
   border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--ari-indigo-light) 40%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 40%, transparent);
   border: 1px solid color-mix(in srgb, var(--ari-thread) 22%, transparent);
 }
 
@@ -436,7 +482,7 @@ body.hero-page .md-header {
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.5;
-  color: #ece6f5;
+  color: var(--ari-ink);
 }
 
 .md-typeset .trace-steps {
@@ -478,12 +524,12 @@ body.hero-page .md-header {
   height: 16px;
   border-radius: 50%;
   background: var(--ari-thread);
-  box-shadow: 0 0 0 4px var(--ari-obsidian), 0 0 14px var(--ari-thread-glow);
+  box-shadow: 0 0 0 4px var(--ari-bg), 0 0 14px var(--ari-thread-glow);
 }
 
 .trace-step--answer::before {
   background: var(--ari-scarlet);
-  box-shadow: 0 0 0 4px var(--ari-obsidian),
+  box-shadow: 0 0 0 4px var(--ari-bg),
     0 0 18px color-mix(in srgb, var(--ari-scarlet) 60%, transparent);
 }
 
@@ -501,7 +547,7 @@ body.hero-page .md-header {
 }
 
 .trace-step--answer .trace-badge {
-  color: #ffd9cf;
+  color: var(--ari-scarlet);
   border-color: color-mix(in srgb, var(--ari-scarlet) 45%, transparent);
 }
 
@@ -512,7 +558,7 @@ body.hero-page .md-header {
 }
 
 .md-typeset .trace-step--answer h3 {
-  color: #ffd9cf;
+  color: var(--ari-scarlet);
 }
 
 .md-typeset .trace-step p {
@@ -520,6 +566,66 @@ body.hero-page .md-header {
   font-size: 0.95rem;
   line-height: 1.6;
   opacity: 0.88;
+}
+
+/* ---- Eval pyramid — a layered-tier figure (deliberately NOT a flowchart).
+   Wide/cheap/abundant at the base, narrow/costly/rare at the apex. Stepped
+   (ziggurat) silhouette suits the Labyrinth motif; pure CSS, air-gap-safe. --- */
+.md-typeset .eval-pyramid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem auto 2.4rem;
+  max-width: 42rem;
+}
+
+.md-typeset .eval-pyramid .tier {
+  width: var(--w);
+  padding: 0.85rem 1.2rem 0.9rem;
+  text-align: center;
+  border-radius: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--tint, var(--ari-thread)) 40%, transparent);
+  background:
+    radial-gradient(ellipse 70% 120% at 50% 0%,
+      color-mix(in srgb, var(--tint, var(--ari-thread)) 12%, transparent), transparent 70%),
+    color-mix(in srgb, var(--ari-panel) 55%, transparent);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.md-typeset .eval-pyramid .tier:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tint, var(--ari-thread)) 75%, transparent);
+}
+
+.eval-pyramid .tier .tk {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ari-heading);
+}
+
+.eval-pyramid .tier .td {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0.85;
+  margin-top: 0.15rem;
+}
+
+.eval-pyramid .tier .tmeta {
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--tint, var(--ari-thread)) 90%, var(--ari-ink));
+  margin-top: 0.35rem;
+}
+
+.md-typeset .eval-pyramid .pyramid-axis {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  text-align: center;
 }
 
 /* ---- Architecture diagram (bespoke, zero-dependency, air-gap-safe) -------- */
@@ -540,7 +646,7 @@ body.hero-page .md-header {
   border-radius: 1rem;
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, var(--ari-mist), transparent 70%),
-    color-mix(in srgb, var(--ari-obsidian) 55%, transparent);
+    color-mix(in srgb, var(--ari-bg) 55%, transparent);
 }
 
 .arch-row {
@@ -563,7 +669,7 @@ body.hero-page .md-header {
   padding: 0.85rem 1.3rem;
   border-radius: 0.7rem;
   border: 1px solid color-mix(in srgb, var(--ari-thread) 22%, transparent);
-  background: color-mix(in srgb, var(--ari-indigo-light) 45%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 45%, transparent);
   min-width: 9rem;
 }
 
@@ -583,19 +689,19 @@ body.hero-page .md-header {
 .md-typeset .arch-node--lead,
 .md-typeset .arch-node--synth {
   border-color: color-mix(in srgb, var(--ari-thread) 55%, transparent);
-  background: color-mix(in srgb, var(--ari-indigo-light) 70%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 70%, transparent);
   box-shadow: 0 4px 20px color-mix(in srgb, var(--ari-thread) 12%, transparent);
 }
 
 .md-typeset .arch-node--input {
-  background: color-mix(in srgb, var(--ari-indigo-light) 28%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 28%, transparent);
 }
 
 /* The output node is the end of the thread: scarlet, mirroring the hero trace. */
 .md-typeset .arch-node--output {
   border-color: color-mix(in srgb, var(--ari-scarlet) 50%, transparent);
   background: color-mix(in srgb, var(--ari-scarlet) 14%, transparent);
-  color: #ffd9cf;
+  color: var(--ari-scarlet);
   font-weight: 700;
 }
 

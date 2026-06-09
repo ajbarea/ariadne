@@ -91,10 +91,24 @@ features = [
     "search.share",
 ]
 
+# Light/dark toggle. Honors the visitor's OS preference, flippable from the header
+# button. Dark (the obsidian Labyrinth) is the brand default; light is a parchment
+# counterpart. Custom colors per scheme live in docs/style.css.
 [[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 primary = "custom"
 accent = "custom"
+toggle.icon = "material/weather-night"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "custom"
+accent = "custom"
+toggle.icon = "material/weather-sunny"
+toggle.name = "Switch to dark mode"
 
 # ---------------------------------------------------------------------------
 # Plugins

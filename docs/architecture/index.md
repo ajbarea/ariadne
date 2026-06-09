@@ -116,6 +116,31 @@ only ratified artifacts, never the gate it is scored against.
   regressions on the same eval instance). The eval harness is the external verifiable reward the
   loop can never edit.
 
+## Knowing it works
+
+The brief's central challenge is *"how do you know what works?"* Ariadne answers it
+with a tiered eval pyramid: cheap, exhaustive checks on every output at the base;
+expensive, sampled judgment at the apex.
+
+<div class="eval-pyramid" markdown="0">
+  <div class="tier" style="--w: 48%; --tint: var(--ari-scarlet);">
+    <div class="tk">LLM-as-judge</div>
+    <div class="td">ICD-203 analytic-standards rubric, on a sample of survivors</div>
+    <div class="tmeta">slow · costly · sampled</div>
+  </div>
+  <div class="tier" style="--w: 74%;">
+    <div class="tk">Entailment (NLI)</div>
+    <div class="td">HHEM-2.1 checks each cited claim against its evidence</div>
+    <div class="tmeta">fast · local · per claim</div>
+  </div>
+  <div class="tier" style="--w: 100%; --tint: var(--ari-thread);">
+    <div class="tk">Deterministic floor</div>
+    <div class="td">citation gate + ICD-203 tradecraft lint on every output</div>
+    <div class="tmeta">microseconds · $0 · every claim</div>
+  </div>
+  <p class="pyramid-axis">volume falls and cost rises toward the apex</p>
+</div>
+
 ## Still open
 
 The pieces not yet built or still settling:
