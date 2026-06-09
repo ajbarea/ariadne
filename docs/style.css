@@ -568,6 +568,98 @@ body.hero-page .md-header {
   opacity: 0.88;
 }
 
+/* ---- Lifecycle ring — propose -> ratify -> freeze, repeating, around an
+   immutable eval-gate core. A cycle, deliberately not a straight pipeline. ---- */
+.md-typeset .figure-cycle {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  aspect-ratio: 1 / 0.86;
+  margin: 2rem auto 2.6rem;
+}
+
+.md-typeset .figure-cycle .cycle-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.figure-cycle .cycle-ring .ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--ari-thread) 55%, transparent);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+
+.figure-cycle .cycle-ring .tip {
+  fill: var(--ari-thread);
+}
+
+.md-typeset .figure-cycle .cyc-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 8.6rem;
+  text-align: center;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 32%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 72%, transparent);
+}
+
+.figure-cycle .cyc-node b {
+  display: block;
+  color: var(--ari-heading);
+  font-size: 0.95rem;
+}
+
+.figure-cycle .cyc-node span {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  opacity: 0.8;
+}
+
+.cyc-propose { left: 50%; top: 12%; }
+.cyc-ratify  { left: 84%; top: 72%; }
+.cyc-freeze  { left: 16%; top: 72%; }
+
+.md-typeset .figure-cycle .cyc-core {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8.4rem;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem;
+  border-radius: 50%;
+  border: 1.5px dashed color-mix(in srgb, var(--ari-scarlet) 60%, transparent);
+  background: radial-gradient(circle at 50% 40%,
+    color-mix(in srgb, var(--ari-scarlet) 16%, transparent), transparent 72%);
+  color: var(--ari-heading);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.figure-cycle .cyc-core small {
+  display: block;
+  font-weight: 400;
+  opacity: 0.78;
+  font-size: 0.64rem;
+  line-height: 1.3;
+  margin-top: 0.25rem;
+  color: var(--ari-ink);
+}
+
+@media (max-width: 520px) {
+  .md-typeset .figure-cycle { max-width: 22rem; aspect-ratio: 1 / 1; }
+  .figure-cycle .cyc-node { width: 7rem; font-size: 0.85rem; }
+}
+
 /* ---- Eval pyramid — a layered-tier figure (deliberately NOT a flowchart).
    Wide/cheap/abundant at the base, narrow/costly/rare at the apex. Stepped
    (ziggurat) silhouette suits the Labyrinth motif; pure CSS, air-gap-safe. --- */

@@ -100,10 +100,24 @@ plugin wrapper for one-click install and slash-command UX, per
 ## Adaptive & self-improvement
 
 Beyond the built-in datasets, Ariadne **adapts** to a user's own store and **improves from
-experience** ([ADR-0020](decisions/0020-adaptive-self-improving-ariadne.md)). Everything rides
-one lifecycle, **propose → ratify → freeze**: the agent proposes a declarative artifact, a human
-ratifies it, it freezes as config the gates keep checking. The loop's hard boundary: it edits
-only ratified artifacts, never the gate it is scored against.
+experience** ([ADR-0020](decisions/0020-adaptive-self-improving-ariadne.md)). Every change rides
+one cycle, turning around a core the loop can never touch:
+
+<div class="figure-cycle" markdown="0">
+  <svg class="cycle-ring" viewBox="0 0 100 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <circle class="ring" cx="50" cy="47.3" r="37"></circle>
+    <path class="tip" d="M-2.4,-2.4 L3.4,0 L-2.4,2.4 Z" transform="translate(81,27) rotate(57)"></path>
+    <path class="tip" d="M-2.4,-2.4 L3.4,0 L-2.4,2.4 Z" transform="translate(50,84.3) rotate(180)"></path>
+    <path class="tip" d="M-2.4,-2.4 L3.4,0 L-2.4,2.4 Z" transform="translate(19,27.2) rotate(303)"></path>
+  </svg>
+  <div class="cyc-node cyc-propose"><b>Propose</b><span>the agent drafts a declarative artifact</span></div>
+  <div class="cyc-node cyc-ratify"><b>Ratify</b><span>a human approves or rejects</span></div>
+  <div class="cyc-node cyc-freeze"><b>Freeze</b><span>it becomes config the gates check</span></div>
+  <div class="cyc-core">eval gate · governance<small>the loop can never edit this</small></div>
+</div>
+
+The loop edits only ratified artifacts; the eval harness it is scored against stays off-limits,
+so an agent can never quietly grade its own work.
 
 - **Adapt (Axis A):** introspect a real Postgres, propose a mapping into the canonical schema
   (deterministic or LLM), ratify it, and the existing indexer / workup / eval run unchanged on
