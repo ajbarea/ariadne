@@ -715,12 +715,27 @@ items must not be hardened against one answer.
       is propose-only (ADR-0020's human-keeps-judgment spine). Hermetic orchestration — the live workup +
       scoring are injected seams (the `profiles --validate` pattern), so it is fully TDD'd without spend
       ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md)). *Remaining
-      (deferred): the live execution itself (2N real workups, deliberate spend) + recording the
-      invocation signal into the run manifest (the SDK `PostToolUse`-fires-for-`Skill` contract is
-      confirmed; the gate rides an unobserved caveat until then); full counterfactual trace auditing.*
-      `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual Trace Auditing
-      (arXiv 2605.11946); matched baseline + invocation gate, ~14% help / 78% none / 8% harm — SkillTester
-      (arXiv 2603.28815).`
+      (deferred): the live execution itself (2N real workups, deliberate spend); full counterfactual
+      trace auditing.* (Recording the invocation signal into the manifest shipped as the follow-on
+      below.) `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual Trace
+      Auditing (arXiv 2605.11946); matched baseline + invocation gate, ~14% help / 78% none / 8% harm —
+      SkillTester (arXiv 2603.28815).`
+- [x] **Skill-invocation recording — the SkillTester gate is now signal-effective, shipped 2026-06-08.**
+      `ratify`'s invocation gate needs to know whether the candidate skill actually *fired* (else a
+      measured delta is ambient variance, not the skill). The deferred recording assumed a `PostToolUse`
+      hook would fire for the `Skill` tool — a June-2026 re-check found that **false**: the Skill tool is
+      *prompt expansion* and never reaches the tool pipeline, so the hook never fires
+      (anthropics/claude-code#43630, **closed not-planned**; the documented workaround is parsing the
+      transcript). So recording reads the signal off the **message stream**: a skill call surfaces as a
+      `ToolUseBlock(name="Skill", …)` in an `AssistantMessage`'s content (which `run_workup` already
+      iterates), normalized to the bare frontmatter name (`provenance.skills`) and persisted to the
+      manifest's `skills_invoked`. Every current workup carries it, so the gate is signal-effective
+      (`None` now = legacy run only); the live `ratify` runner routes through `run_workup`, so its
+      candidate-arm manifests will carry it. *Remaining (folded into the live step): validating the
+      streamed block appears live + its exact `input` key.* TDD; 563 unit green.
+      `# research(2026-06): hooks don't fire for Skill — prompt-expansion bypasses the tool pipeline
+      (anthropics/claude-code#43630 closed not-planned); observe the streamed Skill ToolUseBlock (the
+      transcript-parse workaround, inline on the live stream).`
 
 > **First slice — SHIPPED 2026-06-07** (A1 introspect→apply + the B1 seed, on
 > **Postgres**): introspect a real Postgres → propose a mapping into the canonical
@@ -745,9 +760,10 @@ items must not be hardened against one answer.
 > to a user's store *and* learns from experience, every change human-ratified, the eval gate it
 > can never edit as the external verifiable reward. The loop is now closed end to end — `ariadne
 > ratify` (2026-06-08, [ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md))
-> produces the paired runs `compare` measures and gates on whether the skill actually fired. Next
-> candidates are the deferred tail (`ratify`'s *live execution* + manifest-recording its invocation
-> signal; multi-trajectory consolidation) — all YAGNI.
+> produces the paired runs `compare` measures and gates on whether the skill actually fired — and that
+> firing is now **recorded** off the message stream into the manifest (2026-06-08), so the gate is
+> signal-effective. Next candidates are the deferred tail (`ratify`'s *live execution*, which also
+> validates the recording live; multi-trajectory consolidation) — all YAGNI.
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).

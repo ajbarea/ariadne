@@ -27,10 +27,10 @@ existing skill from a new certified run, ratified by `compare`; see *Recently sh
 The loop is now closed end to end: `ariadne ratify` (ADR-0034) *produces* the paired runs `compare`
 measures — see *Recently shipped*.
 
-**Next candidates (all YAGNI until a consumer needs them):** `ariadne ratify`'s deferred tail — the
-*live execution* itself (2N real workups against live stores, deliberate spend) and recording the
-skill-invocation signal into the run manifest so the SkillTester gate is signal-effective live (the
-SDK contract is confirmed; until then it rides the unobserved caveat); B2's multi-trajectory
+**Next candidates (all YAGNI until a consumer needs them):** `ariadne ratify`'s last deferred tail —
+the *live execution* itself (2N real workups against live stores, deliberate spend), which also
+*validates* the now-wired invocation recording (that the streamed `Skill` block appears live + its
+exact `input` key — see *Recently shipped*); B2's multi-trajectory
 hierarchical consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`);
 B1's agent-driven refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis
 (the SkillTTA ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
@@ -119,11 +119,32 @@ verdict **abstains** rather than ratify (three honest states: observed / signal-
 `.claude/skills/`; default is propose-only (ADR-0020's human-keeps-judgment spine). The orchestration
 is **hermetic** — the live workup + scoring are injected seams (the `profiles --validate` pattern) —
 so it is fully TDD'd without spend. *Deferred (named):* the live execution itself (2N real workups,
-deliberate spend) and recording the invocation signal into the run manifest (the gate rides an
-unobserved caveat until then; the SDK `PostToolUse`-fires-for-`Skill` contract is web-confirmed). TDD;
-523 unit green. `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual
-Trace Auditing (arXiv 2605.11946); matched baseline + invocation gate, ~14% help / 78% none / 8% harm
-— SkillTester (arXiv 2603.28815).`
+deliberate spend). (Recording the invocation signal into the manifest — the original immediate
+follow-on — shipped next; see below.) TDD; 523 unit green. `# research(2026-06): counterfactual
+with/without-skill paired runs — Counterfactual Trace Auditing (arXiv 2605.11946); matched baseline +
+invocation gate, ~14% help / 78% none / 8% harm — SkillTester (arXiv 2603.28815).`
+
+---
+
+**Skill-invocation recording — the SkillTester gate is now signal-effective, shipped 2026-06-08**
+([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
+`ratify`'s invocation gate needs to know whether the candidate skill actually *fired* — else a
+measured delta is ambient model variance, not the skill. The deferred recording assumed a
+`PostToolUse` hook would fire for the `Skill` tool; a June-2026 re-check found that is **false** —
+the Skill tool is *prompt expansion* and never reaches the tool pipeline, so the hook never fires
+(anthropics/claude-code#43630, **closed not-planned**; the documented workaround is to parse the
+transcript). So recording reads the signal off the **message stream** instead: a skill call surfaces
+as a `ToolUseBlock(name="Skill", …)` in an `AssistantMessage`'s content, which `run_workup` already
+iterates — `provenance.skills.skill_invocations` normalizes it to the bare frontmatter name
+(stripping any `plugin:` qualifier so a staged-arm skill matches its `name:`), and `run_workup`
+persists the observed set to the manifest's `skills_invoked`. Every current workup now carries the
+signal, so the gate is **signal-effective** (`None` now means only a legacy run); the live `ratify`
+runner already routes through `run_workup`, so its candidate-arm manifests will carry it. What's left
+for the live-execution step is *validating* the streamed block appears + its exact `input` key (the
+extractor tolerates the plausible keys until then). TDD red→green (extractor 9 + manifest 4); 563 unit
+green. `# research(2026-06): hooks don't fire for Skill — prompt-expansion bypasses the tool pipeline
+(anthropics/claude-code#43630 closed not-planned); observe the streamed Skill ToolUseBlock (the
+transcript-parse workaround, inline on the live stream).`
 
 ---
 

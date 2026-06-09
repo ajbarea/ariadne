@@ -101,6 +101,10 @@ class Manifest:
     cost_usd: float | None
     usage: dict | None
     scores: dict
+    # The skills the agent invoked this run (ADR-0034's SkillTester gate reads this).
+    # None on a legacy run written before recording was wired = "instrument absent"
+    # (unobserved); [] = "recorded, none fired" — the gate treats them differently.
+    skills_invoked: list[str] | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -177,6 +181,7 @@ def build_workup_manifest(
     scores: dict,
     cost_usd: float | None = None,
     usage: dict | None = None,
+    skills_invoked: list[str] | None = None,
 ) -> Manifest:
     """Assemble the run record from what `run_workup` knows at the return."""
     sha, dirty = git_provenance()
@@ -197,4 +202,5 @@ def build_workup_manifest(
         cost_usd=cost_usd,
         usage=usage,
         scores=scores,
+        skills_invoked=skills_invoked,
     )

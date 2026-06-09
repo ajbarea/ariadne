@@ -128,8 +128,9 @@ def check_invocation(candidate_runs: Sequence[RunArtifacts], expected: str) -> I
     """Was ``expected`` actually invoked across the candidate arm (SkillTester confound control)?
 
     Three honest states: *observed* (proceed on compare's verdict); *signal present but never
-    invoked* (the delta is ambient variance — the verdict must abstain); *no signal recorded* (the
-    instrument is absent — a caveat, never a false reject, until recording is wired, ADR-0034).
+    invoked* (the delta is ambient variance — the verdict must abstain); *no signal recorded* (a
+    legacy run predating stream-recording — a caveat, never a false reject; current workups record
+    the signal off the message stream, ADR-0034).
     """
     present = [s for r in candidate_runs if (s := skills_invoked(r)) is not None]
     if not present:
@@ -138,8 +139,9 @@ def check_invocation(candidate_runs: Sequence[RunArtifacts], expected: str) -> I
             observed=False,
             signal_present=False,
             note=(
-                "invocation signal not recorded by these runs — proceeding on the net-effect "
-                "verdict; wire skill-invocation recording to gate on it (ADR-0034)."
+                "invocation signal not recorded by these runs (legacy runs predating "
+                "stream-recording) — proceeding on the net-effect verdict; a current workup "
+                "records it off the message stream (ADR-0034)."
             ),
         )
     if any(expected in s for s in present):

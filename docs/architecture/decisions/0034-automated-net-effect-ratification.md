@@ -108,10 +108,25 @@ Adopt **option 3**, in `src/ariadne/learning/ratify.py` + an `ariadne ratify` co
   the arm toggle**, all hermetic and TDD'd against injected seams. *Deferred, named:* (a) the live
   execution itself — `2N` real workups against real stores — is gated behind a key + stores and not
   run here (deliberate spend), exactly as ADR-0031 deferred *producing* the runs; (b) **recording**
-  the invocation signal into the run manifest is the immediate follow-on — the SDK contract is
-  confirmed (the `PostToolUse` hook fires for the built-in `Skill` tool with its `tool_name`), and
-  until a run records it the gate degrades to the unobserved caveat rather than a false reject;
-  (c) full counterfactual *trace* auditing and a real significance test over many trials.
+  the invocation signal into the run manifest is the immediate follow-on (now shipped — see the
+  follow-up below); (c) full counterfactual *trace* auditing and a real significance test over many
+  trials.
+
+> **Follow-up — recording the invocation signal, shipped 2026-06-08.** The original scoping above
+> assumed a `PostToolUse` hook would fire for the built-in `Skill` tool. A June-2026 re-check found
+> that is **false**: the Skill tool is handled as *prompt expansion* and never reaches the tool
+> pipeline, so the hook never fires (anthropics/claude-code#43630, **closed not-planned** — the
+> documented workaround is to parse the transcript). So recording reads the signal off the message
+> stream instead: a skill call surfaces as a `ToolUseBlock(name="Skill", …)` in an
+> `AssistantMessage`'s content, which `run_workup` already iterates — `provenance.skills`
+> normalizes it to the bare frontmatter name (stripping any `plugin:` qualifier so a staged-arm
+> skill matches its name) and `run_workup` persists the set to the manifest's `skills_invoked`, the
+> key the gate reads. So a current workup always carries the signal (`None` now means only a legacy
+> run). What remains gated behind the live execution (a) is *validating* that the block appears in
+> the live stream and which `input` key it uses — the extractor tolerates the plausible keys until
+> then. `# research(2026-06): hooks do not fire for Skill (prompt-expansion bypasses the tool
+> pipeline) — anthropics/claude-code#43630 closed not-planned; observe the streamed Skill
+> ToolUseBlock (the transcript-parse workaround, inline on the live stream).`
 
 Sources: Counterfactual Trace Auditing of LLM agent skills — with-skill vs without-skill paired
 runs, effect visible under saturation/cancellation

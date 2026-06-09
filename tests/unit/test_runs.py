@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from ariadne.runs import (
     Manifest,
@@ -85,7 +86,7 @@ class _Gov:
 
 
 def _manifest(**over) -> Manifest:
-    base = {
+    base: dict[str, Any] = {
         "run_id": "r",
         "entity": "Halberd",
         "dataset": "synthetic",
@@ -183,6 +184,47 @@ def test_build_workup_manifest_assembles_record():
     assert m.created_at.endswith("Z")
     assert m.cost_usd == 0.42
     assert m.usage == {"input_tokens": 100, "output_tokens": 50}
+
+
+def test_build_workup_manifest_records_invoked_skills():
+    m = build_workup_manifest(
+        run_directory=Path("runs/synthetic/halberd/r"),
+        entity="Halberd",
+        dataset="synthetic",
+        model="claude-opus-4-8",
+        profile="default",
+        params={},
+        duration_s=1.0,
+        exit_code=0,
+        trace_hex="",
+        scores={"eval": None},
+        skills_invoked=["entity-workup"],
+    )
+    assert m.skills_invoked == ["entity-workup"]
+    assert m.to_dict()["skills_invoked"] == ["entity-workup"]
+
+
+def test_manifest_round_trips_skills_invoked():
+    m = _manifest(skills_invoked=["entity-workup"])
+    assert Manifest.from_dict(m.to_dict()) == m
+
+
+def test_manifest_from_dict_defaults_skills_invoked_for_legacy_runs():
+    # A manifest written before recording was wired has no `skills_invoked` key; it must still
+    # load, defaulting to None — the reader treats None as "instrument absent" (unobserved),
+    # distinct from [] ("recorded, none fired"). See ariadne.learning.runs.skills_invoked.
+    legacy = _manifest().to_dict()
+    del legacy["skills_invoked"]
+    assert Manifest.from_dict(legacy).skills_invoked is None
+
+
+def test_written_manifest_is_read_back_by_the_invocation_reader(tmp_path):
+    # The writer/reader contract end to end: a manifest build_workup_manifest writes with
+    # skills_invoked is read by the SkillTester gate's reader as the same set (ADR-0034).
+    from ariadne.learning.runs import load_run, skills_invoked as read_invoked
+
+    write_manifest(tmp_path, _manifest(skills_invoked=["entity-workup"]))
+    assert read_invoked(load_run(tmp_path)) == {"entity-workup"}
 
 
 def test_update_latest_points_at_run(tmp_path):

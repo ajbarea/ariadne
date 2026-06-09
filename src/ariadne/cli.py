@@ -50,6 +50,7 @@ from ariadne.provenance.governance import audit_read_only
 from ariadne.provenance.hook import make_provenance_hook
 from ariadne.provenance.ledger import ProvenanceLedger
 from ariadne.provenance.repair import repair_citations_loop
+from ariadne.provenance.skills import skill_invocations
 from ariadne.provenance.tradecraft import lint_estimative_language
 from ariadne.relational.postgres_server import RELATIONAL_TOOLS, postgres_stdio_config
 from ariadne.report.note import write_outputs
@@ -1173,6 +1174,7 @@ async def run_workup(
     result_cost: float | None = None
     result_usage: dict | None = None
     result_model_usage: dict | None = None
+    skills_seen: set[str] = set()  # which Agent Skills fired (ADR-0034's SkillTester gate)
     with workup_span(entity, dataset, semantic=with_semantic, sql=with_sql):
         started = time.monotonic()
         async for message in query(prompt=prompt, options=options):
@@ -1180,6 +1182,9 @@ async def run_workup(
                 note_parts.extend(
                     block.text for block in message.content if isinstance(block, TextBlock)
                 )
+                # Hooks never fire for Skill (it is prompt-expansion, not a piped tool —
+                # anthropics/claude-code#43630), so read the invocation off the stream here.
+                skills_seen |= skill_invocations(message.content)
             elif isinstance(message, ResultMessage):
                 result_text = message.result
                 had_error = bool(getattr(message, "is_error", False))
@@ -1292,6 +1297,7 @@ async def run_workup(
             cost_usd=result_cost,
             usage=result_usage,
             scores=scores_from_reports(report, tradecraft, governance),
+            skills_invoked=sorted(skills_seen),
         ),
     )
     update_latest(out_dir.parent, out_dir.name)

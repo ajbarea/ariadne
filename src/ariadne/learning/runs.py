@@ -60,9 +60,11 @@ def skills_invoked(run: RunArtifacts) -> set[str] | None:
     """The skill names a run recorded as invoked, or ``None`` if no signal was recorded.
 
     ``None`` (the manifest has no ``skills_invoked`` key) means the instrument is absent — a legacy
-    run, or recording not yet wired (ADR-0034) — and is deliberately distinct from an empty set
-    (recorded, none fired). The invocation gate treats ``None`` as *unobserved* (a caveat, never a
-    false reject) and a non-matching set as *not invoked* (the confound SkillTester guards against).
+    run written before recording was wired (ADR-0034) — and is deliberately distinct from an empty
+    set (recorded, none fired). A current ``ariadne workup`` records the skills it observed off the
+    message stream (``provenance.skills``), so its manifest always carries the key. The invocation
+    gate treats ``None`` as *unobserved* (a caveat, never a false reject) and a non-matching set as
+    *not invoked* (the confound SkillTester guards against).
     """
     if not run.manifest:
         return None
