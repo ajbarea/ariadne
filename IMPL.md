@@ -27,13 +27,9 @@ existing skill from a new certified run, ratified by `compare`; see *Recently sh
 The loop is now closed end to end: `ariadne ratify` (ADR-0034) *produces* the paired runs `compare`
 measures — see *Recently shipped*.
 
-**Next candidates (all YAGNI until a consumer needs them):** `ariadne ratify`'s last deferred tail —
-the *live execution* itself (2N real workups against live stores, deliberate spend). The blocking
-correctness risk it carried is now **closed** — the staged-arm skills allowlist contract was fixed
-(the arm set `skills=[]`, which rejected every skill, so the candidate could never fire; see *Recently
-shipped*) — so what remains is the deliberate spend, which also live-validates the staged skill fires +
-records (the streamed `Skill` block appears live; its `input` key is now pinned to the primary source,
-not deferred — see *Recently shipped*); B2's multi-trajectory
+**Next candidates (all YAGNI until a consumer needs them):** `ariadne ratify`'s live execution —
+**now run** (2026-06-09, see *Recently shipped*), so the deferred tail is closed; what remains is all
+YAGNI — B2's multi-trajectory
 hierarchical consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`);
 B1's agent-driven refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis
 (the SkillTTA ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
@@ -42,6 +38,30 @@ Re-survey ROADMAP and overrule if something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
+
+---
+
+**`ariadne ratify` live execution — the deferred deliberate-spend tail, run 2026-06-09**
+([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md)). The orchestration
+was fully hermetic-tested (injected live-workup + scorer seams); this ran it for real against live
+stores — closing the named deferred tail. Ratified a genuine candidate (`closing-citation-audit`, the
+supplementary skill B3 `reflect` had proposed) vs the always-on `entity-workup` base: **4 live Halberd
+graph workups** (2 baseline OFF / 2 candidate ON), `-n 2`, **$2.60 total**, all exit 0. Findings, all
+honest: (1) **the invocation gate works live** — the staged candidate fired in 1 of 2 candidate trials
+(model-driven invocation variance) and its `Skill` ToolUseBlock was recorded off the **live message
+stream** as `skills_invoked: ['closing-citation-audit', 'entity-workup']` → `observed=True`. This is the
+direct live confirmation of two formerly-deferred items at once: *the streamed Skill block appears live*
+**and** *the `skill` input key* (today's primary-source pin — the live stream's key extracted both names,
+plugin namespace stripped to bare). (2) **Verdict NEUTRAL** (repairs 0 / regressions 0 / net +0): both
+arms saturate the fixture (every run `grounded`, recall/trajectory/coverage = 1.0), so there is no delta
+to measure — the honest SkillTester "no-effect" majority (~78%), *not* a failure. `compare` correctly
+returned neutral (skill fired, no net gain), **not** abstain (which is reserved for *never fired*).
+(3) Propose-only default held — not applied (no clean net gain to ratify). (4) **Prompt caching live**
+(cost discipline): `cache_read_input_tokens` 250K–690K per run vs ~100 uncached input. Small-N (<3/side)
+caveated by `compare` as directional. The candidate skill + run artifacts are gitignored (`skills-proposed/`,
+`runs/`), so nothing of the validation lands in the tree — only this record. `# research(2026-06):
+SkillTester ~14% help / ~78% no-effect / ~8% harm — a fixture-saturated neutral is the expected modal
+outcome, the gate distinguishes neutral (fired, no delta) from abstain (never fired).`
 
 ---
 

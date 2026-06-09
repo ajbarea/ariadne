@@ -106,8 +106,9 @@ Adopt **option 3**, in `src/ariadne/learning/ratify.py` + an `ariadne ratify` co
   via the harness, then `compare` only reads). The boundary holds.
 - **Honest scoping (YAGNI).** This slice ships the **orchestration + the invocation-gate logic +
   the arm toggle**, all hermetic and TDD'd against injected seams. *Deferred, named:* (a) the live
-  execution itself — `2N` real workups against real stores — is gated behind a key + stores and not
-  run here (deliberate spend), exactly as ADR-0031 deferred *producing* the runs; (b) **recording**
+  execution itself — `2N` real workups against real stores — was gated behind a key + stores and not
+  run in this slice (deliberate spend), exactly as ADR-0031 deferred *producing* the runs; **it was
+  subsequently run for real (2026-06-09 — see the live-execution follow-up below)**; (b) **recording**
   the invocation signal into the run manifest is the immediate follow-on (now shipped — see the
   follow-up below); (c) full counterfactual *trace* auditing and a real significance test over many
   trials.
@@ -155,6 +156,26 @@ Adopt **option 3**, in `src/ariadne/learning/ratify.py` + an `ariadne ratify` co
 > ClaudeAgentOptions.skills docstring, v0.2.87); plugin skills are namespaced plugin:skill and a
 > plugin manifest is optional but pins the name; restrict filesystem discovery with setting_sources=[]
 > and load skills from a path via plugins= (code.claude.com/docs agent-sdk skills + plugins).`
+
+> **Follow-up — the live execution, run 2026-06-09.** The deferred deliberate-spend tail (a, above)
+> was run for real against live stores, closing it. Candidate: `closing-citation-audit` (the
+> supplementary skill B3 `reflect` had proposed) vs the always-on `entity-workup` base; `-n 2`,
+> graph-only Halberd. **4 real workups, $2.60, all exit 0.** Outcomes, all honest: (1) **the invocation
+> gate works live** — the staged candidate fired in 1 of 2 candidate trials (model-driven invocation
+> variance) and its `Skill` ToolUseBlock was recorded off the **live message stream**
+> (`skills_invoked: ['closing-citation-audit', 'entity-workup']`), so `observed=True`. This is the live
+> confirmation of both formerly-deferred validation items at once: *the streamed `Skill` block appears
+> live* **and** *the `skill` input key* (pinned to the primary source the same day — the live stream's
+> key was extracted correctly, the `plugin:` namespace stripped to the bare `name`). (2) **Verdict
+> NEUTRAL** (repairs 0 / regressions 0): both arms saturate the fixture (all runs `grounded`,
+> recall/trajectory/coverage = 1.0), so there is no delta — the SkillTester ~78% no-effect majority,
+> *not* a failure, and `compare` correctly distinguished it from *abstain* (which is reserved for the
+> skill **never** firing). A skill that only audits citations cannot improve an already-100%-cited
+> baseline; the candidate arm did do *more* retrieval (15–17 graph calls vs 13) but it did not move the
+> scored outcome. (3) **Propose-only held** — not applied (no clean net gain). (4) **Prompt caching
+> live** (`cache_read_input_tokens` 250K–690K/run vs ~100 uncached). Small-N (<3/side) was caveated by
+> `compare` as directional. The candidate skill and run artifacts are gitignored, so only this record
+> persists. *Still deferred (c): full counterfactual trace auditing + a significance test over large N.*
 
 Sources: Counterfactual Trace Auditing of LLM agent skills — with-skill vs without-skill paired
 runs, effect visible under saturation/cancellation

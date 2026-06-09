@@ -733,9 +733,10 @@ items must not be hardened against one answer.
       is propose-only (ADR-0020's human-keeps-judgment spine). Hermetic orchestration — the live workup +
       scoring are injected seams (the `profiles --validate` pattern), so it is fully TDD'd without spend
       ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md)). *Remaining
-      (deferred): the live execution itself (2N real workups, deliberate spend); full counterfactual
-      trace auditing.* (Recording the invocation signal into the manifest shipped as the follow-on
-      below.) `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual Trace
+      (deferred): full counterfactual trace auditing.* (The **live execution itself was run 2026-06-09** —
+      4 real Halberd workups, $2.60; the candidate skill fired live and was recorded off the stream
+      → invocation gate `observed=True`, verdict NEUTRAL on a saturated fixture, caching live; see below.
+      Recording the invocation signal into the manifest shipped as the follow-on below.) `# research(2026-06): counterfactual with/without-skill paired runs — Counterfactual Trace
       Auditing (arXiv 2605.11946); matched baseline + invocation gate, ~14% help / 78% none / 8% harm —
       SkillTester (arXiv 2603.28815).`
 - [x] **Skill-invocation recording — the SkillTester gate is now signal-effective, shipped 2026-06-08.**
@@ -767,6 +768,19 @@ items must not be hardened against one answer.
       schema change degrading to the honest "unrecorded" abstain, never a false ratify. TDD red→green;
       572 unit green. `# research(2026-06): Skill input key = `skill`, primary source is the bundled CLI
       tool schema (v2.1.169), SDK is a thin subprocess wrapper so the schema is CLI-side.`
+- [x] **`ariadne ratify` live execution — the deferred deliberate-spend tail, run 2026-06-09**
+      ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md)). Ran the
+      hermetic-tested orchestration for real against live stores. Ratified a genuine candidate
+      (`closing-citation-audit`, the skill B3 `reflect` had proposed) vs the always-on `entity-workup`
+      base: **4 live Halberd graph workups** (2 OFF / 2 ON), `-n 2`, **$2.60**, all exit 0. The staged
+      candidate **fired live** (1 of 2 candidate trials — model invocation variance) and was recorded off
+      the **message stream** (`skills_invoked: ['closing-citation-audit', 'entity-workup']`) →
+      `observed=True`: a single live confirmation of *the streamed Skill block appears live* **and** *the
+      `skill` input key* (the same-day primary-source pin, now exercised live). Verdict **NEUTRAL**
+      (repairs 0 / regressions 0): both arms saturate the fixture (all `grounded`, recall/trajectory/
+      coverage 1.0), so no delta — the honest SkillTester no-effect majority, and `compare` correctly
+      distinguished it from *abstain* (never fired). Propose-only held (not applied). **Caching live**
+      (`cache_read` 250K–690K tok/run). Candidate + runs gitignored; only the record lands.
 - [x] **Ratify staged-arm skills contract fix — shipped 2026-06-08** ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
       `ratify` stages each arm as a `--plugin-dir` plugin, but `build_options` *also* set `skills=[]`
       on the arm — and a June-2026 re-verification of the SDK contract (re-check the primary source,
@@ -813,9 +827,12 @@ items must not be hardened against one answer.
 > firing is now **recorded** off the message stream into the manifest (2026-06-08), so the gate is
 > signal-effective — and the staged-arm skills **allowlist contract** that gates whether the candidate
 > can even fire is now fixed (2026-06-08): the arm's `skills=[]` rejected every skill, so it could
-> never fire; → `skills="all"` + `setting_sources=[]` + a staged plugin manifest. Next candidates are
-> the deferred tail (`ratify`'s *live execution* — the deliberate spend, which also live-validates the
-> recording + the staged firing; multi-trajectory consolidation) — all YAGNI.
+> never fire; → `skills="all"` + `setting_sources=[]` + a staged plugin manifest. And the **live
+> execution itself was run (2026-06-09)** — 4 real Halberd workups, $2.60, the candidate skill firing
+> live and recorded off the stream (`observed=True`), verdict NEUTRAL on a saturated fixture, caching
+> live — so the whole `ratify` loop is now exercised end to end with real spend, nothing deferred but
+> full counterfactual trace auditing. Remaining candidates (multi-trajectory consolidation, skill
+> composition, SkillTTA, A2 SHACL, A3 tool families) are all YAGNI until a consumer needs them.
 
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
