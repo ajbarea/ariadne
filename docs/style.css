@@ -568,6 +568,87 @@ body.hero-page .md-header {
   opacity: 0.88;
 }
 
+/* ---- Canonical schema — an ER/data-model figure (tables + typed links).
+   A different idiom again: DB-style tables, not nodes-and-arrows. ----------- */
+.md-typeset .schema-model {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  aspect-ratio: 1 / 0.72;
+  margin: 2rem auto 2.4rem;
+}
+
+.md-typeset .schema-model .links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.schema-model .links line {
+  stroke: color-mix(in srgb, var(--ari-thread) 45%, transparent);
+  stroke-width: 1;
+}
+
+.md-typeset .schema-model .tbl {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 9.2rem;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 32%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 80%, transparent);
+  font-size: 0.78rem;
+}
+
+.schema-model .tbl-h {
+  padding: 0.35rem 0.7rem;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: #1f1608; /* dark ink on the always-gold header, both schemes */
+  background: linear-gradient(var(--ari-thread), var(--ari-thread-deep));
+  letter-spacing: 0.01em;
+}
+
+.schema-model .tbl-r {
+  padding: 0.28rem 0.7rem;
+  font-family: var(--md-code-font-family, monospace);
+  font-size: 0.72rem;
+  color: var(--ari-ink);
+  border-top: 1px solid color-mix(in srgb, var(--ari-thread) 14%, transparent);
+}
+
+.schema-model .tbl--hub {
+  border-color: color-mix(in srgb, var(--ari-thread) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ari-thread) 12%, transparent);
+}
+
+.schema-model .tbl-entity { left: 50%; top: 40%; z-index: 2; }
+.schema-model .tbl-attribute { left: 16%; top: 22%; }
+.schema-model .tbl-document { left: 84%; top: 22%; }
+.schema-model .tbl-relationship { left: 50%; top: 88%; z-index: 2; }
+
+.md-typeset .schema-model .rel-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ari-heading);
+  background: var(--ari-bg);
+  padding: 0.05rem 0.4rem;
+  border-radius: 1rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .md-typeset .schema-model { max-width: 24rem; aspect-ratio: 1 / 1.1; }
+  .md-typeset .schema-model .tbl { width: 8rem; }
+  .schema-model .tbl-attribute { left: 24%; top: 18%; }
+  .schema-model .tbl-document { left: 76%; top: 18%; }
+}
+
 /* ---- Lifecycle ring — propose -> ratify -> freeze, repeating, around an
    immutable eval-gate core. A cycle, deliberately not a straight pipeline. ---- */
 .md-typeset .figure-cycle {

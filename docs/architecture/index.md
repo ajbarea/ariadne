@@ -70,11 +70,25 @@ the target shape.
 ## Datasets
 
 A developer adds a corpus by writing one **adapter** that maps raw data to the
-canonical schema (`Entity` / `Relationship` / `Document` / `Attribute`); a
-dataset-agnostic indexer fans the records into the stores. The agent,
-`entity-workup` skill, connectors, and eval harness never change. Governance
-(access-control, PII gating) attaches at the canonical layer once, not per
-dataset.
+canonical schema below; a dataset-agnostic indexer fans the records into the
+stores. The agent, `entity-workup` skill, connectors, and eval harness never
+change. Governance (access-control, PII gating) attaches at the canonical layer
+once, not per dataset.
+
+<div class="schema-model" markdown="0">
+  <svg class="links" viewBox="0 0 100 72" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <line x1="50" y1="28.8" x2="16" y2="15.8"></line>
+    <line x1="50" y1="28.8" x2="84" y2="15.8"></line>
+    <line x1="50" y1="28.8" x2="50" y2="63.4"></line>
+  </svg>
+  <div class="tbl tbl-attribute"><div class="tbl-h">Attribute</div><div class="tbl-r">key</div><div class="tbl-r">value</div></div>
+  <div class="tbl tbl-document"><div class="tbl-h">Document</div><div class="tbl-r">text</div><div class="tbl-r">source</div></div>
+  <div class="tbl tbl--hub tbl-entity"><div class="tbl-h">Entity</div><div class="tbl-r">name</div><div class="tbl-r">type</div><div class="tbl-r">aliases[]</div></div>
+  <div class="tbl tbl-relationship"><div class="tbl-h">Relationship</div><div class="tbl-r">type</div><div class="tbl-r">source &rarr; Entity</div><div class="tbl-r">target &rarr; Entity</div></div>
+  <div class="rel-label" style="left: 33%; top: 31%;">1 : N</div>
+  <div class="rel-label" style="left: 67%; top: 31%;">mentions</div>
+  <div class="rel-label" style="left: 50%; top: 64%;">source · target</div>
+</div>
 
 **Free-text retrieval** is hybrid: Postgres full-text (`tsvector` GIN,
 `websearch_to_tsquery`) fused with pgvector semantic search via Reciprocal Rank
