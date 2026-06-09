@@ -41,8 +41,10 @@ def test_write_rubric_json_persists_overall_and_dimensions(tmp_path: Path) -> No
     assert path == tmp_path / "rubric.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data["overall"] == 4.5
+    assert data["overall_spread"] == 0.0  # self-consistency disagreement (0 = single-judgment)
     assert data["dimensions"][0] == {
         "key": "alternatives",
         "score": 5,
         "rationale": "ACH present.",
+        "spread": 0.0,
     }

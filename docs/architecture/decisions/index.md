@@ -61,6 +61,7 @@ ADR is where the *comparison* lives.
 | [0032](0032-deepening-a-skill-from-new-experience.md) | Deepening a skill from new experience — `distil --into`, bounded and compare-gated | Accepted |
 | [0033](0033-verifying-no-network-egress.md) | Verifying the air-gapped posture — a network-egress guard (`egress_guard` + autouse CI gate) | Accepted |
 | [0034](0034-automated-net-effect-ratification.md) | Automated net-effect ratification — `ariadne ratify`, produce the paired runs | Accepted |
+| [0035](0035-self-consistency-sampling-for-the-rubric-judge.md) | Self-consistency sampling for the analytic-rubric judge — median + judge-disagreement | Accepted |
 
 ## Template
 

@@ -639,6 +639,8 @@ h1.entity{font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing
 .rdim .rr{font-size:12.5px;color:var(--soft);line-height:1.5;margin-top:7px}
 .rbar{height:5px;border-radius:3px;background:var(--line);margin-top:9px;overflow:hidden}
 .rbar i{display:block;height:100%;background:var(--thread)}
+.rdim .rsd{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+.rov .rsd{font-family:var(--mono);font-size:12px}
 
 /* Trajectory */
 .traj{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding:18px 22px}
@@ -1203,12 +1205,16 @@ if(EV||RB){
   if(CAV.length){body+=`<div class="evcav"><div class="evcav-h">⚑ Where this run fell short of ground truth</div>`
     +CAV.map(c=>`<div class="evcav-i">${esc(c)}</div>`).join("")+`</div>`;}
   if(RB){
-    const dims=(RB.dimensions||[]).map(d=>`<div class="rdim"><div class="rh">`
-      +`<span class="rk">${esc(d.key)}</span><span class="rs">${esc(String(d.score))}/5</span></div>`
-      +`<div class="rbar"><i style="width:${d.score/5*100}%"></i></div>`
-      +`<div class="rr">${esc(d.rationale||"")}</div></div>`).join("");
+    const dims=(RB.dimensions||[]).map(d=>{
+      const sd=(d.spread>0)?`<span class="rsd" title="judge disagreement: stdev over self-consistency samples">±${d.spread.toFixed(2)}</span>`:"";
+      return `<div class="rdim"><div class="rh">`
+        +`<span class="rk">${esc(d.key)}</span><span class="rs">${esc(String(d.score))}/5${sd}</span></div>`
+        +`<div class="rbar"><i style="width:${d.score/5*100}%"></i></div>`
+        +`<div class="rr">${esc(d.rationale||"")}</div></div>`;
+    }).join("");
+    const ovsd=(RB.overall_spread>0)?` <span class="rsd" title="mean judge disagreement across dimensions (self-consistency, ADR-0035)">±${RB.overall_spread.toFixed(2)} judge disagreement</span>`:"";
     body+=`<div class="evsub">ICD-203 analytic-standards rubric · LLM-judged</div>`
-      +`<div class="rubricw"><div class="rov">Overall <b>${fx(RB.overall)}</b> / 5</div>${dims}</div>`;
+      +`<div class="rubricw"><div class="rov">Overall <b>${fx(RB.overall)}</b> / 5${ovsd}</div>${dims}</div>`;
   }
   $("#eval-body").innerHTML=body;
 }

@@ -44,6 +44,24 @@ manual `infra/neo4j/seed.cypher` on a fresh container.)
 
 ---
 
+**Rubric judge self-consistency — `ariadne rubric --samples N`, shipped 2026-06-09** ([ADR-0035](./docs/architecture/decisions/0035-self-consistency-sampling-for-the-rubric-judge.md)).
+A web-search-grounded eval-rigor pass on the brief's central challenge (*"how do you know what
+works?"*). The eval pyramid's noisiest tier — the single LLM-rubric judgment per ICD-203 dimension
+— is now optionally **self-consistent**: `--samples N` re-judges each dimension N times,
+**median-aggregates** (robust to one outlier draw), and reports the inter-sample **disagreement**
+(`spread`) per dimension + overall, so the analyst sees *where the judge is unstable* (the report
+renders a `±σ` badge). The June-2026 search refined the naive "add multi-judge" plan: the
+cross-vendor ensemble is the launch-decision default but **breaks the air-gapped single-model
+branch** (ADR-0012) and costs 3–5×, while a single calibrated judge is fine for longitudinal
+monitoring — so the shipped form is the on-prem one (same-model sampling + reliability-reporting),
+default unchanged (`samples=1`, zero regression). Live-validated for ~$0.15: the judge samples with
+genuine variance (the `accuracy` dimension drew 5,4,4,4,5 over 5 samples → not deterministic, so the
+signal is real; no temperature pinning needed). TDD; 571 unit green. `# research(2026-06):
+self-consistency + reliability-reporting is the on-prem judge-bias slice; median over mean for
+outlier robustness; N samples not N vendors (ADR-0012).`
+
+---
+
 **Ratify staged-arm skills contract fix — the invocation gate can now observe a firing, shipped 2026-06-08**
 ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
 `ariadne ratify` stages each arm as a `--plugin-dir` plugin, but `build_options` also set `skills=[]`

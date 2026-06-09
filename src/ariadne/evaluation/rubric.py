@@ -30,6 +30,7 @@ pure and hermetic — the real model lives in ``evaluation.judge`` behind the
 from __future__ import annotations
 
 import json
+import statistics
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Protocol
@@ -52,6 +53,7 @@ class DimensionScore:
     key: str
     score: int
     rationale: str
+    spread: float = 0.0  # self-consistency disagreement: stdev of the N samples (0 = unanimous/N=1)
 
 
 @dataclass(frozen=True)
@@ -60,6 +62,7 @@ class RubricReport:
 
     dimensions: tuple[DimensionScore, ...]
     overall: float
+    overall_spread: float = 0.0  # mean per-dimension disagreement (0 = single-judgment / unanimous)
 
 
 class AnalyticJudge(Protocol):
@@ -135,31 +138,64 @@ ICD203_RUBRIC: tuple[RubricDimension, ...] = (
 )
 
 
+def _aggregate(trials: list[DimensionScore]) -> DimensionScore:
+    """Median-aggregate N self-consistency samples of one dimension (ADR-0035).
+
+    Median (not mean) is robust to a single outlier judgment; ``spread`` is the population stdev
+    of the sampled scores — the judge's disagreement with itself, ``0.0`` when unanimous or
+    single-sample. The kept rationale is from a sample *at* the median, so the prose explains the
+    reported score. ``trials`` is never empty (>= 1 sample per dimension).
+    """
+    values = [t.score for t in trials]
+    median = round(statistics.median(values))
+    spread = statistics.pstdev(values) if len(values) > 1 else 0.0
+    representative = next((t for t in trials if t.score == median), trials[0])
+    return DimensionScore(
+        key=representative.key, score=median, rationale=representative.rationale, spread=spread
+    )
+
+
 def score_note(
     note: str,
     judge: AnalyticJudge,
     rubric: tuple[RubricDimension, ...] = ICD203_RUBRIC,
+    *,
+    samples: int = 1,
 ) -> RubricReport:
-    """Score ``note`` against every rubric dimension and aggregate (mean of 1-5)."""
-    scores = tuple(judge.score(note, dimension) for dimension in rubric)
+    """Score ``note`` against every rubric dimension and aggregate (mean of 1-5).
+
+    ``samples`` > 1 runs **self-consistency** (ADR-0035): each dimension is judged ``samples``
+    times and median-aggregated, with the inter-sample disagreement surfaced as ``spread``. The
+    default (1) is a single judgment — unchanged, and defensible for longitudinal monitoring; raise
+    it for a borderline score near a ``--min`` gate, where one noisy judgment shouldn't decide it.
+    """
+    if samples < 1:
+        raise ValueError("samples must be >= 1")
+    scores = tuple(
+        _aggregate([judge.score(note, dimension) for _ in range(samples)]) for dimension in rubric
+    )
     overall = sum(s.score for s in scores) / len(scores) if scores else 0.0
-    return RubricReport(dimensions=scores, overall=overall)
+    overall_spread = sum(s.spread for s in scores) / len(scores) if scores else 0.0
+    return RubricReport(dimensions=scores, overall=overall, overall_spread=overall_spread)
 
 
 def score_note_dir(
     out_dir: str | Path,
     judge: AnalyticJudge,
     rubric: tuple[RubricDimension, ...] = ICD203_RUBRIC,
+    *,
+    samples: int = 1,
 ) -> RubricReport:
     """Read ``note.md`` from a workup dir and score it."""
     note = (Path(out_dir) / "note.md").read_text(encoding="utf-8")
-    return score_note(note, judge, rubric)
+    return score_note(note, judge, rubric, samples=samples)
 
 
 def write_rubric_json(out_dir: str | Path, report: RubricReport) -> Path:
     """Persist a rubric ``report`` to ``rubric.json`` so the HTML report can show it."""
     payload = {
         "overall": report.overall,
+        "overall_spread": report.overall_spread,
         "dimensions": [asdict(d) for d in report.dimensions],
     }
     path = Path(out_dir) / "rubric.json"

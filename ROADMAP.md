@@ -151,14 +151,17 @@ items must not be hardened against one answer.
      report dashboard card; TDD, headless-verified).
      `# research(2026-06): SoK Agentic RAG (arXiv 2603.07379) — trajectory-aware
      retrieval eval: context utilization / cumulative relevance / retrieval drift.`
-   - **Multi-judge averaging (FACTS-style).** DeepMind FACTS Grounding averages
-     three independent judges to cut single-judge bias; Ariadne uses one. The
-     cross-vendor form (Gemini/GPT-4o/Claude) tensions with the air-gapped
-     single-model branch ([ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)),
-     so the on-prem-safe variant is N sampled judgments or N local judges, not N
-     vendors. Pair with the **unfaithful-CoT / judge-gaming** research-watch
-     (agent CoT does not always reflect true reasoning — sample-level human spot
-     checks stay necessary).
+   - **Multi-judge averaging (FACTS-style) — addressed on-prem 2026-06-09 ([ADR-0035](./docs/architecture/decisions/0035-self-consistency-sampling-for-the-rubric-judge.md)).**
+     DeepMind FACTS Grounding averages three independent judges to cut single-judge bias;
+     Ariadne used one. The cross-vendor form (Gemini/GPT-4o/Claude) tensions with the
+     air-gapped single-model branch ([ADR-0012](./docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)),
+     so the shipped variant is the on-prem one: `ariadne rubric --samples N` runs
+     **self-consistency** — median-aggregate N judgments per dimension, **reporting the
+     inter-sample disagreement** (`spread`) so the analyst sees where the judge is unstable.
+     Default stays a single judgment (fine for monitoring; the June-2026 consensus reserves
+     ensembles for the noise band). Pair with the **unfaithful-CoT / judge-gaming**
+     research-watch (agent CoT does not always reflect true reasoning — sample-level human
+     spot checks stay necessary).
 
    Sources: [Future AGI — deterministic eval floor 2026](https://futureagi.com/blog/deterministic-llm-evaluation-metrics-2026/) ·
    [DeepMind FACTS framework](https://galileo.ai/blog/deepmind-facts-framework-llm-factual-accuracy) ·
@@ -375,6 +378,21 @@ items must not be hardened against one answer.
       verifier into the citation gate. Decision:
       [ADR-0011](./docs/architecture/decisions/0011-llm-rubric-analytic-standards-eval.md).
       `# research(2026-06): LLM-Rubric (pointwise, criterion-separated, anchored) + judge-bias mitigations.`
+- [x] **Rubric judge self-consistency — `ariadne rubric --samples N` (2026-06-09):** the eval
+      pyramid's noisiest tier (a single LLM judgment) gained an opt-in robustness pass.
+      `--samples N` re-judges each ICD-203 dimension N times and **median-aggregates** (robust to
+      an outlier draw), reporting the inter-sample **disagreement** (`spread`) per dimension +
+      overall so the analyst sees where the judge is unstable (the report renders a `±σ` badge).
+      Default stays a single judgment — unchanged, and fine for longitudinal monitoring per the
+      June-2026 consensus (ensembles are for the noise band). Chose the **on-prem** form
+      (same-model sampling, median, reliability-reporting) over the cross-vendor FACTS ensemble,
+      which breaks the air-gapped single-model branch (ADR-0012). Live-validated for ~$0.15: the
+      judge samples with genuine variance (the `accuracy` dimension drew 5,4,4,4,5 over 5 samples).
+      [ADR-0035](./docs/architecture/decisions/0035-self-consistency-sampling-for-the-rubric-judge.md).
+      `# research(2026-06): single calibrated judge fine for monitoring / ensembles for the noise
+      band, self-consistency + reliability-reporting the on-prem slice (futureagi LLM-judge-bias-2026;
+      Label Your Data 2026); median over mean for outlier robustness; self-preference bias real
+      (arXiv 2604.22891); FACTS multi-judge lineage, N samples not N vendors (ADR-0012).`
 - [x] **Evaluation harness (planted-needle):** `ariadne eval <dir>` scores recall
       / trajectory / `grounded` (surfaced AND traversed, not guessed) / pivot-burden
       against the Compound-Alpha fixture (2026-06-02; the real Halberd workup scores

@@ -156,6 +156,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Fail (exit 1) if the overall score is below this threshold (1-5). "
         "Default: informational only.",
     )
+    rb.add_argument(
+        "-n",
+        "--samples",
+        type=int,
+        default=1,
+        help="Self-consistency: re-judge each dimension N times and median-aggregate, reporting "
+        "the inter-sample disagreement (default 1; raise it for a score near --min; odd N best).",
+    )
     ix = sub.add_parser("index", help="Load a dataset's records into the live stores")
     ix.add_argument(
         "--dataset",
@@ -870,21 +878,25 @@ def _run_governance(workup_dir: str) -> int:
     return 0
 
 
-def _run_rubric(workup_dir: str, minimum: float | None = None) -> int:
+def _run_rubric(workup_dir: str, minimum: float | None = None, samples: int = 1) -> int:
     """Score a workup's note against the ICD-203 rubric with the live Claude judge.
 
     Needs ANTHROPIC_API_KEY + the 'rubric' extra. Informational by default; with
-    ``--min`` it becomes a CI-gateable pass/fail on the overall score.
+    ``--min`` it becomes a CI-gateable pass/fail on the overall score. ``samples`` > 1 runs
+    self-consistency (ADR-0035): median-aggregate N judgments per dimension, reporting the
+    inter-sample disagreement so a borderline score is not decided by one noisy judgment.
     """
     from ariadne.evaluation.judge import ClaudeAnalyticJudge
     from ariadne.evaluation.rubric import score_note_dir, write_rubric_json
 
-    report = score_note_dir(workup_dir, ClaudeAnalyticJudge())
+    report = score_note_dir(workup_dir, ClaudeAnalyticJudge(), samples=samples)
     write_rubric_json(workup_dir, report)  # surfaced in the report
     merge_scores(Path(workup_dir), {"rubric": {"score": report.overall}})
-    print(f"Rubric (ICD-203) overall={report.overall:.2f}/5")
+    spread = f" (judge disagreement ±{report.overall_spread:.2f} over {samples} samples)"
+    print(f"Rubric (ICD-203) overall={report.overall:.2f}/5{spread if samples > 1 else ''}")
     for s in report.dimensions:
-        print(f"  {s.key:<14} {s.score}/5  {s.rationale}")
+        disagree = f" ±{s.spread:.2f}" if s.spread else ""
+        print(f"  {s.key:<14} {s.score}/5{disagree}  {s.rationale}")
     if minimum is not None and report.overall < minimum:
         print(f"Rubric FAILED — overall {report.overall:.2f} < {minimum:.2f}", file=sys.stderr)
         return 1
@@ -1379,7 +1391,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     if args.command == "rubric":
-        return _run_rubric(args.workup_dir, args.min)
+        return _run_rubric(args.workup_dir, args.min, args.samples)
     # Fast-fail before the paid agent loop if a store the run needs isn't up (the #1
     # first-run stumble): print how to start it, exit cleanly, spend nothing.
     unreachable = workup_preflight(dict(os.environ), with_sql=args.sql, with_semantic=args.semantic)
