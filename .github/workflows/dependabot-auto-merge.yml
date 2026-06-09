@@ -1,0 +1,40 @@
+name: Dependabot auto-merge
+
+# research(2026-06): auto-merge Dependabot PRs that bump only patch versions.
+# Patch is non-breaking by semver, dependabot.yml already holds new releases for a
+# 7-day supply-chain cooldown, and main's required checks gate the merge — so the
+# weekly manual click this removes was toil, not review. Minor/major still wait for
+# a person: a grouped PR reports its HIGHEST bump, so any minor in the batch holds
+# the whole batch.
+#
+# GITHUB_TOKEN (elevated via permissions), not a GitHub App token: a
+# Dependabot-triggered run reads only the Dependabot secrets store, not Actions
+# secrets. Caveat: a GITHUB_TOKEN merge doesn't re-fire push-triggered workflows
+# (e.g. a docs/Pages deploy), so a prod-dep patch that changes built output goes
+# live on the next push rather than instantly — immaterial for dev-dep + action
+# bumps. The required checks gate every merge, same as a human's.
+
+on: pull_request
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    # Dependabot's own PRs only; skipped (non-blocking) on every other PR.
+    # pull_request.user.login (not the spoofable github.actor) is the robust gate.
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'ajbarea/ariadne'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Arm auto-merge for patch updates
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
