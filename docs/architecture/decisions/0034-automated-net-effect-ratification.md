@@ -123,10 +123,16 @@ Adopt **option 3**, in `src/ariadne/learning/ratify.py` + an `ariadne ratify` co
 > skill matches its name) and `run_workup` persists the set to the manifest's `skills_invoked`, the
 > key the gate reads. So a current workup always carries the signal (`None` now means only a legacy
 > run). What remains gated behind the live execution (a) is *validating* that the block appears in
-> the live stream and which `input` key it uses — the extractor tolerates the plausible keys until
-> then. `# research(2026-06): hooks do not fire for Skill (prompt-expansion bypasses the tool
-> pipeline) — anthropics/claude-code#43630 closed not-planned; observe the streamed Skill
-> ToolUseBlock (the transcript-parse workaround, inline on the live stream).`
+> the live stream; the `input` key it uses is **no longer** part of that — it is pinned to the
+> primary source (2026-06-09): the Skill tool's input schema lives in the bundled CLI (the binary
+> the SDK shells out to), and CLI v2.1.169's tool schema is `skill: z.string().describe("The name
+> of a skill …")` + `args: z.string().optional()`, so the name is under `skill` (`args` carries
+> arguments, not the name). The extractor reads the one confirmed key — the speculative
+> `command`/`name`/`skill_name` fallbacks (tolerated "until a live run pins the key") were removed
+> as now-known-dead speculative generality. `# research(2026-06): hooks do not fire for Skill
+> (prompt-expansion bypasses the tool pipeline) — anthropics/claude-code#43630 closed not-planned;
+> observe the streamed Skill ToolUseBlock; Skill input key = `skill`, read off the bundled CLI
+> v2.1.169 tool schema (the SDK is a thin subprocess wrapper, schema is CLI-side).`
 
 > **Follow-up — the staged-arm skills contract fix, shipped 2026-06-08.** Staging via `plugins=`
 > loads the candidate skill to disk, but `build_options` also set `skills=[]` on the arm — and a

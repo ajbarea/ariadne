@@ -32,7 +32,8 @@ the *live execution* itself (2N real workups against live stores, deliberate spe
 correctness risk it carried is now **closed** — the staged-arm skills allowlist contract was fixed
 (the arm set `skills=[]`, which rejected every skill, so the candidate could never fire; see *Recently
 shipped*) — so what remains is the deliberate spend, which also live-validates the staged skill fires +
-records (the streamed `Skill` block + its exact `input` key); B2's multi-trajectory
+records (the streamed `Skill` block appears live; its `input` key is now pinned to the primary source,
+not deferred — see *Recently shipped*); B2's multi-trajectory
 hierarchical consolidation (Trace2Skill across many runs), skill *composition* (`composes_with`);
 B1's agent-driven refinement of a persisted mapping (now unblocked by B3); test-time skill synthesis
 (the SkillTTA ephemeral track); A3 richer per-dataset tool families; A2's SHACL transpile of
@@ -41,6 +42,26 @@ Re-survey ROADMAP and overrule if something higher-value surfaces.
 
 (Bring the stores up with the `infra/*/docker-compose.yml` files; Neo4j needs the
 manual `infra/neo4j/seed.cypher` on a fresh container.)
+
+---
+
+**Skill-invocation `input` key pinned to the primary source — rigor-hardening, shipped 2026-06-09**
+([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up). The
+SkillTester invocation extractor (`provenance/skills.py`) read the invoked skill's name from a
+*speculative* tuple of keys — `("skill", "command", "name", "skill_name")` — "tolerated until a live
+run pins the exact key" (a standing "claim to re-check"). Pinned it for **$0** instead of waiting on
+the deferred `ratify` spend: the Skill tool's input schema lives in the **bundled CLI** (the binary the
+Python SDK shells out to — `subprocess_cli.py`, *not* the SDK, which only types `ToolUseBlock.input` as
+`dict`), and reading the installed CLI v2.1.169's own tool schema shows
+`skill: z.string().describe("The name of a skill …")` + `args: z.string().optional()`. So the name is
+under **`skill`** (confirmed); `args` carries arguments, not the name. Collapsed the extractor to the
+one confirmed key and **removed the three speculative fallbacks** as now-known-dead generality (AJ's
+YAGNI / no-speculative-generality rule) — the function still skips a malformed/absent-key block
+gracefully, so a future schema change degrades to the honest "unrecorded" abstain state, never a false
+ratify. The deferred live step now owes only *the block appears live*, not *which key*. TDD red→green
+(replaced the speculative-fallback test with two confirmed-schema tests); 572 unit green. `# research(2026-06):
+Skill tool input key = `skill` — primary source is the bundled CLI tool schema (v2.1.169
+`skill: z.string()`), the SDK is a thin subprocess wrapper so the schema is CLI-side, not SDK-side.`
 
 ---
 
@@ -183,9 +204,9 @@ iterates — `provenance.skills.skill_invocations` normalizes it to the bare fro
 persists the observed set to the manifest's `skills_invoked`. Every current workup now carries the
 signal, so the gate is **signal-effective** (`None` now means only a legacy run); the live `ratify`
 runner already routes through `run_workup`, so its candidate-arm manifests will carry it. What's left
-for the live-execution step is *validating* the streamed block appears + its exact `input` key (the
-extractor tolerates the plausible keys until then). TDD red→green (extractor 9 + manifest 4); 563 unit
-green. `# research(2026-06): hooks don't fire for Skill — prompt-expansion bypasses the tool pipeline
+for the live-execution step is *validating* the streamed block appears live; its `input` key is **no
+longer** deferred — pinned to the primary source (see the rigor-hardening entry at the top). TDD
+red→green (extractor 9 + manifest 4); 563 unit green. `# research(2026-06): hooks don't fire for Skill — prompt-expansion bypasses the tool pipeline
 (anthropics/claude-code#43630 closed not-planned); observe the streamed Skill ToolUseBlock (the
 transcript-parse workaround, inline on the live stream).`
 

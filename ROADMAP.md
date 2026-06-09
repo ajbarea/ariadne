@@ -750,10 +750,23 @@ items must not be hardened against one answer.
       manifest's `skills_invoked`. Every current workup carries it, so the gate is signal-effective
       (`None` now = legacy run only); the live `ratify` runner routes through `run_workup`, so its
       candidate-arm manifests will carry it. *Remaining (folded into the live step): validating the
-      streamed block appears live + its exact `input` key.* TDD; 563 unit green.
+      streamed block appears live.* (The block's exact `input` key was a deferred sub-item; **pinned to
+      the primary source 2026-06-09** — see below — so the live step no longer owes it.) TDD; 563 unit green.
       `# research(2026-06): hooks don't fire for Skill — prompt-expansion bypasses the tool pipeline
       (anthropics/claude-code#43630 closed not-planned); observe the streamed Skill ToolUseBlock (the
       transcript-parse workaround, inline on the live stream).`
+- [x] **Skill-invocation `input` key pinned to the primary source — rigor-hardening, shipped 2026-06-09**
+      ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
+      The invocation extractor read the skill name from a *speculative* key tuple
+      (`skill`/`command`/`name`/`skill_name`) "tolerated until a live run pins the key" — a standing
+      claim-to-re-check. Pinned for **$0** without the deferred spend: the Skill tool's input schema
+      lives in the **bundled CLI** (the binary the SDK subprocesses, not the Python SDK), and CLI
+      v2.1.169's tool schema is `skill: z.string()` + `args: z.string().optional()` — so the name is
+      under **`skill`** (`args` = arguments, not name). Collapsed to the one confirmed key + removed the
+      three dead fallbacks (no-speculative-generality); the graceful absent-key skip keeps a future
+      schema change degrading to the honest "unrecorded" abstain, never a false ratify. TDD red→green;
+      572 unit green. `# research(2026-06): Skill input key = `skill`, primary source is the bundled CLI
+      tool schema (v2.1.169), SDK is a thin subprocess wrapper so the schema is CLI-side.`
 - [x] **Ratify staged-arm skills contract fix — shipped 2026-06-08** ([ADR-0034](./docs/architecture/decisions/0034-automated-net-effect-ratification.md), follow-up).
       `ratify` stages each arm as a `--plugin-dir` plugin, but `build_options` *also* set `skills=[]`
       on the arm — and a June-2026 re-verification of the SDK contract (re-check the primary source,

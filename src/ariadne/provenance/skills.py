@@ -12,9 +12,12 @@ locating a transcript file).
 
 # research(2026-06): hooks do not fire for Skill invocations — prompt-expansion bypasses the
 # tool pipeline (anthropics/claude-code#43630, closed not-planned). Read the streamed Skill
-# ToolUseBlock instead. The Skill tool's input schema lives in the CLI (not the Python SDK),
-# so the exact input key and the block's live presence in the stream are confirmed when the
-# live ratify execution runs (the deferred spend step, ADR-0034).
+# ToolUseBlock instead. The Skill tool's input schema lives in the CLI (the binary the Python
+# SDK shells out to via subprocess), not the SDK; read off the bundled CLI v2.1.169 it is
+# `skill: z.string().describe("The name of a skill ...")` + `args: z.string().optional()` — so
+# the invoked skill's name is under `skill` (`args` carries arguments, not the name). The
+# block's *live* presence in the stream is still only exercised by the deferred ratify spend
+# (ADR-0034), but the input key no longer is — it is pinned to the primary source.
 """
 
 from __future__ import annotations
@@ -27,10 +30,9 @@ if TYPE_CHECKING:
 # The tool name the model uses to invoke a skill.
 SKILL_TOOL_NAME = "Skill"
 
-# The Skill tool carries the invoked skill under one of these input keys. `skill` is the shape
-# the upstream feature request names (anthropics/claude-code#43630); the others cover the
-# slash-command / name-field variants — tolerated until a live run pins the exact key.
-_SKILL_INPUT_KEYS = ("skill", "command", "name", "skill_name")
+# The Skill tool carries the invoked skill's name under `skill` — confirmed against the bundled
+# CLI's tool schema (v2.1.169: `skill: z.string()`), the binary the SDK subprocess invokes.
+SKILL_NAME_KEY = "skill"
 
 
 def _bare_name(identifier: str) -> str:
@@ -46,9 +48,9 @@ def skill_invocations(content: Iterable[Any]) -> set[str]:
     """The bare skill names invoked across one AssistantMessage's content blocks.
 
     Duck-typed on ``ToolUseBlock``'s ``(name, input)`` shape: a block whose name is the Skill
-    tool yields the bare skill name from its input; text, thinking, and evidence-tool calls are
-    ignored. Malformed Skill blocks (no recognizable key, empty/non-string value) are skipped,
-    never raised — observation must not break a workup.
+    tool yields the bare skill name from its ``input["skill"]``; text, thinking, and evidence-tool
+    calls are ignored. Malformed Skill blocks (no ``skill`` key, empty/non-string value) are
+    skipped, never raised — observation must not break a workup.
     """
     found: set[str] = set()
     for block in content:
@@ -57,9 +59,7 @@ def skill_invocations(content: Iterable[Any]) -> set[str]:
         inp = getattr(block, "input", None)
         if not isinstance(inp, dict):
             continue
-        for key in _SKILL_INPUT_KEYS:
-            value = inp.get(key)
-            if isinstance(value, str) and value.strip():
-                found.add(_bare_name(value))
-                break
+        value = inp.get(SKILL_NAME_KEY)
+        if isinstance(value, str) and value.strip():
+            found.add(_bare_name(value))
     return found
