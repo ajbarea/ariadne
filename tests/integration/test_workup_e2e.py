@@ -68,3 +68,15 @@ async def test_live_workup_produces_cited_note(neo4j_conn, tmp_path) -> None:
     assert (out / "provenance.jsonl").read_text().strip()
     # success criterion (4): surfaces the planted non-obvious link
     assert "Compound-Alpha" in note or "co-located" in note.lower()
+
+    # SkillTester invocation signal (ADR-0034): a normal workup enables skills=["entity-workup"],
+    # so the stream-recorder must observe that skill firing and persist it to the manifest. This is
+    # the live validation the recording slice deferred — recording reads the streamed Skill
+    # ToolUseBlock because PostToolUse hooks never fire for Skill (anthropics/claude-code#43630).
+    # If this fails, the streamed Skill block's shape/presence or input key changed: check
+    # ariadne.provenance.skills (the extractor tolerates several plausible input keys).
+    manifest = json.loads((out / "manifest.json").read_text())
+    assert isinstance(manifest.get("skills_invoked"), list), "manifest must record skills_invoked"
+    assert "entity-workup" in manifest["skills_invoked"], (
+        f"entity-workup not observed in the stream (got {manifest.get('skills_invoked')})"
+    )
