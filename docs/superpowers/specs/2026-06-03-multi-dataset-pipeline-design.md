@@ -1,7 +1,7 @@
 # Ariadne — design: dataset-agnostic sensemaking pipeline
 
 > **Status:** design, awaiting review. Authored 2026-06-03.
-> **Driver:** SCADS demo feedback — prove the harness handles sensemaking on
+> **Driver:** demo feedback — prove the harness handles sensemaking on
 > real corpora beyond the synthetic Neo4j graph, and make adding a dataset easy
 > for future devs. Target corpora: **Enron** (public) and **Avocado / LDC2015T03**
 > (license + PII gated).

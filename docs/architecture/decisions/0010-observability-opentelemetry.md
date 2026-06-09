@@ -104,7 +104,7 @@ the `otel` extra is not installed, every call is a silent no-op.
 - The `gen_ai.agent.name` attribute (and peers) are marked experimental;
   flagged for review when the GenAI semconv reaches stability 1.0.
 - Operators running Ariadne inside a shared OTEL pipeline (e.g. Jaeger +
-  Grafana in a SCADS deployment) get Ariadne traces alongside other services
+  Grafana in an enterprise deployment) get Ariadne traces alongside other services
   with no extra plumbing.
 
 ## Sources

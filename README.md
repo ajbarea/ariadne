@@ -1,6 +1,6 @@
 # Ariadne
 
-**Sensemaking for nonatomic entities using AI coding agents.** Part of the SCADS program.
+**Sensemaking for nonatomic entities using AI coding agents.**
 
 [![CI](https://github.com/ajbarea/ariadne/actions/workflows/ci.yml/badge.svg)](https://github.com/ajbarea/ariadne/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/ajbarea/ariadne/graph/badge.svg)](https://codecov.io/gh/ajbarea/ariadne)
@@ -58,14 +58,14 @@ ability to:
 - reduce the analyst's manual-pivot burden, and
 - surface non-obvious connections impractical to find with conventional tooling.
 
-## SCADS umbrella role
+## Umbrella role
 
-Ariadne is conceived as an umbrella effort within SCADS. It does not
-duplicate sibling-project work; it defines integration interfaces so that
-contributions from other SCADS projects — graph-extraction pipelines, entity-
-resolution models, multimodal indexing schemes — can be surfaced as callable
-tools within the harness. It is both a standalone research contribution and a
-unifying demonstration layer for the SCADS portfolio.
+Ariadne is conceived as an umbrella effort. It does not duplicate
+companion-project work; it defines integration interfaces so that external
+capabilities — graph-extraction pipelines, entity-resolution models,
+multimodal indexing schemes — can be surfaced as callable tools within the
+harness. It is both a standalone research contribution and a unifying
+demonstration layer for a wider analytic toolchain.
 
 ## Install
 

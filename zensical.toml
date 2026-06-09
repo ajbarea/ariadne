@@ -1,6 +1,6 @@
 [project]
 site_name = "Ariadne"
-site_description = "A sensemaking harness for nonatomic entities: an agentic analytic interface over heterogeneous, multimodal data. Part of the SCADS program."
+site_description = "A sensemaking harness for nonatomic entities: an agentic analytic interface over heterogeneous, multimodal data."
 site_author = "AJ Barea"
 site_url = "https://ajbarea.github.io/ariadne/"
 repo_url = "https://github.com/ajbarea/ariadne"
@@ -20,7 +20,7 @@ nav = [
   { "Architecture" = [
       { "Overview" = "architecture/index.md" },
       { "Workflow Patterns" = "patterns.md" },
-      { "SCADS Integration" = "integration.md" },
+      { "Integration" = "integration.md" },
   ]},
   { "Research" = [
       { "Overview" = "research/index.md" },

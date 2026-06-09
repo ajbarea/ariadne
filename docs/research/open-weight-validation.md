@@ -89,7 +89,7 @@ every axis, so a passing score from a larger model is meaningful, not a rubber s
    (see `docs/superpowers/specs/2026-06-04-user-model-selection-design.md`, D6).
 4. **A scorable open-weight *quality* number needs a faster host.** The 14B/30B
    quality rows are a follow-up on a GPU host or hosted open-weight endpoint; the
-   throughput wall on commodity Apple Silicon is itself a useful SCADS air-gap
+   throughput wall on commodity Apple Silicon is itself a useful air-gap
    deployment finding (plan for inference hardware, not just model weights).
 5. **Measured 2026-06-04: thinking-off helps, but prefill of the static context is the
    real wall.** Disabling qwen3 reasoning (`think:false` through LiteLLM, the June-2026

@@ -6,7 +6,7 @@
 
 ## Context
 
-SCADS demo feedback asked the harness to handle sensemaking on real corpora
+Demo feedback asked the harness to handle sensemaking on real corpora
 (Enron, Avocado/LDC2015T03) beyond the synthetic Neo4j graph, and to make adding
 a dataset straightforward for future developers. The question is how to structure
 that expansion without re-wiring stores, re-implementing governance, or coupling

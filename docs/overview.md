@@ -1,7 +1,7 @@
 # Overview
 
 Ariadne is a sensemaking harness for entities that live inside large
-organizations, built within the SCADS program.
+organizations.
 
 ## The problem
 
@@ -43,9 +43,9 @@ It is judged on four things:
 3. **Reduce** the analyst's manual-pivot burden.
 4. **Surface** non-obvious connections that conventional tooling would miss.
 
-## The SCADS umbrella role
+## The umbrella role
 
-Ariadne is an umbrella effort within SCADS. Rather than duplicate work, it defines
+Ariadne is an umbrella effort. Rather than duplicate work, it defines
 integration interfaces so contributions from sibling projects (graph-extraction
 pipelines, entity-resolution models, multimodal indexing) surface as callable
 tools inside the harness. That makes it both a standalone research contribution

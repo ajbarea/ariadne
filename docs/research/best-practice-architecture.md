@@ -172,7 +172,7 @@ synthesizes their findings into the analytic product.
 | **1** | Single-store vertical slice | graph connector + `entity-workup` skill + provenance hook + CLI (entity → cited note) |
 | **2** | Heterogeneous retrieval | add SQL + vector connectors; source-routing + reconciliation; subagent fan-out |
 | **3** | Multimodal fusion | multimodal-to-text extraction tool; cross-modal evidence fusion |
-| **4** | Rigor, eval & integration | provenance surface, confidence handling, eval harness, SCADS sibling-tool interfaces |
+| **4** | Rigor, eval & integration | provenance surface, confidence handling, eval harness, sibling-tool interfaces |
 | **5** | Deployment hardening | resolve the cloud-vs-air-gapped fork per component |
 
 ---

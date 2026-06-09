@@ -73,7 +73,7 @@ or trivially self-hostable; the model forks at the `ANTHROPIC_BASE_URL` boundary
 ### C. Cloud-only, defer air-gap
 
 - **Pros:** simplest now.
-- **Cons:** violates the brief's hybrid constraint and the SCADS deployment
+- **Cons:** violates the brief's hybrid constraint and the target deployment
   reality; leaving it undocumented lets cloud assumptions harden into the code.
 
 ## Decision

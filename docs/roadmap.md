@@ -16,7 +16,7 @@ Resolved (or partly resolved) by the
 still-open items as unsettled; don't harden code against one answer.
 
 1. **MVP toolset boundary**: smallest set of tools/skills/hooks that
-   demonstrates end-to-end value; build vs. expose a stub for a sibling SCADS
+   demonstrates end-to-end value; build vs. expose a stub for a sibling
    project.
 2. **Graph / multi-hop reasoning**: GraphRAG vs. agent-driven Cypher traversal
    vs. hybrid; entity resolution across stores. *(Research: hybrid graph+text +
@@ -42,7 +42,7 @@ still-open items as unsettled; don't harden code against one answer.
 | **1** | Single-store vertical slice | ✅ complete: Neo4j connector + `entity-workup` skill + provenance hook + `ariadne workup` (entity → cited note) |
 | **2** | Heterogeneous retrieval | mostly complete: Postgres SQL connector + hybrid (full-text + vector, RRF) wired into the loop; dataset-agnostic seam; subagent fan-out deferred ([ADR-0005](architecture/decisions/0005-defer-subagent-fan-out.md)) |
 | **3** | Multimodal fusion | planned: multimodal-to-text extraction; cross-modal evidence fusion |
-| **4** | Rigor, eval & integration | mostly complete: citation gate, ICD-203 tradecraft lint, planted-needle + rubric eval, reconciliation scoring, read-only governance gate, SCADS integration interfaces |
+| **4** | Rigor, eval & integration | mostly complete: citation gate, ICD-203 tradecraft lint, planted-needle + rubric eval, reconciliation scoring, read-only governance gate, integration interfaces |
 | **5** | Deployment hardening | mostly complete: cloud-vs-air-gapped fork resolved ([ADR-0012](architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)); OpenTelemetry observability; model profiles ([ADR-0013](architecture/decisions/0013-user-selectable-model-profiles.md)); published to PyPI as `ariadne-sensemaking` via trusted publishing; open-weight validation remains |
 | **6** | Adaptive & self-improving harness | first slices complete ([ADR-0020](architecture/decisions/0020-adaptive-self-improving-ariadne.md)): adapt to a user's own Postgres (introspect, propose a mapping, ratify, run the existing pipeline unchanged); a declarative user ontology; a dynamic MCP surface; and bounded, audited self-improvement, `distil` / `reflect` / `compare` / `distil --into` (learn from a good run, reflect on a poor one, measure net effect, deepen a skill) on a propose-ratify-freeze spine |
 
@@ -56,7 +56,7 @@ still-open items as unsettled; don't harden code against one answer.
   declarative user ontology; a dynamic MCP surface; and bounded, audited self-improvement
   (`distil`, `reflect`, `compare`, `distil --into`) on a propose-ratify-freeze spine.
 - **2026-06-04/05**: LLM-rubric analytic-standards eval, reconciliation scoring,
-  read-only governance hard-fail gate, user-selectable model profiles, SCADS
+  read-only governance hard-fail gate, user-selectable model profiles,
   integration interfaces + reusable workflow patterns, OpenTelemetry observability.
 - **2026-06-03**: Dataset-agnostic pipeline (canonical schema + adapters),
   live indexing + hybrid full-text/semantic retrieval, Enron adapter.

@@ -110,7 +110,7 @@ hide:
       <a class="md-button" href="roadmap/">Roadmap</a>
     </p>
     <blockquote>
-      <p>Ariadne is the <strong>umbrella demonstration layer</strong> for the SCADS portfolio. It integrates sibling-project capabilities as callable tools rather than duplicating them.</p>
+      <p>Ariadne is an <strong>umbrella demonstration layer</strong>: it integrates companion-project capabilities as callable tools rather than duplicating them.</p>
     </blockquote>
   </div>
 </section>

@@ -1,6 +1,6 @@
 # Reusable workflow patterns
 
-> A brief deliverable for the SCADS program. Ariadne is one sensemaking
+> A short methods brief. Ariadne is one sensemaking
 > prototype, but the workflow patterns it demonstrates generalize to other
 > entity-centric analytic use cases. Each pattern below names the problem it
 > solves, its shape, where Ariadne implements it, and how to reuse it. Every

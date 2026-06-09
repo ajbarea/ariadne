@@ -601,7 +601,7 @@ git commit -m "feat(cli): --dataset flag (default synthetic) wired to the regist
 - Modify: `docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md` (renumber: hybrid retrieval → ADR-0007, governance → ADR-0008, since 0006 is now the dataset abstraction)
 - Concision pass: `docs/overview.md`, `docs/research/index.md`, `docs/architecture/index.md` — tighten verbose paragraphs to 1-2 sentences each without dropping facts.
 
-- [ ] **Step 1: Write ADR-0006** (MADR format, matching the existing five records): Status Accepted; Context = SCADS multi-dataset feedback; Decision drivers = extensibility, governance choke point, no N×M coupling; Considered options = canonical+adapter / per-dataset bespoke / framework-as-architecture; Decision = canonical schema + adapter + registry; Consequences = adding a dataset touches one adapter; sources = the two canonical-data-model links from the spec.
+- [ ] **Step 1: Write ADR-0006** (MADR format, matching the existing five records): Status Accepted; Context = multi-dataset demo feedback; Decision drivers = extensibility, governance choke point, no N×M coupling; Considered options = canonical+adapter / per-dataset bespoke / framework-as-architecture; Decision = canonical schema + adapter + registry; Consequences = adding a dataset touches one adapter; sources = the two canonical-data-model links from the spec.
 
 - [ ] **Step 2: Add the registry row** to `docs/architecture/decisions/index.md`:
 

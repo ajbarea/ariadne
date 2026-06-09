@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: >-
   If you use Ariadne or its findings in academic work, please cite this
-  software and the SCADS project deliverable.
+  software.
 title: "Ariadne: Sensemaking for Nonatomic Entities using AI Coding Agents"
 type: software
 authors:
@@ -21,8 +21,7 @@ abstract: >-
   the harness serves as an orchestration layer that dispatches specialized tools
   and skills to retrieve, interpret, and synthesize information across graph,
   structured, and unstructured sources in a coordinated, multi-hop analytic
-  workflow targeting entities within an organizational hierarchy. Developed as
-  the umbrella demonstration layer for the SCADS portfolio.
+  workflow targeting entities within an organizational hierarchy.
 keywords:
   - agentic AI
   - sensemaking

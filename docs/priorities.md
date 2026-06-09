@@ -3,7 +3,7 @@
 This is Ariadne's prioritization made explicit: every requirement traced to a
 **stakeholder need** (a brief success criterion or design constraint), the
 **metric** that proves it, its **priority tier** with rationale, and its
-**feasibility/status**. It answers the SCADS *Sense & Orient* worksheet's step 7
+**feasibility/status**. It answers the *Sense & Orient* worksheet's step 7
 ("Prioritization of Requirements") and feeds steps 2/6 (metric framing and
 goal→metric mapping) and step 8 (sensing back-brief).
 

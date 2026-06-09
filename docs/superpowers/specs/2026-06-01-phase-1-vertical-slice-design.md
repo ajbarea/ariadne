@@ -151,7 +151,7 @@ no real-world entities.
 ## Out of scope (later phases)
 
 SQL + vector connectors and source-routing (Phase 2); multimodal-to-text
-(Phase 3); confidence scoring, eval harness for all four success criteria, SCADS
+(Phase 3); confidence scoring, eval harness for all four success criteria,
 sibling-tool interfaces (Phase 4); air-gapped fork (Phase 5); dedicated
 parameterized graph tools (Phase 2 if traversals prove hot).
 

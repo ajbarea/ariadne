@@ -17,7 +17,7 @@ this file should carry a `# research(YYYY-MM):` provenance note.
 
 ## Mission & charter
 
-> Distilled from the SCADS onboarding brief and archived here 2026-06-01. The
+> Distilled from the originating research brief and archived here 2026-06-01. The
 > brief is not retained; this section is now its system of record.
 
 **Problem.** Modern SIGINT-style collection produces intelligence about entities
@@ -57,7 +57,7 @@ hierarchical reasoning hooks.
   sequence, surface evidence across all data structures and modalities; synthesize
   it into a coherent, cited analytic product.
 - *Secondary* — **documented, reusable workflow patterns** that transfer to future
-  SCADS analytic use cases.
+  analytic use cases.
 
 **Success criteria.** The harness's ability to (1) **traverse** organizational
 relationships, (2) **reconcile** information across modalities, (3) **reduce the
@@ -72,7 +72,7 @@ must be uniform across **quality, security, and data integrity**.
 **Stretch goals.** Multi-player shared sessions; raising analysts' domain
 knowledge and analytic capacity through the tool.
 
-**Program context.** SCADS (Government + Academia + Industry) spans five areas —
+**Research context.** The originating research agenda spans five areas —
 *AI Evaluation*, *AI Implementation*, *AI Agent Development*, *Sensemaking for
 Large Entities*, and *Data Set Creation & Augmentation* — with Data Set Creation
 as the shared foundation and AI Evaluation as the overarching validation
@@ -100,7 +100,7 @@ items must not be hardened against one answer.
 
 1. **MVP toolset boundary** — the smallest set of tools/skills/hooks that
    credibly demonstrates end-to-end value; build vs. expose a stub for a sibling
-   SCADS project. *(Direction set — see Phase 1 / the MVP in the research report.)*
+   companion project. *(Direction set — see Phase 1 / the MVP in the research report.)*
 2. **Graph / multi-hop reasoning** — `# research(2026-06):` GraphRAG is the core
    multi-hop capability, but **hybrid graph+text + agentic correction**
    (HRAG/AGRAG) beats graph-only, and "graph-first" is justified *only* for
@@ -505,7 +505,7 @@ items must not be hardened against one answer.
       renders a *"Where this run fell short of ground truth"* block. Descriptive dimensions
       (pivot burden, context utilization) are never flagged. Turns the eval's own honest
       self-assessment into something the human can act on. TDD; headless-verified.
-- [x] **SCADS integration interfaces (2026-06-04):** two integration ports —
+- [x] **Integration interfaces (2026-06-04):** two integration ports —
       runtime (a sibling as a read-only `mcp__<sibling>__*` tool family) and ingest
       (a sibling's output via a `DatasetAdapter` to the canonical schema) — plus the
       evidence/provenance, read-only governance, and entity-resolution contracts
@@ -516,10 +516,10 @@ items must not be hardened against one answer.
       MCP tool families, provenance-by-hook + citation gate, cross-modal
       reconciliation, ICD-203 tradecraft, planted-needle + rubric eval, verify-the-
       posture governance, the dataset-agnostic seam, injectable-Protocol DI), each
-      grounded in real code + ADRs for reuse by future SCADS use cases.
+      grounded in real code + ADRs for reuse by future use cases.
       [docs/patterns.md](./docs/patterns.md) (top-level nav).
 
-  > **Research watch — Inspect AI as an eval harness / SCADS AI-Evaluation seam.**
+  > **Research watch — Inspect AI as an eval harness / AI-evaluation seam.**
   > `# research(2026-06):` [Inspect](https://inspect.aisi.org.uk/) (UK AI Security
   > Institute + Meridian Labs) is the de-facto agent-eval framework — `Task` =
   > `Dataset` + `Solver` + `Scorer`, model-graded (LLM-as-judge) scorers, an
@@ -530,11 +530,11 @@ items must not be hardened against one answer.
   > domain metrics (planted-needle grounding, supporting-fact F1, reconciliation,
   > ALCE citation recall + HHEM entailment, ICD-203 LLM-Rubric) would wrap as
   > custom `Scorer`s. What it adds on top: a shareable eval-log artifact,
-  > systematic many-fixture / many-model runs, and a natural **SCADS
-  > AI-Evaluation** integration seam (the program's overarching validation area).
+  > systematic many-fixture / many-model runs, and a natural **AI-evaluation**
+  > integration seam.
   > **Caveat / YAGNI:** the bespoke eval CLI (`ariadne eval` / `rubric`) is already
   > green and IR-specific — adopt only when we need cross-model/fixture
-  > comparability, the log viewer, or to hand the SCADS eval effort a standard
+  > comparability, the log viewer, or to hand a wider eval effort a standard
   > interface; never as a swap for working metrics. Sources:
   > [Inspect docs](https://inspect.aisi.org.uk/) ·
   > [UK AISI Autonomous Systems Evaluation Standard](https://ukgovernmentbeis.github.io/as-evaluation-standard/).

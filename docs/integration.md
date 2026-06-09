@@ -1,6 +1,6 @@
-# SCADS integration interfaces
+# Integration interfaces
 
-> Ariadne is the SCADS **umbrella** sensemaking layer: it should *integrate*
+> Ariadne is an **umbrella** sensemaking layer: it should *integrate*
 > sibling-project outputs, graph extraction, entity resolution, multimodal
 > indexing, as callable tools through defined interfaces, **not duplicate**
 > them. This page is the contract a sibling tool implements to plug in. Every

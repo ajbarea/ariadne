@@ -14,6 +14,6 @@ and endpoints come from the environment — never from tracked files. Grant acce
 with scoped `allowedTools` patterns (e.g. `mcp__graph__*`). See the
 [SDK reference](../docs/research/claude-agent-sdk-reference.md), §5.
 
-This directory is also where **SCADS sibling-project integration interfaces**
+This directory is also where **sibling-project integration interfaces**
 land: a sibling's graph-extraction or entity-resolution capability is surfaced
 here as a callable MCP tool rather than reimplemented.

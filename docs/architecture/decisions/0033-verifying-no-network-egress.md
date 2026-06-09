@@ -11,7 +11,7 @@ cloud ↔ air-gapped fork is a **single seam** — the orchestrator model at
 `ANTHROPIC_BASE_URL` — and *everything else* (connectors, embedder, entailment,
 stores) is in-enclave or self-hostable, with the local-first embedder/multimodal
 choices (ADR-0007/0008) pre-empting the classic embedding-egress leak. That claim is
-load-bearing for any SCADS on-prem deployment, yet **nothing verified it**. The codebase
+load-bearing for any on-prem deployment, yet **nothing verified it**. The codebase
 already rejects "trust the config" elsewhere: `audit_read_only` ([provenance/governance.py](../../../src/ariadne/provenance/governance.py))
 audits the *actual* tool trace for write attempts rather than trusting the connector's
 read-only flag. Network egress had no equivalent — a dependency, a telemetry exporter, or

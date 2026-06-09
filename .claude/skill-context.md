@@ -6,7 +6,7 @@ into each skill at invocation. Update on toolchain / path / tooling changes.
 ## repo
 
 - name: ariadne
-- description: sensemaking harness for nonatomic entities (SCADS), built on the Claude Agent SDK
+- description: sensemaking harness for nonatomic entities, built on the Claude Agent SDK
 - package_root: `src/ariadne/` (src-layout, single package)
 - language: Python (>=3.12,<3.15)
 - toolchain: uv (canonical); ruff (format + lint), ty (types), pytest
