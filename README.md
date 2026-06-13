@@ -1,3 +1,7 @@
+<div align="center">
+
+<img src="docs/assets/hero.png" width="800" alt="Ariadne Hero Image">
+
 # Ariadne
 
 **Sensemaking for nonatomic entities using AI coding agents.**
@@ -9,6 +13,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
 
 **Docs:** <https://ajbarea.github.io/ariadne/>
+
+</div>
 
 > Ariadne gave Theseus the thread that let him traverse the Labyrinth and find
 > his way back out. This project is that thread: a single line of reasoning that
