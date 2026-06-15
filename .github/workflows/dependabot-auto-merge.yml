@@ -1,18 +1,20 @@
 name: Dependabot auto-merge
 
-# research(2026-06): auto-merge Dependabot PRs that bump only patch versions.
-# Patch is non-breaking by semver, dependabot.yml already holds new releases for a
-# 7-day supply-chain cooldown, and main's required checks gate the merge — so the
-# weekly manual click this removes was toil, not review. Minor/major still wait for
-# a person: a grouped PR reports its HIGHEST bump, so any minor in the batch holds
-# the whole batch.
+# research(2026-06): auto-merge Dependabot patch bumps (any ecosystem) and any
+# github-actions bump (patch/minor/major). GitHub Actions are CI-only, SHA-pinned, and
+# the build validates them, so even a major action bump is safe to land on green; patch
+# is non-breaking by semver. dependabot.yml already holds new releases for a 7-day
+# supply-chain cooldown, and main's required checks gate every merge — so the click this
+# removes was toil, not review. Language-dependency minors and majors (npm/uv/pip/...)
+# still wait for a person: production runtime is the supply-chain surface (2026 guidance
+# is auto-merge patches for prod deps, review minors). A grouped PR reports its HIGHEST
+# bump, so a non-action group containing any minor holds for review.
 #
-# GITHUB_TOKEN (elevated via permissions), not a GitHub App token: a
-# Dependabot-triggered run reads only the Dependabot secrets store, not Actions
-# secrets. Caveat: a GITHUB_TOKEN merge doesn't re-fire push-triggered workflows
-# (e.g. a docs/Pages deploy), so a prod-dep patch that changes built output goes
-# live on the next push rather than instantly — immaterial for dev-dep + action
-# bumps. The required checks gate every merge, same as a human's.
+# GITHUB_TOKEN (elevated via permissions), not a GitHub App token: a Dependabot-triggered
+# run reads only the Dependabot secrets store, not Actions secrets. Caveat: a GITHUB_TOKEN
+# merge doesn't re-fire push-triggered workflows (e.g. a docs/Pages deploy), so a prod-dep
+# patch that changes built output goes live on the next push rather than instantly —
+# immaterial for dev-dep + action bumps. The required checks gate every merge, like a human's.
 
 on: pull_request
 
@@ -32,8 +34,10 @@ jobs:
         id: meta
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
 
-      - name: Arm auto-merge for patch updates
-        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+      - name: Arm auto-merge (patch any-ecosystem, or any github-actions bump)
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-patch'
+          || steps.meta.outputs.package-ecosystem == 'github-actions'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
