@@ -50,3 +50,43 @@ only if deps aren't installed.
 - `make docs` — serves Zensical docs site (blocks).
 - `make dev` / `uv run ariadne` — runs the harness CLI.
 - `make logs-tail` — follows the log (blocks).
+
+## ci_audit
+
+Configs a CI failure traces to:
+- `pyproject.toml`, `Makefile`, `scripts/dev-runner.sh`
+- `infra/neo4j/docker-compose.yml` (integration: live Neo4j MCP)
+- `.github/workflows/{ci,docs,pin-check,zizmor,release}.yml`, `zensical.toml` (docs build), `codecov.yml`
+
+Required PR checks (7): `Lint (ruff + ty)`, `Tests (py3.12)`, `Tests (py3.13)`, `Tests (py3.14)`, `Read-only governance gate`, `pin-check`, `zizmor`. `docs.yml` build/deploy is push-only — deliberately NOT required (would block PRs forever).
+
+Tool error markers (extend the default grep set):
+- `pytest`, `ruff`, `ty` (lint/test)
+- `pip-audit` / `uv audit` (advisory; informational)
+- `neo4j` / `docker` / `compose` (integration container / MCP errors)
+- `zizmor` (workflow-security findings)
+
+## slop_ground_truth
+
+ariadne ships **no perf/benchmark harness** (no `pytest.mark.performance`, no `make baselines`). Its claims are qualitative — cited-note quality, provenance coverage, graph-backed reasoning — not throughput/latency numbers. Any quantitative perf / scale / accuracy claim is slop unless it traces to a committed test or an evaluation artifact under `tests/` or `runs/`.
+
+## scan_scope
+
+Skip paths:
+- `.venv/`, `dist/`, `site/`, `runs/` (eval outputs), `__pycache__/`, `.ruff_cache/`, `.pytest_cache/`, `.hypothesis/`
+- `uv.lock`, `logs/`, `infra/**/data/` (Neo4j volumes), `overrides/` (docs theme), `docs/assets/`
+
+Subagent scan-area split:
+- Package: `src/ariadne/**/*.py` (Neo4j connector, provenance hook, cited-note CLI, entity workup)
+- MCP servers: `mcp_servers/**/*.py`
+- Skills: `skills/**`, `.claude/skills/entity-workup/**`
+- Scripts and tests: `scripts/**`, `tests/**/*.py`
+- Config/build: `pyproject.toml`, `Makefile`, `.github/workflows/**`, `zensical.toml`, `infra/**/docker-compose.yml`, `codecov.yml`
+- Docs (opt-in): `docs/**/*.md`
+
+## docs_site
+
+- config: `zensical.toml`
+- workflow: `.github/workflows/docs.yml` (build + deploy; push-only, NOT a PR-required check)
+- build_command: `uv tool run zensical build --clean` (CI); local preview `make docs` → `zensical serve` (blocks — do-not-run)
+- site_url: `https://ajbarea.github.io/ariadne/`
