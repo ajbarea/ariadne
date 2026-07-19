@@ -107,10 +107,9 @@ def egress_guard(allow_hosts: Iterable[str] = (), *, block: bool = True) -> Iter
         _inspect(address)
         return orig_connect_ex(self, address)
 
-    # Intentional class-method monkeypatch (the verification mechanism); ty can't model a
-    # method reassignment even with a matching signature.
-    socket.socket.connect = connect  # ty: ignore[invalid-assignment]
-    socket.socket.connect_ex = connect_ex  # ty: ignore[invalid-assignment]
+    # Intentional class-method monkeypatch (the verification mechanism).
+    socket.socket.connect = connect
+    socket.socket.connect_ex = connect_ex
     try:
         yield report
     finally:
