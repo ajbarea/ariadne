@@ -72,9 +72,17 @@ def test_schema_uses_generated_tsvector_and_gin() -> None:
 
 
 def test_document_rows_map_canonical_fields() -> None:
-    rows = document_rows([Document(id="email:1", text="hello world",
-                                   source_entity_ids=("person:X",),
-                                   metadata={"subject": "hi"}, modality="email_body")])
+    rows = document_rows(
+        [
+            Document(
+                id="email:1",
+                text="hello world",
+                source_entity_ids=("person:X",),
+                metadata={"subject": "hi"},
+                modality="email_body",
+            )
+        ]
+    )
     assert rows[0]["id"] == "email:1"
     assert rows[0]["text"] == "hello world"
     assert rows[0]["modality"] == "email_body"
@@ -152,17 +160,23 @@ def document_rows(records: Iterable[Canonical]) -> list[dict]:
     rows: list[dict] = []
     for rec in records:
         if isinstance(rec, Document):
-            rows.append({
-                "id": rec.id, "text": rec.text, "modality": rec.modality,
-                "metadata": json.dumps(rec.metadata), "sources": list(rec.source_entity_ids),
-            })
+            rows.append(
+                {
+                    "id": rec.id,
+                    "text": rec.text,
+                    "modality": rec.modality,
+                    "metadata": json.dumps(rec.metadata),
+                    "sources": list(rec.source_entity_ids),
+                }
+            )
     return rows
 
 
 def attribute_rows(records: Iterable[Canonical]) -> list[dict]:
     return [
         {"entity_id": r.entity_id, "key": r.key, "value": r.value}
-        for r in records if isinstance(r, Attribute)
+        for r in records
+        if isinstance(r, Attribute)
     ]
 
 
@@ -222,20 +236,26 @@ pytestmark = pytest.mark.integration
 @pytest.fixture(scope="module")
 def pg_conn():
     with PostgresContainer("postgres:17") as pg:
-        info = (f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
-                f"user={pg.username} password={pg.password} dbname={pg.dbname}")
+        info = (
+            f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
+            f"user={pg.username} password={pg.password} dbname={pg.dbname}"
+        )
         with psycopg.connect(info, autocommit=True) as conn:
             ensure_schema(conn)
             yield conn
 
 
 def test_full_text_finds_the_matching_document(pg_conn) -> None:
-    upsert_documents(pg_conn, [
-        Document(id="e1", text="The shipment leaves Compound-Alpha at dawn."),
-        Document(id="e2", text="Budget review for the quarter, no logistics content."),
-    ])
-    rows = pg_conn.execute(full_text_sql().encode(),
-                           {"q": "Compound-Alpha shipment", "limit": 5}).fetchall()
+    upsert_documents(
+        pg_conn,
+        [
+            Document(id="e1", text="The shipment leaves Compound-Alpha at dawn."),
+            Document(id="e2", text="Budget review for the quarter, no logistics content."),
+        ],
+    )
+    rows = pg_conn.execute(
+        full_text_sql().encode(), {"q": "Compound-Alpha shipment", "limit": 5}
+    ).fetchall()
     assert rows and rows[0][0] == "e1"
 
 
@@ -311,8 +331,7 @@ def graph_statements(records: list[Canonical]) -> list[str]:
     """Constraints (one per distinct entity label) first, then MERGE statements."""
     labels = sorted({_label(r.type) for r in records if isinstance(r, Entity)})
     constraints = [
-        f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{lbl}) REQUIRE n.id IS UNIQUE"
-        for lbl in labels
+        f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{lbl}) REQUIRE n.id IS UNIQUE" for lbl in labels
     ]
     return constraints + index_graph(records)
 
@@ -407,9 +426,13 @@ def test_index_rejects_unknown_dataset() -> None:
 
 - [ ] **Step 3: Implement** in `src/ariadne/cli.py`: add an `index` subparser and a handler. In `parse_args`, after the `eval` subparser:
 ```python
-    ix = sub.add_parser("index", help="Load a dataset's records into the live stores")
-    ix.add_argument("--dataset", choices=sorted(DATASETS), default="synthetic",
-                    help="Dataset to index (default: synthetic).")
+ix = sub.add_parser("index", help="Load a dataset's records into the live stores")
+ix.add_argument(
+    "--dataset",
+    choices=sorted(DATASETS),
+    default="synthetic",
+    help="Dataset to index (default: synthetic).",
+)
 ```
 Add a handler that loads graph + documents (reads NEO4J_*/DATABASE_URI from env, same defaults as the connectors):
 ```python
@@ -432,8 +455,10 @@ def _run_index(dataset: str, env: dict[str, str]) -> int:
         autocommit=True,
     ) as conn:
         n_docs = load_documents(records, conn)
-    print(f"Indexed {dataset}: {n_graph} graph statements, "
-          f"{n_docs[0]} documents, {n_docs[1]} attributes.")
+    print(
+        f"Indexed {dataset}: {n_graph} graph statements, "
+        f"{n_docs[0]} documents, {n_docs[1]} attributes."
+    )
     return 0
 ```
 Wire in `main` (after the `eval` branch, before the key check):

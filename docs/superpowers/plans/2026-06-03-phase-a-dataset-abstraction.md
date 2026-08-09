@@ -35,22 +35,33 @@ from ariadne.datasets.canonical import (
 
 
 def test_entity_holds_identity_and_open_attributes() -> None:
-    e = Entity(id="person:Halberd", type="person", name="Halberd",
-               aliases=("H1",), attributes={"clearance": "SECRET"})
+    e = Entity(
+        id="person:Halberd",
+        type="person",
+        name="Halberd",
+        aliases=("H1",),
+        attributes={"clearance": "SECRET"},
+    )
     assert e.id == "person:Halberd"
     assert e.attributes["clearance"] == "SECRET"
 
 
 def test_relationship_references_entity_ids() -> None:
-    r = Relationship(src="person:Halberd", dst="unit:Signals-Cell",
-                     type="MEMBER_OF", attributes={"role": "Lead"})
+    r = Relationship(
+        src="person:Halberd", dst="unit:Signals-Cell", type="MEMBER_OF", attributes={"role": "Lead"}
+    )
     assert r.src == "person:Halberd"
     assert r.type == "MEMBER_OF"
 
 
 def test_document_carries_text_metadata_and_sources() -> None:
-    d = Document(id="email:1", text="hello", source_entity_ids=("person:Halberd",),
-                 metadata={"subject": "hi"}, modality="email_body")
+    d = Document(
+        id="email:1",
+        text="hello",
+        source_entity_ids=("person:Halberd",),
+        metadata={"subject": "hi"},
+        modality="email_body",
+    )
     assert d.modality == "email_body"
     assert "person:Halberd" in d.source_entity_ids
 
@@ -266,16 +277,25 @@ from ariadne.datasets.indexer import index_graph
 
 
 def test_entity_becomes_idempotent_merge_keyed_on_id() -> None:
-    cy = index_graph([Entity(id="person:Halberd", type="person", name="Halberd",
-                             attributes={"alias": "H1"})])
+    cy = index_graph(
+        [Entity(id="person:Halberd", type="person", name="Halberd", attributes={"alias": "H1"})]
+    )
     assert any("MERGE" in s and "person:Halberd" in s for s in cy)
     assert any(":Person" in s for s in cy)  # type -> title-case label
     assert all("CREATE " not in s for s in cy)  # idempotent, not CREATE
 
 
 def test_relationship_matches_endpoints_by_id_then_merges_edge() -> None:
-    cy = index_graph([Relationship(src="person:Halberd", dst="unit:Signals-Cell",
-                                   type="MEMBER_OF", attributes={"role": "Lead"})])
+    cy = index_graph(
+        [
+            Relationship(
+                src="person:Halberd",
+                dst="unit:Signals-Cell",
+                type="MEMBER_OF",
+                attributes={"role": "Lead"},
+            )
+        ]
+    )
     joined = "\n".join(cy)
     assert "person:Halberd" in joined and "unit:Signals-Cell" in joined
     assert "MERGE" in joined and "MEMBER_OF" in joined
@@ -283,10 +303,13 @@ def test_relationship_matches_endpoints_by_id_then_merges_edge() -> None:
 
 def test_documents_and_attributes_are_skipped_in_phase_a() -> None:
     from ariadne.datasets.canonical import Attribute, Document
-    cy = index_graph([
-        Document(id="d1", text="x"),
-        Attribute(entity_id="person:X", key="k", value="v"),
-    ])
+
+    cy = index_graph(
+        [
+            Document(id="d1", text="x"),
+            Attribute(entity_id="person:X", key="k", value="v"),
+        ]
+    )
     assert cy == []
 ```
 
@@ -466,8 +489,13 @@ class SyntheticAdapter:
             yield Entity(id=f"unit:{name}", type="unit", name=name, attributes=attrs)
         yield Entity(id="site:Compound-Alpha", type="site", name="Compound-Alpha")
         for name, alias in _PERSONS:
-            yield Entity(id=f"person:{name}", type="person", name=name,
-                         aliases=(alias,), attributes={"alias": alias})
+            yield Entity(
+                id=f"person:{name}",
+                type="person",
+                name=name,
+                aliases=(alias,),
+                attributes={"alias": alias},
+            )
         for src, dst, rtype, attrs in _RELS:
             yield Relationship(src=src, dst=dst, type=rtype, attributes=attrs)
 
@@ -553,10 +581,15 @@ Change `run_workup`'s signature to thread the dataset through, and validate it:
 
 ```python
 async def run_workup(
-    entity: str, out_root: str, env: dict[str, str], *, with_sql: bool = False,
+    entity: str,
+    out_root: str,
+    env: dict[str, str],
+    *,
+    with_sql: bool = False,
     dataset: str = "synthetic",
 ) -> int:
     from ariadne.datasets.base import get_adapter
+
     get_adapter(dataset)  # raises KeyError on unknown; synthetic uses the seeded graph
     ledger = ProvenanceLedger()
     options = build_options(ledger=ledger, env=env, with_sql=with_sql)
@@ -566,10 +599,9 @@ async def run_workup(
 Update the `main` call site (line 173):
 
 ```python
-    return asyncio.run(
-        run_workup(args.entity, args.out, dict(os.environ),
-                   with_sql=args.sql, dataset=args.dataset)
-    )
+return asyncio.run(
+    run_workup(args.entity, args.out, dict(os.environ), with_sql=args.sql, dataset=args.dataset)
+)
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**

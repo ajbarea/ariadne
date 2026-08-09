@@ -228,7 +228,11 @@ from testcontainers.postgres import PostgresContainer
 
 from ariadne.datasets.canonical import Document
 from ariadne.unstructured.document_store import (
-    _vector_literal, ensure_schema, ensure_vector_schema, store_embeddings, upsert_documents,
+    _vector_literal,
+    ensure_schema,
+    ensure_vector_schema,
+    store_embeddings,
+    upsert_documents,
 )
 
 pytestmark = pytest.mark.integration
@@ -237,8 +241,10 @@ pytestmark = pytest.mark.integration
 @pytest.fixture(scope="module")
 def pg_conn():
     with PostgresContainer("pgvector/pgvector:pg17") as pg:
-        info = (f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
-                f"user={pg.username} password={pg.password} dbname={pg.dbname}")
+        info = (
+            f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
+            f"user={pg.username} password={pg.password} dbname={pg.dbname}"
+        )
         with psycopg.connect(info, autocommit=True) as conn:
             ensure_schema(conn)
             ensure_vector_schema(conn, dim=4)
@@ -251,7 +257,8 @@ def test_nearest_neighbour_returns_the_closest_vector(pg_conn) -> None:
     q = _vector_literal([0.9, 0.1, 0.0, 0.0])
     row = pg_conn.execute(
         b"SELECT id FROM documents WHERE embedding IS NOT NULL "
-        b"ORDER BY embedding <=> %(q)s::vector LIMIT 1", {"q": q}
+        b"ORDER BY embedding <=> %(q)s::vector LIMIT 1",
+        {"q": q},
     ).fetchone()
     assert row[0] == "a"
 ```
@@ -278,9 +285,9 @@ from ariadne.unstructured.document_store import hybrid_search_sql
 
 def test_hybrid_sql_fuses_fulltext_and_vector_with_rrf() -> None:
     sql = hybrid_search_sql()
-    assert "websearch_to_tsquery" in sql            # full-text leg
-    assert "<=>" in sql and "::vector" in sql        # vector leg
-    assert "FULL OUTER JOIN" in sql                  # union of both legs
+    assert "websearch_to_tsquery" in sql  # full-text leg
+    assert "<=>" in sql and "::vector" in sql  # vector leg
+    assert "FULL OUTER JOIN" in sql  # union of both legs
     assert "1.0 / (%(k)s +" in sql.replace(" ", " ")  # RRF term
     assert "%(q)s" in sql and "%(qvec)s" in sql and "%(limit)s" in sql
 ```
@@ -345,7 +352,11 @@ from testcontainers.postgres import PostgresContainer
 
 from ariadne.datasets.canonical import Document
 from ariadne.unstructured.document_store import (
-    ensure_schema, ensure_vector_schema, hybrid_search, store_embeddings, upsert_documents,
+    ensure_schema,
+    ensure_vector_schema,
+    hybrid_search,
+    store_embeddings,
+    upsert_documents,
 )
 from ariadne.unstructured.embed import FakeEmbedder
 
@@ -355,13 +366,17 @@ pytestmark = pytest.mark.integration
 def test_hybrid_search_finds_a_doc_by_either_leg() -> None:
     emb = FakeEmbedder(dim=8)
     with PostgresContainer("pgvector/pgvector:pg17") as pg:
-        info = (f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
-                f"user={pg.username} password={pg.password} dbname={pg.dbname}")
+        info = (
+            f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
+            f"user={pg.username} password={pg.password} dbname={pg.dbname}"
+        )
         with psycopg.connect(info, autocommit=True) as conn:
             ensure_schema(conn)
             ensure_vector_schema(conn, dim=emb.dim)
-            docs = [Document(id="a", text="the shipment leaves Compound-Alpha at dawn"),
-                    Document(id="b", text="quarterly budget review notes")]
+            docs = [
+                Document(id="a", text="the shipment leaves Compound-Alpha at dawn"),
+                Document(id="b", text="quarterly budget review notes"),
+            ]
             upsert_documents(conn, docs)
             store_embeddings(conn, {d.id: emb.embed([d.text])[0] for d in docs})
             # full-text leg should surface "a" for the shipment query

@@ -95,6 +95,7 @@ In `src/ariadne/mcp_server.py`, delete its `_slug` (lines 33-34). Its `write_sub
 
 ```python
 from ariadne.runs import slug as entity_slug
+
 # ...
 slug = slug or entity_slug(entity)
 ```
@@ -414,9 +415,19 @@ from ariadne.runs import read_manifest, write_manifest
 
 def _manifest(**over):
     base = dict(
-        run_id="r", entity="Halberd", dataset="synthetic", created_at="t",
-        otel_trace_id=None, ariadne_version="0.1.0", git_sha="abc", git_dirty=False,
-        model=None, profile="default", params={}, duration_s=1.0, exit_code=0,
+        run_id="r",
+        entity="Halberd",
+        dataset="synthetic",
+        created_at="t",
+        otel_trace_id=None,
+        ariadne_version="0.1.0",
+        git_sha="abc",
+        git_dirty=False,
+        model=None,
+        profile="default",
+        params={},
+        duration_s=1.0,
+        exit_code=0,
         scores={"eval": None},
     )
     base.update(over)
@@ -523,9 +534,7 @@ def merge_scores(run_directory: Path, scores: Mapping) -> None:
     """
     data = read_manifest(run_directory)
     if data is None:
-        print(
-            f"No manifest.json in {run_directory} — skipping score merge.", file=sys.stderr
-        )
+        print(f"No manifest.json in {run_directory} — skipping score merge.", file=sys.stderr)
         return
     data.setdefault("scores", {}).update(scores)
     (run_directory / _MANIFEST).write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -665,12 +674,16 @@ def git_provenance() -> tuple[str, bool]:
     try:
         sha = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip()
         dirty = bool(
             subprocess.run(
                 ["git", "status", "--porcelain"],
-                capture_output=True, text=True, check=True,
+                capture_output=True,
+                text=True,
+                check=True,
             ).stdout.strip()
         )
         return sha or "unknown", dirty
