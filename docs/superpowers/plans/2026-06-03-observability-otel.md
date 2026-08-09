@@ -81,8 +81,14 @@ def test_record_workup_metrics_sets_span_attrs_and_records() -> None:
     report = CitationReport(ok=False, cited=["g1"], dangling=[], unused=[], uncited=["x"])
     tc = lint_estimative_language("Halberd is likely the lead.")
     with workup_span("Halberd", "synthetic"):
-        record_workup_metrics(entity="Halberd", dataset="synthetic", duration_s=1.5,
-                              report=report, tradecraft=tc, led=led)
+        record_workup_metrics(
+            entity="Halberd",
+            dataset="synthetic",
+            duration_s=1.5,
+            report=report,
+            tradecraft=tc,
+            led=led,
+        )
     s = next(s for s in _spans() if s.name == "invoke_agent")
     assert s.attributes["ariadne.evidence_calls"] == 1
     assert s.attributes["ariadne.citation.ok"] is False
@@ -244,7 +250,9 @@ import ariadne.cli as cli
 
 def test_main_calls_setup_telemetry(monkeypatch) -> None:
     called = {}
-    monkeypatch.setattr("ariadne.cli.setup_telemetry", lambda: called.setdefault("yes", True) or False)
+    monkeypatch.setattr(
+        "ariadne.cli.setup_telemetry", lambda: called.setdefault("yes", True) or False
+    )
     # index path needs no API key and returns fast if stores absent -> but we only
     # need to reach the setup call; use eval which is pure + no key:
     monkeypatch.setattr("ariadne.cli._run_eval", lambda *a, **k: 0)

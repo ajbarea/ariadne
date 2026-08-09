@@ -34,15 +34,36 @@ from ariadne.datasets.canonical import Document, Entity, Relationship
 from ariadne.datasets.enron import map_messages
 
 _ROWS = [
-    {"message_id": "m1", "from": "vince.kaminski@enron.com",
-     "to": ["shirley.crenshaw@enron.com"], "cc": [], "subject": "models",
-     "date": "2001-05-14T23:39:00", "body": "see attached", "file_name": "kaminski-v/sent/1."},
-    {"message_id": "m2", "from": "vince.kaminski@enron.com",
-     "to": ["vkaminski@aol.com"], "cc": [], "subject": "fwd",
-     "date": "2001-05-15T08:00:00", "body": "forwarding to myself", "file_name": "kaminski-v/sent/2."},
-    {"message_id": "m3", "from": "vince.kaminski@enron.com",
-     "to": ["vkaminski@aol.com"], "cc": [], "subject": "fwd2",
-     "date": "2001-05-16T08:00:00", "body": "again", "file_name": "kaminski-v/sent/3."},
+    {
+        "message_id": "m1",
+        "from": "vince.kaminski@enron.com",
+        "to": ["shirley.crenshaw@enron.com"],
+        "cc": [],
+        "subject": "models",
+        "date": "2001-05-14T23:39:00",
+        "body": "see attached",
+        "file_name": "kaminski-v/sent/1.",
+    },
+    {
+        "message_id": "m2",
+        "from": "vince.kaminski@enron.com",
+        "to": ["vkaminski@aol.com"],
+        "cc": [],
+        "subject": "fwd",
+        "date": "2001-05-15T08:00:00",
+        "body": "forwarding to myself",
+        "file_name": "kaminski-v/sent/2.",
+    },
+    {
+        "message_id": "m3",
+        "from": "vince.kaminski@enron.com",
+        "to": ["vkaminski@aol.com"],
+        "cc": [],
+        "subject": "fwd2",
+        "date": "2001-05-16T08:00:00",
+        "body": "again",
+        "file_name": "kaminski-v/sent/3.",
+    },
 ]
 
 
@@ -54,8 +75,13 @@ def test_addresses_become_person_entities() -> None:
 
 def test_emailed_edges_are_aggregated_with_a_count() -> None:
     recs = list(map_messages(_ROWS))
-    aol = [r for r in recs if isinstance(r, Relationship) and r.type == "EMAILED"
-           and r.dst == "person:vkaminski@aol.com"]
+    aol = [
+        r
+        for r in recs
+        if isinstance(r, Relationship)
+        and r.type == "EMAILED"
+        and r.dst == "person:vkaminski@aol.com"
+    ]
     assert len(aol) == 1  # two messages collapse to one aggregated edge
     assert aol[0].attributes["count"] == "2"
     assert aol[0].src == "person:vince.kaminski@enron.com"
@@ -70,8 +96,18 @@ def test_bodies_become_email_documents() -> None:
 
 
 def test_empty_addresses_are_skipped() -> None:
-    rows = [{"message_id": "x", "from": "", "to": [""], "cc": [], "subject": "",
-             "date": "", "body": "b", "file_name": "f"}]
+    rows = [
+        {
+            "message_id": "x",
+            "from": "",
+            "to": [""],
+            "cc": [],
+            "subject": "",
+            "date": "",
+            "body": "b",
+            "file_name": "f",
+        }
+    ]
     recs = list(map_messages(rows))
     assert not any(isinstance(r, Entity) for r in recs)
     assert not any(isinstance(r, Relationship) for r in recs)
@@ -125,7 +161,8 @@ def map_messages(rows: Iterable[dict]) -> Iterator[Canonical]:
     for row in rows:
         sender = _ensure(row.get("from", ""))
         recipients = [
-            pid for a in (list(row.get("to") or []) + list(row.get("cc") or []))
+            pid
+            for a in (list(row.get("to") or []) + list(row.get("cc") or []))
             if (pid := _ensure(a))
         ]
         date = str(row.get("date") or "")
@@ -139,14 +176,20 @@ def map_messages(rows: Iterable[dict]) -> Iterator[Canonical]:
                     edge["first_seen"] = date
                 if date and date > edge["last_seen"]:
                     edge["last_seen"] = date
-        documents.append(Document(
-            id=f"email:{row.get('message_id', '')}",
-            text=str(row.get("body") or ""),
-            source_entity_ids=tuple(p for p in [sender, *recipients] if p),
-            metadata={"subject": str(row.get("subject") or ""), "date": date,
-                      "from": _norm(row.get("from", "")), "file_name": str(row.get("file_name") or "")},
-            modality="email_body",
-        ))
+        documents.append(
+            Document(
+                id=f"email:{row.get('message_id', '')}",
+                text=str(row.get("body") or ""),
+                source_entity_ids=tuple(p for p in [sender, *recipients] if p),
+                metadata={
+                    "subject": str(row.get("subject") or ""),
+                    "date": date,
+                    "from": _norm(row.get("from", "")),
+                    "file_name": str(row.get("file_name") or ""),
+                },
+                modality="email_body",
+            )
+        )
 
     yield from people.values()
     for (src, dst), attrs in edges.items():
@@ -187,9 +230,18 @@ def test_registered_in_the_registry() -> None:
 
 
 def test_load_maps_injected_rows(monkeypatch) -> None:
-    rows = [{"message_id": "m", "from": "a@enron.com", "to": ["b@enron.com"],
-             "cc": [], "subject": "s", "date": "2001-01-01", "body": "x",
-             "file_name": "kaminski-v/1."}]
+    rows = [
+        {
+            "message_id": "m",
+            "from": "a@enron.com",
+            "to": ["b@enron.com"],
+            "cc": [],
+            "subject": "s",
+            "date": "2001-01-01",
+            "body": "x",
+            "file_name": "kaminski-v/1.",
+        }
+    ]
     a = EnronAdapter()
     monkeypatch.setattr(a, "_rows", lambda: iter(rows))
     names = {r.name for r in a.load() if isinstance(r, Entity)}
@@ -300,8 +352,16 @@ from ariadne.datasets.enron import KAMINSKI_AOL_FIXTURE, map_messages
 from ariadne.evaluation.needle import FIXTURES, score_workup
 
 _ROWS = [
-    {"message_id": f"m{i}", "from": "vince.kaminski@enron.com", "to": ["vkaminski@aol.com"],
-     "cc": [], "subject": "fwd", "date": f"2001-05-1{i}", "body": "x", "file_name": "kaminski-v/s."}
+    {
+        "message_id": f"m{i}",
+        "from": "vince.kaminski@enron.com",
+        "to": ["vkaminski@aol.com"],
+        "cc": [],
+        "subject": "fwd",
+        "date": f"2001-05-1{i}",
+        "body": "x",
+        "file_name": "kaminski-v/s.",
+    }
     for i in range(3)
 ]
 
@@ -313,10 +373,17 @@ def test_fixture_is_registered() -> None:
 def test_cross_account_tie_scores_grounded() -> None:
     # A note surfacing the AOL tie + a ledger that queried the EMAILED edge to it.
     note = "Kaminski forwards work mail to a personal account, vkaminski@aol.com."
-    ledger = [{"id": "g1", "tool": "mcp__neo4j__read_neo4j_cypher",
-               "tool_input": {"query": "MATCH (:Person {name:'vince.kaminski@enron.com'})"
-                                       "-[:EMAILED]->(p) RETURN p.name"},
-               "response_excerpt": "vkaminski@aol.com"}]
+    ledger = [
+        {
+            "id": "g1",
+            "tool": "mcp__neo4j__read_neo4j_cypher",
+            "tool_input": {
+                "query": "MATCH (:Person {name:'vince.kaminski@enron.com'})"
+                "-[:EMAILED]->(p) RETURN p.name"
+            },
+            "response_excerpt": "vkaminski@aol.com",
+        }
+    ]
     report = score_workup(note, ledger, KAMINSKI_AOL_FIXTURE)
     assert report.grounded is True
 ```
@@ -346,6 +413,7 @@ Add the imports `from ariadne.evaluation.needle import NeedleFixture, Supporting
 Because `needle.py` must not import `enron` (cycle), instead register from `enron.py` after the fixture is defined:
 ```python
 from ariadne.evaluation.needle import FIXTURES
+
 FIXTURES["kaminski-aol"] = KAMINSKI_AOL_FIXTURE
 ```
 (Mutating the shared `FIXTURES` dict at enron-import time mirrors the adapter `register()` idiom and avoids a needle→enron import cycle. Ensure `import ariadne.datasets.enron` runs before the CLI reads `sorted(FIXTURES)` — it already does, via the cli.py registration import.)

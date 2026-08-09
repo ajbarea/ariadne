@@ -135,7 +135,10 @@ from testcontainers.postgres import PostgresContainer
 
 from ariadne.datasets.canonical import Document
 from ariadne.unstructured.document_store import (
-    ensure_schema, ensure_vector_schema, store_embeddings, upsert_documents,
+    ensure_schema,
+    ensure_vector_schema,
+    store_embeddings,
+    upsert_documents,
 )
 from ariadne.unstructured.embed import FakeEmbedder
 from ariadne.unstructured.search_tool import search_documents
@@ -146,13 +149,17 @@ pytestmark = pytest.mark.integration
 def test_search_documents_returns_ranked_passages() -> None:
     emb = FakeEmbedder(dim=8)
     with PostgresContainer("pgvector/pgvector:pg17") as pg:
-        info = (f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
-                f"user={pg.username} password={pg.password} dbname={pg.dbname}")
+        info = (
+            f"host={pg.get_container_host_ip()} port={pg.get_exposed_port(5432)} "
+            f"user={pg.username} password={pg.password} dbname={pg.dbname}"
+        )
         with psycopg.connect(info, autocommit=True) as conn:
             ensure_schema(conn)
             ensure_vector_schema(conn, dim=emb.dim)
-            docs = [Document(id="a", text="the shipment leaves Compound-Alpha at dawn"),
-                    Document(id="b", text="quarterly budget review notes")]
+            docs = [
+                Document(id="a", text="the shipment leaves Compound-Alpha at dawn"),
+                Document(id="b", text="quarterly budget review notes"),
+            ]
             upsert_documents(conn, docs)
             store_embeddings(conn, {d.id: emb.embed([d.text])[0] for d in docs})
             results = search_documents(conn, "Compound-Alpha shipment", emb, limit=3)
@@ -218,8 +225,10 @@ EVIDENCE_TOOL_PREFIXES = ("mcp__neo4j__", "mcp__postgres__", "mcp__ariadne__")
 def test_with_semantic_adds_the_ariadne_tool_and_server() -> None:
     from ariadne.cli import build_options
     from ariadne.provenance.ledger import ProvenanceLedger
-    opts = build_options(ledger=ProvenanceLedger(),
-                         env={"DATABASE_URI": "postgresql://x"}, with_semantic=True)
+
+    opts = build_options(
+        ledger=ProvenanceLedger(), env={"DATABASE_URI": "postgresql://x"}, with_semantic=True
+    )
     assert "mcp__ariadne__hybrid_search" in opts.allowed_tools
     assert "ariadne" in opts.mcp_servers
 ```
@@ -229,8 +238,10 @@ And a CLI flag test (new `tests/unit/test_cli_semantic_flag.py`):
 from __future__ import annotations
 from ariadne.cli import parse_args
 
+
 def test_workup_semantic_flag_defaults_false() -> None:
     assert parse_args(["workup", "X"]).semantic is False
+
 
 def test_workup_semantic_flag_opts_in() -> None:
     assert parse_args(["workup", "X", "--semantic"]).semantic is True

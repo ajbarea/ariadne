@@ -59,13 +59,13 @@ def test_resolve_unknown_lists_valid_names() -> None:
 def test_toml_override_adds_profile_with_envelope(tmp_path) -> None:
     p = tmp_path / "profiles.toml"
     p.write_text(
-        '[profiles.fast-local]\n'
+        "[profiles.fast-local]\n"
         'model = "fast-local"\n'
         'egress = "none"\n'
         'description = "Local qwen via Ollama"\n'
-        '[profiles.fast-local.envelope]\n'
-        'max_turns = 12\n'
-        'max_thinking_tokens = 0\n',
+        "[profiles.fast-local.envelope]\n"
+        "max_turns = 12\n"
+        "max_thinking_tokens = 0\n",
         encoding="utf-8",
     )
     reg = load_profiles({"ARIADNE_PROFILES": str(p)})
@@ -299,10 +299,15 @@ def test_governance_json_records_profile(tmp_path) -> None:
     ledger = ProvenanceLedger()
     gov = audit_read_only(ledger.entries)
     report = validate_citations("", ledger)
-    prof = Profile(name="fast-local", model="fast-local", egress="none",
-                   envelope=Envelope(max_turns=12, max_thinking_tokens=0))
-    write_outputs(tmp_path, entity="X", note="", ledger=ledger, report=report,
-                  governance=gov, profile=prof)
+    prof = Profile(
+        name="fast-local",
+        model="fast-local",
+        egress="none",
+        envelope=Envelope(max_turns=12, max_thinking_tokens=0),
+    )
+    write_outputs(
+        tmp_path, entity="X", note="", ledger=ledger, report=report, governance=gov, profile=prof
+    )
     payload = json.loads((tmp_path / "governance.json").read_text())
     assert payload["profile"]["name"] == "fast-local"
     assert payload["profile"]["egress"] == "none"
@@ -560,7 +565,9 @@ def test_run_workup_tool_forwards_profile() -> None:
         return 0
 
     asyncio.run(
-        run_workup_tool("E", profile="fast-local", runner=fake_runner, out_root="/tmp/awt", slug="x")
+        run_workup_tool(
+            "E", profile="fast-local", runner=fake_runner, out_root="/tmp/awt", slug="x"
+        )
     )
     assert seen["profile"] == "fast-local"
 
@@ -810,11 +817,19 @@ def _validate_profile(
 
 In `parse_args`, replace the bare `profiles` subparser with one that takes options:
 ```python
-    pr = sub.add_parser("profiles", help="List or validate the available model profiles")
-    pr.add_argument("--validate", metavar="NAME", default=None,
-                    help="Run a real workup with NAME against the Halberd needle; PASS iff it grounds.")
-    pr.add_argument("--timeout", type=float, default=600.0,
-                    help="Wall-clock budget (seconds) for --validate (default 600).")
+pr = sub.add_parser("profiles", help="List or validate the available model profiles")
+pr.add_argument(
+    "--validate",
+    metavar="NAME",
+    default=None,
+    help="Run a real workup with NAME against the Halberd needle; PASS iff it grounds.",
+)
+pr.add_argument(
+    "--timeout",
+    type=float,
+    default=600.0,
+    help="Wall-clock budget (seconds) for --validate (default 600).",
+)
 ```
 In `main`, the `profiles` dispatch becomes:
 ```python
@@ -853,12 +868,16 @@ async def _slow_runner(entity, out_root, env, **kw) -> int:
 
 
 def test_validate_passes_when_grounded() -> None:
-    rc = _validate_profile("default", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(True))
+    rc = _validate_profile(
+        "default", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(True)
+    )
     assert rc == 0
 
 
 def test_validate_fails_when_not_grounded() -> None:
-    rc = _validate_profile("default", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(False))
+    rc = _validate_profile(
+        "default", env={}, runner=_fast_runner, scorer=lambda d: _FakeReport(False)
+    )
     assert rc == 1
 
 

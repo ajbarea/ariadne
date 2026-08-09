@@ -81,11 +81,12 @@ the v1 primary entity, but topics/events are addable later with no schema change
 
 ```python
 class DatasetAdapter(Protocol):
-    name: str                                  # registry key / --dataset value
-    entity_type: str                           # primary entity, e.g. "person"
+    name: str  # registry key / --dataset value
+    entity_type: str  # primary entity, e.g. "person"
     access: Literal["public", "restricted"]
-    def load(self) -> Iterable[Canonical]: ...        # Entity|Relationship|Document|Attribute
-    def eval_fixtures(self) -> list[NeedleFixture]: ... # known-answer needles
+
+    def load(self) -> Iterable[Canonical]: ...  # Entity|Relationship|Document|Attribute
+    def eval_fixtures(self) -> list[NeedleFixture]: ...  # known-answer needles
 ```
 
 Registered in `DATASETS = {...}`, selected by `--dataset` (same idiom as the
