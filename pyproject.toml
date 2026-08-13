@@ -44,7 +44,7 @@ dependencies = [
     # required by ariadne.mcp_server (ADR-0009) and ariadne-mcp entry point.
     # research(2026-08): capped <2. SDK v2 (spec 2026-07-28, stateless core) removes
     # the mcp.server.fastmcp import path outright, which mcp_server.py uses.
-    "mcp>=1.2,<2",
+    "mcp>=1.2,<3",
     # research(2026-06): OTel library guidance — depend only on -api (no-op until SDK
     # configured by the app entry point). SDK + exporter live in dev + otel extra.
     # See ADR-0010 and docs/superpowers/plans/2026-06-03-observability-otel.md.
