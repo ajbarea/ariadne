@@ -22,6 +22,14 @@ updates:
       # The `eval` extra pins transformers<5; lift when Vectara ships a v5 HHEM.
       - dependency-name: "transformers"
         update-types: ["version-update:semver-major"]
+      # mcp 2.x drops mcp.server.fastmcp (FastMCP -> mcp.server.mcpserver.MCPServer)
+      # and removes create_connected_server_and_client_session, which the in-memory
+      # protocol test builds on. The server-side swap is two lines; the test needs
+      # its session plumbing rewritten against create_client_server_memory_streams.
+      # Deferred until ariadne is being run again, so the rewrite can be checked
+      # against a live client rather than the suite alone.
+      - dependency-name: "mcp"
+        update-types: ["version-update:semver-major"]
     groups:
       uv:
         patterns: ["*"]
