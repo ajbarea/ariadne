@@ -102,6 +102,10 @@ body.hero-page .md-content__inner {
 }
 
 .md-typeset .hero {
+  /* The copy column, and where its right edge lands including the 8vw padding.
+     The scrim below is built from these, so the two cannot drift apart. */
+  --hero-copy-width: min(33rem, 35%);
+  --hero-copy-edge: calc(8vw + var(--hero-copy-width));
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
@@ -115,14 +119,18 @@ body.hero-page .md-content__inner {
   overflow: hidden;
   background-color: var(--ari-bg);
   background:
-    /* Light scrim only on the far left for headline legibility. The art already
-       carries its own dark-left negative space, so this fades out by ~52% and
-       leaves the right half of the image (thread + nodes) fully visible. */
+    /* The scrim has to clear the copy, so it is measured from the copy's own
+       right edge rather than a share of the viewport. A fixed percentage cannot
+       track a `ch`-based measure: at 1440px the old stops went transparent at
+       48% (691px) while the subtitle ran to 683px, so the last words of every
+       line dissolved into the art. Full opacity holds to the edge, then falls
+       off over 16rem, which still leaves the thread and nodes clear. */
     linear-gradient(to right,
       var(--ari-bg) 0%,
-      color-mix(in srgb, var(--ari-bg) 80%, transparent) 20%,
-      color-mix(in srgb, var(--ari-bg) 24%, transparent) 38%,
-      transparent 48%),
+      var(--ari-bg) calc(var(--hero-copy-edge) - 6rem),
+      color-mix(in srgb, var(--ari-bg) 86%, transparent) var(--hero-copy-edge),
+      color-mix(in srgb, var(--ari-bg) 30%, transparent) calc(var(--hero-copy-edge) + 8rem),
+      transparent calc(var(--hero-copy-edge) + 16rem)),
     /* Gentle bottom fade so the hero blends into the page below. */
     linear-gradient(to bottom,
       transparent 60%,
@@ -153,7 +161,7 @@ body.hero-page .md-content__inner {
   /* Keep the whole text column in the left ~42% on wide screens so it clears
      the art (thread + nodes) on the right. Reset to full width when the layout
      centers on narrow screens (see the 960px media query). */
-  max-width: min(33rem, 35%);
+  max-width: var(--hero-copy-width);
 }
 
 .md-typeset .hero h1 {
@@ -1040,6 +1048,17 @@ body.hero-page .md-header {
     align-items: center;
     text-align: center;
     padding: 4rem 6vw;
+    /* Centered copy spans the full width here, so a left-anchored horizontal
+       falloff would leave the ends of each line on bare art. Veil the whole
+       panel instead and let the thread read through it. */
+    background:
+      linear-gradient(to bottom,
+        var(--ari-bg) 0%,
+        color-mix(in srgb, var(--ari-bg) 88%, transparent) 42%,
+        color-mix(in srgb, var(--ari-bg) 72%, transparent) 72%,
+        var(--ari-bg) 100%),
+      var(--hero-bg-image, none) center center / cover no-repeat,
+      linear-gradient(160deg, var(--ari-bg-alt) 0%, var(--ari-bg) 70%);
   }
 
   /* Centered layout — let the text use the full width again. */

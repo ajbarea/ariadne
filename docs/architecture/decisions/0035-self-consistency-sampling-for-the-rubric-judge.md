@@ -12,7 +12,7 @@ works?"* Ariadne answers it with a tiered eval pyramid; the top tier is the **LL
 analytic-quality dimension pointwise on an anchored 1-5 scale. That judge is a **single LLM
 judgment per dimension**, and a single LLM judgment is the known-noisy part of any eval
 pyramid — subject to position, verbosity, self-preference, and calibration-drift bias. The
-[ROADMAP](../../../ROADMAP.md) named the fix as an open delta: *"DeepMind FACTS averages three
+[ROADMAP](https://github.com/ajbarea/ariadne/blob/main/ROADMAP.md) named the fix as an open delta: *"DeepMind FACTS averages three
 judges to cut single-judge bias; Ariadne uses one… the on-prem-safe variant is N sampled
 judgments or N local judges."*
 
