@@ -104,4 +104,4 @@ LLM-based schema linking —
 structured output = schema + validator + repair loop (2026 practice) —
 [Structured Outputs: Schema Validation for Real Pipelines](https://collinwilkins.com/articles/structured-output);
 bounded, deterministically-terminated refinement —
-[Self-Refine, arXiv:2303.17651](https://arxiv.org/abs/2303.17651) (via [ADR-0022](0022-post-hoc-citation-repair.md)).
+[Self-Refine, arXiv:2303.17651](https://arxiv.org/abs/2303.17651) (via [ADR-0022](0022-citation-recall-coverage-hardening.md)).
