@@ -8,7 +8,6 @@ Shared by every sister docs site; the canonical copy is in techne
 (plugins/techne/skills/docs-site/templates/shared/).
 """
 
-import re
 import tomllib
 from pathlib import Path
 
@@ -23,7 +22,8 @@ def nav_pages(entries: object) -> set[str]:
         return {page for entry in entries for page in nav_pages(entry)}
     if isinstance(entries, dict):
         return {page for v in entries.values() for page in nav_pages(v)}
-    if isinstance(entries, str) and not re.match(r"https?://", entries):
+    # External links, and static pages the build generates, are not sources.
+    if isinstance(entries, str) and entries.endswith(".md"):
         return {entries}
     return set()
 
