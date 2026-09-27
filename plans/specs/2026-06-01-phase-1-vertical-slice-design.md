@@ -3,8 +3,8 @@
 > **Status:** design, awaiting review. Authored 2026-06-01.
 > **Scope decision (AJ, 2026-06-01):** *Full live harness + real Neo4j* — the CLI
 > runs the real Claude Agent SDK agent loop against a real Neo4j backend.
-> **Source research:** [`docs/research/best-practice-architecture.md`](../../research/best-practice-architecture.md),
-> [`docs/research/claude-agent-sdk-reference.md`](../../research/claude-agent-sdk-reference.md),
+> **Source research:** [`docs/research/best-practice-architecture.md`](../../docs/research/best-practice-architecture.md),
+> [`docs/research/claude-agent-sdk-reference.md`](../../docs/research/claude-agent-sdk-reference.md),
 > plus the June-2026 connector/Text2Cypher pass recorded inline below.
 
 ## Goal

@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-07
 - **Status:** Accepted (autonomous session; research-grounded, no approval gate)
-- **ADR:** [0022](../../architecture/decisions/0022-citation-recall-coverage-hardening.md)
+- **ADR:** [0022](../../docs/architecture/decisions/0022-citation-recall-coverage-hardening.md)
 
 ## Problem
 

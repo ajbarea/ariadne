@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-06-05)
 - **Deciders:** Ariadne maintainers
-- **Design spec:** [2026-06-05-adaptive-self-improving-ariadne-design.md](../../superpowers/specs/2026-06-05-adaptive-self-improving-ariadne-design.md)
+- **Design spec:** [2026-06-05-adaptive-self-improving-ariadne-design.md](https://github.com/ajbarea/ariadne/blob/main/plans/specs/2026-06-05-adaptive-self-improving-ariadne-design.md)
 
 ## Context
 

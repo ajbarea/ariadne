@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-05
 - **Status:** Approved (brainstorm) — implementation pending
-- **ADR:** [0021](../../architecture/decisions/0021-run-output-organization.md)
+- **ADR:** [0021](../../docs/architecture/decisions/0021-run-output-organization.md)
 
 ## Problem
 

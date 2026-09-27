@@ -5,7 +5,7 @@
 > model selection is deployment-env-only (`ANTHROPIC_BASE_URL` + `ANTHROPIC_MODEL`
 > + the LiteLLM routing config); no `model` parameter exists on the MCP `workup`
 > tool, the CLI `workup` command, or the Claude Code plugin.
-> **Builds on:** [ADR-0012](../../architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)
+> **Builds on:** [ADR-0012](../../docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)
 > (the single-seam model fork) and the air-gap governance posture it establishes.
 
 ## Goal
@@ -21,7 +21,7 @@ air-gap deployment that lists no cloud profile makes a cloud selection impossibl
 
 A raw `model="..."` per-call param maximises flexibility but punches a hole in the
 governance posture: an analyst could request a cloud model inside an enclave (the
-egress leak [ADR-0012](../../architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)
+egress leak [ADR-0012](../../docs/architecture/decisions/0012-cloud-vs-air-gapped-deployment-fork.md)
 exists to prevent), and raw Ollama/LiteLLM tags would leak into the analytic
 interface. A **curated, operator-defined allowlist** gives users real choice within
 vetted options; air-gap governance is preserved *by construction* — the operator

@@ -86,7 +86,7 @@ every axis, so a passing score from a larger model is meaningful, not a rubber s
 3. **This produced a design response, not just a number.** The user-selectable
    model-profiles design now carries a per-model **operating envelope** so a local
    profile runs lean and a frontier profile runs generous, from one codebase
-   (see `docs/superpowers/specs/2026-06-04-user-model-selection-design.md`, D6).
+   (see `plans/specs/2026-06-04-user-model-selection-design.md`, D6).
 4. **A scorable open-weight *quality* number needs a faster host.** The 14B/30B
    quality rows are a follow-up on a GPU host or hosted open-weight endpoint; the
    throughput wall on commodity Apple Silicon is itself a useful air-gap

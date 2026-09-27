@@ -13,7 +13,7 @@ that expansion without re-wiring stores, re-implementing governance, or coupling
 dataset-specific concerns into the agent/connectors/eval harness.
 
 See the full design spec at
-[`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md).
+[`plans/specs/2026-06-03-multi-dataset-pipeline-design.md`](https://github.com/ajbarea/ariadne/blob/main/plans/specs/2026-06-03-multi-dataset-pipeline-design.md).
 
 ## Decision drivers
 

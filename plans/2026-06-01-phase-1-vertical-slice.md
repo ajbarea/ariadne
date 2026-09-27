@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12+, `claude-agent-sdk`, `neo4j` driver, `mcp-neo4j-cypher` server, `uv`, `ruff`, `ty`, `pytest`, `testcontainers[neo4j]`, Docker (Colima).
 
-**Spec:** [`docs/superpowers/specs/2026-06-01-phase-1-vertical-slice-design.md`](../specs/2026-06-01-phase-1-vertical-slice-design.md)
+**Spec:** [`docs/superpowers/specs/2026-06-01-phase-1-vertical-slice-design.md`](specs/2026-06-01-phase-1-vertical-slice-design.md)
 
 ---
 
