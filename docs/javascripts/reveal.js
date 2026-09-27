@@ -1,64 +1,56 @@
-/* Scroll-reveal for landing page sections and hero-page body class.
-   Re-entrant so Material's instant navigation can rebind cleanly. */
+// Shared by every sister docs site. The canonical copy is in techne
+// (plugins/techne/skills/docs-site/templates/shared/); edit it there and run the
+// docs-site sync, never in a site. Site-specific effects go in their own file.
+//
+// Marks pages that open with a `.hero` (`hero-page` on <html> and <body>) and
+// reveals each `.landing-section` as it scrolls into view. The CSS keeps sections
+// visible until `js-ready` is set, so a reader without JavaScript sees the whole
+// page; reduced motion shows every section at once. Re-entrant: instant navigation
+// swaps the page without a load, so each run tears down the previous observer.
 (function () {
-  var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  /* Signal to CSS that JS is running so progressive-enhancement rules can apply. */
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.documentElement.classList.add("js-ready");
+  let observer = null;
 
-  var revealObserver = null;
-
-  function setupReveal() {
-    if (revealObserver) {
-      revealObserver.disconnect();
-      revealObserver = null;
+  function init() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
     }
 
-    var hasHero = !!document.querySelector(".hero");
-    if (hasHero) {
-      document.documentElement.classList.add("hero-page");
-      document.body.classList.add("hero-page");
-    } else {
-      /* Strip lingering hero-page styling from a prior instant-navigation. */
-      document.documentElement.classList.remove("hero-page");
-      document.body.classList.remove("hero-page");
-    }
+    const hero = document.querySelector(".hero") !== null;
+    document.documentElement.classList.toggle("hero-page", hero);
+    document.body.classList.toggle("hero-page", hero);
 
-    var sections = document.querySelectorAll(".landing-section");
+    const sections = document.querySelectorAll(".landing-section");
     if (!sections.length) return;
 
-    sections.forEach(function (section) {
-      section.classList.remove("visible");
-    });
-
-    if (prefersReducedMotion) {
-      sections.forEach(function (section) {
-        section.classList.add("visible");
-      });
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      sections.forEach((s) => s.classList.add("visible"));
       return;
     }
 
-    revealObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            revealObserver.unobserve(entry.target);
-          }
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
     );
-
-    sections.forEach(function (section) {
-      revealObserver.observe(section);
+    sections.forEach((s) => {
+      s.classList.remove("visible");
+      observer.observe(s);
     });
   }
 
-  /* Material theme's instant navigation uses the document$ RxJS observable */
-  if (typeof document$ !== "undefined") {
-    document$.subscribe(setupReveal);
+  if (window.document$ && typeof window.document$.subscribe === "function") {
+    window.document$.subscribe(init);
+  } else if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
   } else {
-    document.addEventListener("DOMContentLoaded", setupReveal);
+    init();
   }
 })();

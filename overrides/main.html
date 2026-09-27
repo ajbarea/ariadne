@@ -1,28 +1,46 @@
 {% extends "base.html" %}
 
 {#-
-  Open Graph / Twitter card overrides.
+  Shared by every sister docs site. The canonical copy is in techne
+  (plugins/techne/skills/docs-site/templates/shared/); edit it there and run
+  the docs-site sync, never in a site.
 
-  Zensical's social-cards plugin is still a stub as of mid-2026, so we emit the
-  tags ourselves. Per-page title/description fall back to the site defaults when
-  page-level metadata is absent. The og:image is only emitted once a brand asset
-  exists at docs/assets/hero.png — drop the file in and it lights up; until then
-  no broken image reference is published.
+  The home tab reads the site name, not "Home - Site". Open Graph and Twitter
+  card tags are emitted here because Zensical's social-cards plugin is still a
+  stub. A site with card artwork sets `extra.og_image` (a path under docs/);
+  without it the image tags are omitted, since a missing image previews worse
+  than none.
 -#}
+{% set is_home = page.is_homepage or page.url == '' or page.url == '/' %}
+
+{% block htmltitle %}
+  {% if is_home %}
+    <title>{{ config.site_name }}</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
 {% block extrahead %}
-  {% set is_home = page.is_homepage or page.url == '' or page.url == '/' %}
   {% set raw_title = (page.meta and page.meta.title) or page.title %}
   {% set page_title = is_home and config.site_name or (raw_title ~ ' | ' ~ config.site_name) %}
   {% set page_desc = (page.meta and page.meta.description) or config.site_description %}
   {% set page_url = page.canonical_url or config.site_url %}
+  {% set og_image = config.extra.og_image and (config.site_url ~ config.extra.og_image) %}
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ config.site_name }}">
   <meta property="og:title" content="{{ page_title }}">
   <meta property="og:description" content="{{ page_desc }}">
   <meta property="og:url" content="{{ page_url }}">
+  {% if og_image %}
+    <meta property="og:image" content="{{ og_image }}">
+  {% endif %}
 
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="{{ og_image and 'summary_large_image' or 'summary' }}">
   <meta name="twitter:title" content="{{ page_title }}">
   <meta name="twitter:description" content="{{ page_desc }}">
+  {% if og_image %}
+    <meta name="twitter:image" content="{{ og_image }}">
+  {% endif %}
 {% endblock %}
