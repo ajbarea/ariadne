@@ -1,30 +1,37 @@
 """Every page under docs/ is in the zensical.toml nav.
 
-Zensical publishes every Markdown file under docs/ and cannot exclude one, so a page the nav
-leaves out still deploys, unreachable from the site. Working notes belong under plans/.
+Zensical publishes every Markdown file under docs/ and cannot exclude one, so
+a page the nav leaves out still deploys, unreachable from the site. Working
+notes belong outside docs/.
+
+Shared by every sister docs site; the canonical copy is in techne
+(plugins/techne/skills/docs-site/templates/shared/).
 """
 
 import re
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+HERE = Path(__file__).resolve()
+ROOT = next(p for p in HERE.parents if (p / "zensical.toml").is_file())
+UNLISTED = "published but not in the nav; list it or move it out of docs/"
+MISSING = "in the nav but missing from docs/"
 
 
 def nav_pages(entries: object) -> set[str]:
     if isinstance(entries, list):
-        return set().union(*(nav_pages(e) for e in entries)) if entries else set()
+        return {page for entry in entries for page in nav_pages(entry)}
     if isinstance(entries, dict):
-        return set().union(*(nav_pages(v) for v in entries.values())) if entries else set()
+        return {page for v in entries.values() for page in nav_pages(v)}
     if isinstance(entries, str) and not re.match(r"https?://", entries):
         return {entries}
     return set()
 
 
 def test_every_docs_page_is_in_the_nav() -> None:
-    nav = tomllib.loads((ROOT / "zensical.toml").read_text())["project"]["nav"]
+    config = tomllib.loads((ROOT / "zensical.toml").read_text())
+    listed = nav_pages(config["project"]["nav"])
     docs = ROOT / "docs"
     sources = {p.relative_to(docs).as_posix() for p in docs.rglob("*.md")}
-    listed = nav_pages(nav)
-    assert sources - listed == set(), "published but not in the nav; list it or move it to plans/"
-    assert listed - sources == set(), "in the nav but missing from docs/"
+    assert sources - listed == set(), UNLISTED
+    assert listed - sources == set(), MISSING
