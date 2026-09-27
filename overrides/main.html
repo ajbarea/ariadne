@@ -32,15 +32,15 @@
   <meta property="og:site_name" content="{{ config.site_name | e }}">
   <meta property="og:title" content="{{ page_title | e }}">
   <meta property="og:description" content="{{ page_desc | e }}">
-  <meta property="og:url" content="{{ page_url | e }}">
+  <meta property="og:url" content="{{ page_url }}">
   {% if og_image %}
-    <meta property="og:image" content="{{ og_image | e }}">
+    <meta property="og:image" content="{{ og_image }}">
   {% endif %}
 
   <meta name="twitter:card" content="{{ og_image and 'summary_large_image' or 'summary' }}">
   <meta name="twitter:title" content="{{ page_title | e }}">
   <meta name="twitter:description" content="{{ page_desc | e }}">
   {% if og_image %}
-    <meta name="twitter:image" content="{{ og_image | e }}">
+    <meta name="twitter:image" content="{{ og_image }}">
   {% endif %}
 {% endblock %}
