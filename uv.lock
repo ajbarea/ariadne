@@ -152,7 +152,7 @@ wheels = [
 
 [[package]]
 name = "anthropic"
-version = "1.5.0"
+version = "1.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -163,9 +163,9 @@ dependencies = [
     { name = "sniffio" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6e/43/6f3f6006f5216d43a059a1a856d275ef6536cdfa94883b64cc04d7873cb7/anthropic-1.5.0.tar.gz", hash = "sha256:b25f87f5758861f25993383a5c9bf274eb6e0f1b010c84019ad91854cb4e1bc6", size = 1156657, upload-time = "2026-09-10T17:45:35.93Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a4/8b/4210dd090000ba35d07cee9105530794911d955788c3992b4882df49eaac/anthropic-1.7.0.tar.gz", hash = "sha256:0ab1b04668606ba1ae93f6d9e8dcc2e0c4f0debebd4eea4773a3a595f0836db1", size = 1181035, upload-time = "2026-09-18T16:13:05.262Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/1c/c32fce35ca0be0205f2377d2238e3ed73dea5abc2be09d15fbd032091d60/anthropic-1.5.0-py3-none-any.whl", hash = "sha256:d9ce04b29ad1f7025dda3e3bc478cde8d2924d2de5417d2d4a4bb0378ecbc2a6", size = 1235236, upload-time = "2026-09-10T17:45:34.216Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/dc/74995efda028421917f4caabd24db1373ee0742573a2363fff1a21191441/anthropic-1.7.0-py3-none-any.whl", hash = "sha256:6b681b6ee00f232bb54f50f9a0d6d30e7be368c1b6f754bfd470c8385b8b6058", size = 1255606, upload-time = "2026-09-18T16:13:03.725Z" },
 ]
 
 [[package]]
@@ -454,7 +454,7 @@ wheels = [
 
 [[package]]
 name = "claude-agent-sdk"
-version = "0.2.152"
+version = "0.2.157"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -462,13 +462,12 @@ dependencies = [
     { name = "mcp" },
     { name = "sniffio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/61/de2194d266fcede2a737996e800e7726079730f81ef03d41117e7888be04/claude_agent_sdk-0.2.152.tar.gz", hash = "sha256:0822bbdf700ccdd1acecf8365345a56bde07833afe7f8bd1bee68cba0e2fcf9a", size = 344710, upload-time = "2026-09-02T22:47:58.633Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/e3/444df1691c864a8349067686719b43e714fc43d3853fb1b2ebc2097e2a6e/claude_agent_sdk-0.2.157.tar.gz", hash = "sha256:4ce6f41bc965fcb4a9d11bd7a3cac266975c75b632f3d74a26f55f0fffb3160a", size = 346579, upload-time = "2026-09-18T18:21:10.306Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/d3/ee2b674958e105cf26a2eb4d512c46b02fcfdc8fadbb14dde750bbfaf9b1/claude_agent_sdk-0.2.152-py3-none-macosx_11_0_arm64.whl", hash = "sha256:6cc1e949743c7634274ae526bfd1c0a216ff9d71c6b36d94cab80f32b0d32b4c", size = 85989333, upload-time = "2026-09-02T22:48:02.484Z" },
-    { url = "https://files.pythonhosted.org/packages/92/c4/6564671e6d303012b5c0bd6650b9977317c3b5c83914cf5ac62068fa85e6/claude_agent_sdk-0.2.152-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:9c79c4ef91b15e5fae6aba62a82afb983dc360bc159902c541046227e2852c86", size = 90503485, upload-time = "2026-09-02T22:48:06.357Z" },
-    { url = "https://files.pythonhosted.org/packages/13/5d/1efd9e3332d2909e015c6571a4b5ed937e9126b9c702217813247c1c8052/claude_agent_sdk-0.2.152-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:1e5b619e6fa3c98f06ddc107652f7820c4573fb73a9a24263568d9974078bbc2", size = 95850705, upload-time = "2026-09-02T22:48:10.493Z" },
-    { url = "https://files.pythonhosted.org/packages/95/a0/f921e52fdbfd400e46fbc1e707e6004a3ef99ace6cb4555429a3a8d3f371/claude_agent_sdk-0.2.152-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:f885bd935054082a599dcf92bbdaf3c0b853117a79375cb3aae74674a8124326", size = 96039825, upload-time = "2026-09-02T22:48:14.587Z" },
-    { url = "https://files.pythonhosted.org/packages/e6/be/dd113754761c6eef6eec1f2b148c825f925d4bfaa3f946656925239c54f9/claude_agent_sdk-0.2.152-py3-none-win_amd64.whl", hash = "sha256:f422c256358997ffa3a740f9fdc8127aa8404a9d57493502dc7d2ac05ecb5486", size = 98656506, upload-time = "2026-09-02T22:48:19.109Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/e8/3e9cc23eb5a5a01a0e2ee931a17db2785f95407525d50366af06a4a5469c/claude_agent_sdk-0.2.157-py3-none-macosx_11_0_arm64.whl", hash = "sha256:dd6a2c7aa1901e43b827411d62f2327aed82f53ed8ca6b076eaa5be4a1fc681f", size = 92744001, upload-time = "2026-09-18T18:21:15.969Z" },
+    { url = "https://files.pythonhosted.org/packages/49/eb/e5095703a8efbe504ec468cab039543caabfc0ea3327c735a3d1b60e57ac/claude_agent_sdk-0.2.157-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:ebf3f514c61db9be01bbf6d1acb0d993247340583b3559d2df75e3822f618bbb", size = 97352326, upload-time = "2026-09-18T18:21:21.007Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/f4/64505beb3c757b863753d6556539554704ec9168cb96454dc6463b14df85/claude_agent_sdk-0.2.157-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:a58089e0c11364db2ec7a139e09b36a4fb9c95817a758bee7b28e0434f55c0b6", size = 102701030, upload-time = "2026-09-18T18:21:27.065Z" },
+    { url = "https://files.pythonhosted.org/packages/03/8f/2a7c121469fd16d1d6465bec180726c54f6e151b12e50835283b4285d1ce/claude_agent_sdk-0.2.157-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:bd126b2edee3a247b2c7c4cee1f5a3ea68ef748288ec0650db88dd3918e5471a", size = 102830653, upload-time = "2026-09-18T18:21:32.948Z" },
 ]
 
 [[package]]
@@ -1582,14 +1581,14 @@ wheels = [
 
 [[package]]
 name = "neo4j"
-version = "6.3.0"
+version = "6.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytz" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/57/f939c3b9b28e5851095eafb823b5a996eea3f21a14be513bcf9b355f97da/neo4j-6.3.0.tar.gz", hash = "sha256:d0d3986c37ad174a549a39dfec6d22a00a061ebcb0267f1a5caf856589838e73", size = 242487, upload-time = "2026-08-28T10:25:04.743Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/46/7a562799679d0c9bd3f12d28b43591eb953efc975e1241536733c5d8bcd3/neo4j-6.3.1.tar.gz", hash = "sha256:e75530ca0691d69916c56acdb7401df4ee9e1d5084cfcfb3ede796db38667dcd", size = 242885, upload-time = "2026-09-15T08:08:32.67Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/47/d29d93455fe2959e5b8383e52f68b3633d729f39e87fef94743f9f2240ae/neo4j-6.3.0-py3-none-any.whl", hash = "sha256:d243f9c8adf882ae7205a76eb2419b0a632d5f3c89383d4a0044d737a2223991", size = 331471, upload-time = "2026-08-28T10:25:03.263Z" },
+    { url = "https://files.pythonhosted.org/packages/08/a5/e33f76f4eb7e72c350e65802151884048325f889ab5d156ce4b6d9bde959/neo4j-6.3.1-py3-none-any.whl", hash = "sha256:a1b702d356f88885c27bdcf7dcd56af76423dbff4e26064e5bf5dbf47af53044", size = 331462, upload-time = "2026-09-15T08:08:31.252Z" },
 ]
 
 [[package]]
@@ -2831,7 +2830,7 @@ wheels = [
 
 [[package]]
 name = "sentence-transformers"
-version = "6.0.1"
+version = "6.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -2845,9 +2844,9 @@ dependencies = [
     { name = "transformers" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d9/ef/87681678d0aa91a1e77f0ffdd2e5d900aaf358aac644dd14bead8d95ec4c/sentence_transformers-6.0.1.tar.gz", hash = "sha256:1c3b8d9403f87ad0c879638554f36cc85744f38a6a70d150fd7e964ca0e9935b", size = 575395, upload-time = "2026-08-31T07:50:43.518Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/a1/53ae87971817e2d8370f8e79b843a881be33ab339502d71c5f82ac31f7af/sentence_transformers-6.1.0.tar.gz", hash = "sha256:299025df51550dc1a38f05be27a9b0bf881c4e5e70542b3b7757d05e00aa3868", size = 576566, upload-time = "2026-09-18T10:44:24.279Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/ab/dc6031faf1b6bba08076fbf457b21a5c51ba7928a77916915e093c16b8c7/sentence_transformers-6.0.1-py3-none-any.whl", hash = "sha256:b8888d72c707ba33c63aa30845850702dd5acadf1dd0d051436380bcebe4fd0f", size = 739832, upload-time = "2026-08-31T07:50:41.635Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/6e/9115e19589c83172bd37ec793cfef7f7c719464053fa6a8882700c1f4488/sentence_transformers-6.1.0-py3-none-any.whl", hash = "sha256:eb8122f4d180f552eda26dc3d77e84e8c11dc2b1d456a406b9f24abb70ceeadd", size = 740560, upload-time = "2026-09-18T10:44:22.841Z" },
 ]
 
 [[package]]
