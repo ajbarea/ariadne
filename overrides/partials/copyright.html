@@ -1,7 +1,16 @@
+{#-
+  Shared by every sister docs site; the canonical copy is in techne
+  (plugins/techne/skills/docs-site/templates/shared/). A site with a footer mark
+  sets `extra.brand_mark` (a path under docs/).
+-#}
 <div class="md-copyright">
   {% if config.copyright %}
     <div class="md-copyright__highlight">
-      2026 — {{ config.copyright }}
+      2026
+      {% if config.extra.brand_mark %}
+        <img src="{{ config.extra.brand_mark | url }}" alt="" aria-hidden="true" class="brand-mark">
+      {% endif %}
+      {{ config.copyright }}
     </div>
   {% endif %}
   {% if not config.extra.generator == false %}
