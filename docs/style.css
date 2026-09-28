@@ -32,6 +32,7 @@
   --ari-ink: var(--ari-ink);                  /* body text on brand surfaces */
   --ari-heading: var(--ari-thread-light); /* accent headings / labels */
   --ari-halo: var(--ari-obsidian);     /* ring behind nodes = page base */
+  --ari-label: var(--ari-thread);      /* small gold text: AA on the page base */
 
   /* Material overrides */
   --md-primary-fg-color: var(--ari-thread);
@@ -57,11 +58,13 @@
   --ari-ink: #2b2545;
   --ari-heading: #835f1b;
   --ari-halo: #faf6ec;
-  --ari-thread-light: #9a7324; /* darker gold so accents + gradients read on cream */
+  --ari-thread-light: #83601c; /* darker gold so accents + gradients read on cream */
+  --ari-label: #7a5a14;         /* AA on cream and on the alt band */
   --ari-mist: rgba(131, 95, 27, 0.07);
   --md-default-bg-color: var(--ari-bg);
   --md-default-bg-color--light: #fffdf8;
-  --md-typeset-a-color: var(--ari-thread-deep);
+  --md-typeset-a-color: #7a5a14;
+  --md-accent-fg-color: #5f4509;
 }
 
 /* Gradients tuned for dark; in light mode run them darker so they read on cream. */
@@ -86,8 +89,20 @@
 
 /* ---- Hero ---------------------------------------------------------------- */
 
-body.hero-page .md-footer {
+/* The landing keeps the one-line copyright footer and drops prev/next; the line
+   sits on the page itself rather than a band of its own. */
+body.hero-page .md-footer__inner {
   display: none !important;
+}
+
+body.hero-page .md-footer,
+body.hero-page .md-footer-meta {
+  background: transparent;
+}
+
+body.hero-page .md-footer-meta {
+  border-top: 1px solid color-mix(in srgb, var(--ari-thread) 16%, transparent);
+  color: var(--ari-ink);
 }
 
 html.hero-page,
@@ -138,6 +153,17 @@ body.hero-page .md-content__inner {
       var(--ari-bg) 100%),
     var(--hero-bg-image, none) right center / cover no-repeat,
     linear-gradient(160deg, var(--ari-bg-alt) 0%, var(--ari-bg) 70%);
+}
+
+/* The anchor link Material adds to every h1 has no job on the landing title. */
+.md-typeset .hero .headerlink {
+  display: none;
+}
+
+/* The hero art as its own element, shown only where the layout stacks (see the
+   960px query); on wide screens the same image is the hero's background. */
+.md-typeset .hero .hero-art {
+  display: none;
 }
 
 /* A faint woven-thread grid evoking the Labyrinth, biased to the LEFT (text)
@@ -256,31 +282,28 @@ body.hero-page .md-content__inner {
   background: color-mix(in srgb, var(--ari-panel) 70%, transparent) !important;
 }
 
-.hero-modes {
-  font-size: clamp(0.72rem, 1.1vw, 0.85rem);
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  opacity: 0.7;
-  color: var(--ari-thread-light);
+.md-typeset .hero .hero-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   margin: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-/* Keep each store icon glued to its label when the row wraps. */
+/* Each store is a chip, so the row wraps whole chips, never mid-phrase. */
 .hero-modes .mode-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
   white-space: nowrap;
-}
-
-.hero-modes a {
-  color: inherit;
-  text-decoration: none;
-  border-bottom: 1px dashed color-mix(in srgb, var(--ari-thread-light) 45%, transparent);
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.hero-modes a:hover {
-  color: var(--ari-heading);
-  border-bottom-color: var(--ari-thread);
+  padding: 0.28rem 0.62rem;
+  border-radius: 2rem;
+  color: var(--ari-label);
+  border: 1px solid color-mix(in srgb, var(--ari-thread) 32%, transparent);
+  background: color-mix(in srgb, var(--ari-panel) 45%, transparent);
 }
 
 /* ---- Landing sections (scroll-revealed by reveal.js) --------------------- */
@@ -329,6 +352,29 @@ html.js-ready .landing-section.visible {
   flex-wrap: wrap;
   gap: 0.8rem;
   margin: 1.6rem 0;
+}
+
+/* Section buttons are the hero's pills at a smaller size, so the page has one
+   button language. */
+.md-typeset .section-buttons .md-button {
+  padding: 0.65rem 1.5rem;
+  border-radius: 3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Material's primary button puts white on the primary colour; on gold that fails
+   contrast, so it carries the hero CTA's dark ink. */
+.md-typeset .section-buttons .md-button--primary {
+  color: #1a1206;
+  background: var(--ari-thread);
+  border-color: var(--ari-thread);
+}
+
+.md-typeset .section-buttons .md-button--primary:hover {
+  color: #1a1206;
+  background: var(--ari-thread-light);
 }
 
 /* Credibility stat strip (reinforces "grounded in research").
@@ -458,14 +504,13 @@ body.hero-page .md-header {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ari-thread);
+  color: var(--ari-label);
   border: 1px solid color-mix(in srgb, var(--ari-thread) 35%, transparent);
   border-radius: 2rem;
   padding: 0.12rem 0.7rem;
   margin-left: 0.5rem;
   white-space: nowrap;
   vertical-align: middle;
-  opacity: 0.9;
 }
 
 .trace-q {
@@ -482,7 +527,7 @@ body.hero-page .md-header {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ari-thread);
+  color: var(--ari-label);
   margin-bottom: 0.35rem;
 }
 
@@ -670,7 +715,9 @@ body.hero-page .md-header {
 
 @media (max-width: 600px) {
   .md-typeset .figure-funnel { max-width: 22rem; aspect-ratio: 1 / 0.9; }
-  .figure-funnel .src { width: 7rem; }
+  .md-typeset .figure-funnel .src { width: 6.6rem; }
+  .md-typeset .figure-funnel .seam { width: 5.6rem; }
+  .md-typeset .figure-funnel .sink { width: 6rem; }
 }
 
 /* ---- Canonical schema — an ER/data-model figure (tables + typed links).
@@ -750,9 +797,11 @@ body.hero-page .md-header {
 
 @media (max-width: 560px) {
   .md-typeset .schema-model { max-width: 24rem; aspect-ratio: 1 / 1.1; }
-  .md-typeset .schema-model .tbl { width: 8rem; }
-  .schema-model .tbl-attribute { left: 24%; top: 18%; }
-  .schema-model .tbl-document { left: 76%; top: 18%; }
+  .md-typeset .schema-model .tbl,
+  .md-typeset .schema-model .tbl-attribute,
+  .md-typeset .schema-model .tbl-document { width: 7.4rem; }
+  .md-typeset .schema-model .tbl-attribute { left: 24%; top: 18%; }
+  .md-typeset .schema-model .tbl-document { left: 76%; top: 18%; }
 }
 
 /* ---- Lifecycle ring — propose -> ratify -> freeze, repeating, around an
@@ -844,7 +893,7 @@ body.hero-page .md-header {
 
 @media (max-width: 520px) {
   .md-typeset .figure-cycle { max-width: 22rem; aspect-ratio: 1 / 1; }
-  .figure-cycle .cyc-node { width: 7rem; font-size: 0.85rem; }
+  .md-typeset .figure-cycle .cyc-node { width: 6.6rem; font-size: 0.85rem; }
 }
 
 /* ---- Eval pyramid — a layered-tier figure (deliberately NOT a flowchart).
@@ -903,7 +952,7 @@ body.hero-page .md-header {
   margin: 0.2rem 0 0;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
-  opacity: 0.6;
+  opacity: 0.85;
   text-align: center;
 }
 
@@ -1044,57 +1093,68 @@ body.hero-page .md-header {
 /* ---- Responsive ---------------------------------------------------------- */
 
 @media (max-width: 960px) {
+  /* The copy spans the width here, so the art cannot sit beside it: it moves to
+     its own block above the title, whole, and fades into the page below. */
   .md-typeset .hero {
-    align-items: center;
-    text-align: center;
-    padding: 4rem 6vw;
-    /* Centered copy spans the full width here, so a left-anchored horizontal
-       falloff would leave the ends of each line on bare art. Veil the whole
-       panel instead and let the thread read through it. */
-    background:
-      linear-gradient(to bottom,
-        var(--ari-bg) 0%,
-        color-mix(in srgb, var(--ari-bg) 88%, transparent) 42%,
-        color-mix(in srgb, var(--ari-bg) 72%, transparent) 72%,
-        var(--ari-bg) 100%),
-      var(--hero-bg-image, none) center center / cover no-repeat,
-      linear-gradient(160deg, var(--ari-bg-alt) 0%, var(--ari-bg) 70%);
+    min-height: 0;
+    padding: 0 6vw 1.8rem;
+    background: var(--ari-bg);
   }
 
-  /* Centered layout — let the text use the full width again. */
   .md-typeset .hero > * {
     max-width: 100%;
   }
 
-  .md-typeset .hero .hero-subtitle {
-    margin-left: auto;
-    margin-right: auto;
+  .md-typeset .hero .hero-art {
+    display: block;
+    align-self: stretch;
+    max-width: none;
+    margin: 0 -6vw 1.4rem;
+    aspect-ratio: 1672 / 941;
+    background: var(--hero-bg-image, none) center / cover no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
   }
 
-  .md-typeset .hero .hero-buttons,
-  .md-typeset .hero .hero-buttons > p {
-    justify-content: center;
+  /* The art is dark: on cream it needs a longer fall-off, or its lower edge
+     reads as a grey band before the page begins. */
+  [data-md-color-scheme="default"] .md-typeset .hero .hero-art {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 40%, transparent 96%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 40%, transparent 96%);
+  }
+
+  .md-typeset .hero .hero-subtitle {
+    max-width: 38ch;
   }
 }
 
 @media (max-width: 768px) {
   .md-typeset .hero h1 {
-    font-size: clamp(2rem, 8vw, 2.8rem);
+    font-size: clamp(2.2rem, 10vw, 2.8rem);
     max-width: 16ch;
+  }
+
+  .md-typeset .hero .hero-subtitle {
+    margin-bottom: 1.6rem;
+  }
+
+  .md-typeset .hero .hero-buttons {
+    width: 100%;
+    margin-bottom: 1.4rem;
   }
 
   .md-typeset .hero .hero-buttons > p {
     flex-direction: column;
+    align-items: stretch;
     width: 100%;
-    align-items: center;
+    max-width: 22rem;
   }
 
   .hero-buttons .md-button {
-    width: 85%;
-    max-width: 280px;
+    width: 100%;
   }
 
   .landing-section {
-    padding: 3rem 1.4rem;
+    padding: 2.2rem 1.25rem;
   }
 }
