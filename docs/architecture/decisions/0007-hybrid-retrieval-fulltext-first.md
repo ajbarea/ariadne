@@ -9,7 +9,7 @@
 The canonical pipeline (ADR-0006) includes a `Document` leg for unstructured
 evidence, email bodies, attachments, free-text records. That leg needs retrieval.
 The full design spec
-([`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](../../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md))
+([`plans/specs/2026-06-03-multi-dataset-pipeline-design.md`](https://github.com/ajbarea/ariadne/blob/main/plans/specs/2026-06-03-multi-dataset-pipeline-design.md))
 calls for **hybrid lexical + semantic retrieval**: a full-text (lexical) pass
 and a vector-similarity (semantic) pass whose results are fused. The question
 is sequencing, what to build first, and at what dependency cost.

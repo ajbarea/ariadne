@@ -2,7 +2,7 @@
 
 What's being worked on **right now** — nothing else. Long-term plans and the
 one-line ledger of completed work live in [ROADMAP.md](./ROADMAP.md); the full
-record of *how* each thing shipped is in `docs/superpowers/plans/`, the ADRs
+record of *how* each thing shipped is in `plans/`, the ADRs
 (`docs/architecture/decisions/`), and git history. Keep this file short: when a
 task ships, move its one-liner to ROADMAP and clear it from here.
 

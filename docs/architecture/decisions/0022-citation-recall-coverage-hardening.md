@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-06-07)
 - **Deciders:** Ariadne maintainers
-- **Design:** [spec](../../superpowers/specs/2026-06-07-citation-coverage-hardening-design.md)
+- **Design:** [spec](https://github.com/ajbarea/ariadne/blob/main/plans/specs/2026-06-07-citation-coverage-hardening-design.md)
 
 ## Context
 

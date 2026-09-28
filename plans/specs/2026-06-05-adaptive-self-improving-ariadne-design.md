@@ -2,13 +2,13 @@
 
 - **Date:** 2026-06-05
 - **Status:** Approved design (implementation phased; first slice specced below)
-- **Decision record:** [ADR-0020](../../architecture/decisions/0020-adaptive-self-improving-ariadne.md)
+- **Decision record:** [ADR-0020](../../docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)
 
 ## Problem
 
 Ariadne generalizes today at **code level**: to analyze a new corpus, a developer
 writes a `DatasetAdapter`, maps the source into the canonical schema, and registers
-it in `DATASETS` ([ADR-0006](../../architecture/decisions/0006-dataset-agnostic-pipeline.md)).
+it in `DATASETS` ([ADR-0006](../../docs/architecture/decisions/0006-dataset-agnostic-pipeline.md)).
 That is powerful but it means *the maintainer* extends Ariadne. Two capabilities are
 missing for the tool to be a general sensemaking harness:
 
@@ -98,7 +98,7 @@ user ontology yet, **no** dynamic MCP yet):
 
 1. **Introspection** — a read-only `information_schema` reader producing a structured
    schema summary (tables, columns, types, foreign keys). Reuses the postgres-mcp
-   restricted-mode posture ([ADR-0003](../../architecture/decisions/0003-postgres-mcp-restricted-mode.md)).
+   restricted-mode posture ([ADR-0003](../../docs/architecture/decisions/0003-postgres-mcp-restricted-mode.md)).
 2. **Proposed mapping** — an injected mapper (Protocol; hermetic fake + real Claude
    behind an extra, mirroring the rubric judge) emits a candidate mapping: which
    tables→entity types, which columns→attributes (intrinsic) vs which FKs→edges

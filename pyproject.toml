@@ -47,7 +47,7 @@ dependencies = [
     "mcp>=1.2,<2",
     # research(2026-06): OTel library guidance — depend only on -api (no-op until SDK
     # configured by the app entry point). SDK + exporter live in dev + otel extra.
-    # See ADR-0010 and docs/superpowers/plans/2026-06-03-observability-otel.md.
+    # See ADR-0010 and plans/2026-06-03-observability-otel.md.
     "opentelemetry-api>=1.30",
     "tomli-w>=1.2.0",
     "pysbd>=0.3.4",
@@ -58,7 +58,7 @@ data = ["datasets>=3"]
 
 # research(2026-06): SDK + OTLP exporter are optional so the base install emits
 # nothing (api-only). Enable for production export or development tracing.
-# See ADR-0010 and docs/superpowers/plans/2026-06-03-observability-otel.md.
+# See ADR-0010 and plans/2026-06-03-observability-otel.md.
 otel = ["opentelemetry-sdk>=1.30", "opentelemetry-exporter-otlp>=1.30"]
 
 # research(2026-06): Semantic retrieval leg (ADR-0007) — sentence-transformers

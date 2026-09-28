@@ -98,7 +98,7 @@ tool (opt-in `--semantic`), per
 
 The same seam takes any source. Four adapters spanning four modalities map into
 one canonical schema with no change to the agent, connectors, or eval harness
-([ADR-0006](decisions/0006-dataset-agnostic-pipeline.md); [pipeline design spec](../superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md)).
+([ADR-0006](decisions/0006-dataset-agnostic-pipeline.md); [pipeline design spec](https://github.com/ajbarea/ariadne/blob/main/plans/specs/2026-06-03-multi-dataset-pipeline-design.md)).
 
 <div class="figure-funnel" markdown="0">
   <svg class="flines" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" aria-hidden="true">

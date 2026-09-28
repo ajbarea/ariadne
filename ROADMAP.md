@@ -218,7 +218,7 @@ items must not be hardened against one answer.
 - [x] **Phase A — Dataset abstraction** (2026-06-03): canonical schema +
       `DatasetAdapter` protocol + `DATASETS` registry + dataset-agnostic indexer +
       synthetic adapter + `--dataset` flag. Decision: [ADR-0006](./docs/architecture/decisions/0006-dataset-agnostic-pipeline.md).
-      Full design: [`docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md`](./docs/superpowers/specs/2026-06-03-multi-dataset-pipeline-design.md).
+      Full design: [`plans/specs/2026-06-03-multi-dataset-pipeline-design.md`](./plans/specs/2026-06-03-multi-dataset-pipeline-design.md).
       `# research(2026-06): canonical-data-model pattern (datadriven.io + enterpriseintegrationpatterns.com).`
 - [x] **Phase B1 — Live indexing + full-text retrieval** (2026-06-03):
       `document_store.py` `tsvector` GIN index + `websearch_to_tsquery`;
@@ -675,7 +675,7 @@ items must not be hardened against one answer.
 > *experience-improving* (it gets better at that store across workups) — **without**
 > eroding the auditable / read-only / no-silent-merge / provenance-by-hook spine.
 > Decision + full design: [ADR-0020](./docs/architecture/decisions/0020-adaptive-self-improving-ariadne.md)
-> · [design spec](./docs/superpowers/specs/2026-06-05-adaptive-self-improving-ariadne-design.md).
+> · [design spec](./plans/specs/2026-06-05-adaptive-self-improving-ariadne-design.md).
 > Everything rides one lifecycle — **propose → ratify → freeze**: the agent proposes
 > a declarative artifact, a human ratifies it, it freezes as config the deterministic
 > gates keep checking. **Hard boundary:** the self-improvement loop edits only those
@@ -899,4 +899,4 @@ items must not be hardened against one answer.
 
 > **Completed work** is the `[x]` items in the phases above — that is the
 > one-line ledger of what's done. The full record of *how* each shipped lives in
-> `docs/superpowers/plans/`, the ADRs, and git history.
+> `plans/`, the ADRs, and git history.

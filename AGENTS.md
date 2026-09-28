@@ -45,6 +45,9 @@ in [`ROADMAP.md`](ROADMAP.md) with a `# research(YYYY-MM):` provenance note.
 - Agent **Skills** (packaged analytic procedures) → `skills/<name>/SKILL.md`.
 - **MCP servers** (graph / SQL / vector connectors) → `mcp_servers/`.
 - Research backing decisions → `docs/research/`.
+- Design specs → `plans/specs/`; implementation plans → `plans/`. Everything under `docs/`
+  deploys to the public site, so working notes stay out of it, and every `docs/` page is in
+  the `zensical.toml` nav.
 
 ## Skill context
 
