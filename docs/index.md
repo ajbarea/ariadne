@@ -8,6 +8,8 @@ hide:
 
 <div class="hero" markdown>
 
+<div class="hero-art" aria-hidden="true">&nbsp;</div>
+
 # Ariadne
 
 **One thread through the Labyrinth.** Ariadne follows a single entity's evidence across graph, records, and documents, then pulls it back into one cited answer.
@@ -22,7 +24,7 @@ hide:
 
 <div class="hero-tagline" markdown>
 
-<span class="mode-item">:octicons-git-merge-24: Graph</span> · <span class="mode-item">:octicons-database-24: Relational</span> · <span class="mode-item">:octicons-file-24: Unstructured</span> · <span class="mode-item">:octicons-image-24: Multimodal</span>
+<span class="mode-item">:octicons-git-merge-24: Graph</span> <span class="mode-item">:octicons-database-24: Relational</span> <span class="mode-item">:octicons-file-24: Unstructured</span> <span class="mode-item">:octicons-image-24: Multimodal</span>
 { .hero-modes }
 
 </div>
