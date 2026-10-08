@@ -120,7 +120,11 @@ body.hero-page .md-content__inner {
   /* The copy column, and where its right edge lands including the 8vw padding.
      The scrim below is built from these, so the two cannot drift apart. */
   --hero-copy-width: min(33rem, 35%);
-  --hero-copy-edge: calc(8vw + var(--hero-copy-width));
+  /* The hero spans the viewport, so the art meets the screen's edge rather than
+     stopping in a seam; on a wide screen the copy holds to a 72rem band (rem: the
+     theme raises the root font size there). */
+  --hero-pad: max(8vw, calc(50vw - 36rem));
+  --hero-copy-edge: calc(var(--hero-pad) + var(--hero-copy-width));
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
@@ -129,8 +133,10 @@ body.hero-page .md-content__inner {
   align-items: flex-start;
   justify-content: center;
   text-align: left;
-  padding: 6rem 8vw 5rem;
-  margin: -1.2rem -0.8rem 0;
+  width: 100vw;
+  box-sizing: border-box;
+  padding: 6rem var(--hero-pad) 5rem;
+  margin: -1.2rem 0 0 calc(-50vw + 50%);
   overflow: hidden;
   background-color: var(--ari-bg);
   background:
@@ -188,6 +194,12 @@ body.hero-page .md-content__inner {
      the art (thread + nodes) on the right. Reset to full width when the layout
      centers on narrow screens (see the 960px media query). */
   max-width: var(--hero-copy-width);
+}
+
+/* Two pills side by side need more than the copy's measure; the scrim behind them
+   holds full strength to the copy's edge and fades over the next 6rem. */
+.md-typeset .hero > .hero-buttons {
+  max-width: none;
 }
 
 .md-typeset .hero h1 {
