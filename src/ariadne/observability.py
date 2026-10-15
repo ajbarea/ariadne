@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 from opentelemetry import metrics, trace
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
     from ariadne.evaluation.needle import EvalReport
     from ariadne.evaluation.reconcile import ReconciliationReport
@@ -55,7 +55,7 @@ _eval_score = _meter.create_histogram(
 @contextmanager
 def workup_span(
     entity: str, dataset: str, *, semantic: bool = False, sql: bool = False
-) -> Iterator[trace.Span]:
+) -> Generator[trace.Span, None, None]:
     """A GenAI ``invoke_agent`` span wrapping a workup; its duration is the task time."""
     # research(2026-06): gen_ai.* follows the OTel GenAI semantic conventions;
     # `gen_ai.agent.name` is in the experimental agents spec and may change in the
@@ -112,7 +112,7 @@ def record_workup_metrics(
 
 
 @contextmanager
-def eval_span(entity: str, fixture: str) -> Iterator[trace.Span]:
+def eval_span(entity: str, fixture: str) -> Generator[trace.Span, None, None]:
     """A span wrapping a fixture scoring run; parents the gen_ai.evaluation.result events."""
     with _tracer.start_as_current_span(
         "evaluate",

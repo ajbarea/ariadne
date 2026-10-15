@@ -76,20 +76,17 @@ def make_provenance_hook(ledger: ProvenanceLedger) -> Hook:
         data: dict[str, Any] = cast("dict[str, Any]", input_data)
         tool: str = data.get("tool_name", "")
         if not tool.startswith(EVIDENCE_TOOL_PREFIXES):
-            return cast("SyncHookJSONOutput", {})
+            return {}
         response = data.get("tool_response", "")
         cite_id = ledger.record(tool, data.get("tool_input", {}), response)
-        return cast(
-            "SyncHookJSONOutput",
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PostToolUse",
-                    "additionalContext": (
-                        f"Provenance: this {_source_label(tool)} result is recorded as "
-                        f"{cite_id}. Cite every fact you derive from it as [cite:{cite_id}]."
-                    ),
-                }
-            },
-        )
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": (
+                    f"Provenance: this {_source_label(tool)} result is recorded as "
+                    f"{cite_id}. Cite every fact you derive from it as [cite:{cite_id}]."
+                ),
+            }
+        }
 
     return provenance_hook
