@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Buffer, Iterable, Iterator
+    from collections.abc import Buffer, Generator, Iterable
     from typing import Any
 
     # The socket-address shape stdlib's connect accepts (typeshed's ``_Address``).
@@ -81,7 +81,9 @@ def _peer_hostport(address: _Address) -> tuple[str, int] | None:
 
 
 @contextmanager
-def egress_guard(allow_hosts: Iterable[str] = (), *, block: bool = True) -> Iterator[EgressReport]:
+def egress_guard(
+    allow_hosts: Iterable[str] = (), *, block: bool = True
+) -> Generator[EgressReport, None, None]:
     """Enforce (or audit) a network-egress allowlist for the duration of the ``with`` block.
 
     Loopback is always allowed; ``allow_hosts`` adds enclave hosts (e.g. the Neo4j/Postgres
