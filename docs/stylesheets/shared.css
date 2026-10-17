@@ -1,0 +1,115 @@
+/* Shared by every sister docs site. The canonical copy is in techne
+   (plugins/techne/skills/docs-site/templates/shared/); edit it there and run the
+   docs-site sync, never in a site. overrides/main.html loads it. */
+
+/* Inline code in a table breaks between words, never inside one. Zensical gives code
+   `word-break: break-word`, which counts a break after every character toward a
+   column's minimum width, so a table squeezes a code column until identifiers split;
+   `word-break: normal` still breaks after a hyphen (techne:research-|grounded).
+   javascripts/shared.js wraps each word in .nobr; without it, the code stays on one
+   line. A table wider than its column scrolls inside its own box, which WCAG 1.4.10
+   allows for data tables. */
+.md-typeset table:not([class]) :not(pre) > code {
+  white-space: nowrap;
+}
+
+.md-typeset table:not([class]) :not(pre) > code.words {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.md-typeset code .nobr {
+  white-space: nowrap;
+}
+
+/* Zensical's script wraps each table in .md-typeset__scrollwrap, the box that scrolls.
+   javascripts/shared.js makes a box that overflows a labelled, keyboard-focusable
+   region, and that box shows a shadow, in the text color so both schemes see it, at
+   an edge with more table past it (the covers scroll with the content, the shadows
+   stay put). The covers are the page color, so a tinted admonition or details block
+   skips them. */
+.md-typeset__scrollwrap[role="region"] {
+  background:
+    linear-gradient(to right, var(--md-default-bg-color) 30%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--md-default-bg-color) 30%, transparent) right / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--md-default-fg-color) 30%, transparent), transparent) left / 0.9rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--md-default-fg-color) 30%, transparent), transparent) right / 0.9rem 100% no-repeat scroll;
+}
+
+.md-typeset__scrollwrap[role="region"] table:not([class]) {
+  background-color: transparent;
+}
+
+:is(.admonition, details) .md-typeset__scrollwrap[role="region"] {
+  background: none;
+}
+
+:is(.admonition, details) .md-typeset__scrollwrap[role="region"] table:not([class]) {
+  background-color: var(--md-default-bg-color);
+}
+
+.md-typeset__scrollwrap:focus-visible {
+  outline: 0.1rem solid var(--md-accent-fg-color);
+  outline-offset: -0.1rem;
+}
+
+/* Zensical caps the layout at 61rem so prose stays near 80-100 characters a line;
+   on a wide screen its documented widening, 1440px, gives tables room. From 125em
+   the root font is 150% and 61rem is already wider, so the larger value wins. */
+@media screen and (min-width: 100em) {
+  .md-grid {
+    max-width: max(61rem, 1440px);
+  }
+}
+
+/* Side panels toggle (javascripts/shared.js): hides the navigation and the
+   table of contents on screens wide enough to show them, so the page takes the
+   full width. Below 76.25em Zensical turns the navigation into its drawer, so the
+   button and the hiding apply only above that. */
+.md-header__button.sidebars-toggle {
+  display: none;
+}
+
+@media screen and (min-width: 76.25em) {
+  .md-header__button.sidebars-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    margin: 0 0.2rem;
+    padding: 0;
+    color: currentcolor;
+    background: none;
+    border: 0;
+    border-radius: 0.2rem;
+    cursor: pointer;
+    opacity: 0.85;
+  }
+
+  .sidebars-toggle:hover,
+  .sidebars-toggle:focus-visible {
+    opacity: 1;
+    background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  }
+
+  .sidebars-toggle svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: currentcolor;
+  }
+
+  [data-sidebars="hidden"] .md-sidebar--primary,
+  [data-sidebars="hidden"] .md-sidebar--secondary {
+    display: none;
+  }
+
+  /* Zensical widens the content margins for the sidebars beside it, with a selector
+     (.md-sidebar--primary:not([hidden]) ~ .md-content > .md-content__inner) this one
+     has to outrank. */
+  [data-sidebars="hidden"] .md-main .md-content > .md-content__inner.md-typeset {
+    margin-right: 0.8rem;
+    margin-left: 0.8rem;
+  }
+}
