@@ -1,8 +1,8 @@
 """Every page under docs/ is in the zensical.toml nav.
 
-Zensical publishes every Markdown file under docs/ and cannot exclude one, so
-a page the nav leaves out still deploys, unreachable from the site. Working
-notes belong outside docs/.
+A page the nav leaves out still deploys, unreachable from the site. Zensical
+0.0.70+ can hold pages back (exclude_docs, not_in_nav); this check does not read
+those settings, so working notes belong outside docs/.
 
 Shared by every sister docs site; the canonical copy is in techne
 (plugins/techne/skills/docs-site/templates/shared/).

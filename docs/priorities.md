@@ -48,7 +48,7 @@ which is why they are P0/P1 and not aspirations.
 
 | Requirement | Serves | Metric (proof) | Feasibility | Status |
 |---|---|---|---|---|
-| No-fabrication + no-uncited-claim citation gate | C-spec | citation report `dangling`/`uncited`/`unsupported` = 0 | Shipped | ✅ |
+| No-fabrication + no-uncited-claim citation gate | C-spec | citation report `dangling`, `uncited`, `unsupported` all = 0 | Shipped | ✅ |
 | Factual-precision check (entailment) | C-spec | HHEM `unsupported` on non-estimative claims | Shipped (`eval` extra) | ✅ |
 | Analytic calibration (ICD-203/206 tradecraft) | C-spec, C-gov (quality) | tradecraft lint: estimative-band + confidence presence | Shipped | ✅ |
 | Analytic-standards rubric (the axes gates can't see) | C-spec | ICD-203 rubric overall + per-criterion (judged independently) | Shipped (`rubric` extra) | ✅ |
