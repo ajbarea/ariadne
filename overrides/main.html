@@ -28,7 +28,8 @@
   {% endif %}
 {% endblock %}
 
-{#- Shared table and layout rules, before the site's extra_css so a site can override them. -#}
+{#- Shared table and layout rules, before the site's extra_css so a site can override them;
+    the table-code wrapping rules are !important and hold. -#}
 {% block fonts %}
   {{ super() }}
   <link rel="stylesheet" href="{{ 'stylesheets/shared.css' | url }}">
