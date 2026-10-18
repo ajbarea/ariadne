@@ -893,6 +893,18 @@ items must not be hardened against one answer.
 > full counterfactual trace auditing. Remaining candidates (multi-trajectory consolidation, skill
 > composition, SkillTTA, A2 SHACL, A3 tool families) are all YAGNI until a consumer needs them.
 
+### Next direction: Ariadne for research
+
+Point the sensemaking loop at a researcher's own literature: a corpus of papers (first, work on
+federated agents) as the store, used to read, position, and cross-reference them. The citation
+gate becomes the core quality measure rather than a demo feature. Open questions:
+
+- [ ] One master `.bib` as the corpus index, every entry verifiable against its DOI or arXiv record.
+- [ ] Import a Zotero-style export, or a list of links to papers, as the paper store.
+- [ ] Git integration: read the corpus and bibliography from a repository, so changes are versioned.
+- [ ] Closed corpus by default: answer only from the corpus, and search outside sources only when
+      the user asks.
+
 ### Stretch (post-MVP — from the brief)
 - [ ] Multi-player shared sessions (collaborative analyst workflows).
 - [ ] Tooling that raises analysts' domain knowledge / analytic capacity.
