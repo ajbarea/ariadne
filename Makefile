@@ -79,7 +79,7 @@ clean:                  ## Remove caches, build artifacts, and old dev-runner ar
 # ---------------------------------------------------------------------------
 
 docs:                   ## Serve project documentation locally (do-not-run)
-	@$(UV) --with zensical zensical serve
+	@$(UV) --group docs zensical serve
 
 dev:                    ## Run the ariadne CLI entrypoint (do-not-run)
 	@$(UV) ariadne

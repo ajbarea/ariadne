@@ -8,15 +8,28 @@ on:
       - "docs/**"
       - "overrides/**"
       - "zensical.toml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/docs.yml"
+  # Builds on PRs too, so a docs change or a zensical bump that breaks the site
+  # fails before merge. Deploy runs on main only.
+  pull_request:
+    paths:
+      - "docs/**"
+      - "overrides/**"
+      - "zensical.toml"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# PR builds get their own group, so one never replaces a queued deploy from main.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('docs-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -30,21 +43,24 @@ jobs:
       - name: Set up uv (with Python)
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
+          version: "0.11.5"
           enable-cache: true
           python-version: "3.12"
 
-      # Build docs with an ephemeral Zensical install so the docs pipeline does
-      # not depend on a committed uv.lock (the project lockfile may lag).
+      # Installs only the docs group, at the zensical version pinned in uv.lock.
       - name: Install docs toolchain
-        run: uv tool install zensical
+        run: uv sync --locked --only-group docs
 
+      # --strict turns Zensical warnings, such as a broken link, into errors.
       - name: Build docs site
-        run: uv tool run zensical build --clean
+        run: uv run --no-sync zensical build --clean --strict
 
       - name: Configure Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site
