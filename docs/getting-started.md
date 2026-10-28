@@ -58,7 +58,7 @@ a target from outside the Makefile:
 This site is built with [Zensical](https://zensical.org/). Serve it locally:
 
 ```bash
-make docs                        # uv run --with zensical zensical serve
+make docs                        # uv run --group docs zensical serve
 ```
 
 It deploys automatically to GitHub Pages on every push to `main` that touches

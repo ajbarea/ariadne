@@ -33,13 +33,12 @@ jobs:
           enable-cache: true
           python-version: "3.12"
 
-      # Build docs with an ephemeral Zensical install so the docs pipeline does
-      # not depend on a committed uv.lock (the project lockfile may lag).
+      # Installs only the docs group, at the zensical version pinned in uv.lock.
       - name: Install docs toolchain
-        run: uv tool install zensical
+        run: uv sync --frozen --only-group docs
 
       - name: Build docs site
-        run: uv tool run zensical build --clean
+        run: uv run --no-sync zensical build --clean
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

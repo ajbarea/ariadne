@@ -234,7 +234,7 @@ Built with [Zensical](https://zensical.org/) and deployed to GitHub Pages on
 every push to `main` touching `docs/`. Serve locally:
 
 ```bash
-make docs        # uv run --with zensical zensical serve
+make docs        # uv run --group docs zensical serve
 ```
 
 ## Status
