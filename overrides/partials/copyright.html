@@ -1,15 +1,14 @@
 {#-
   Shared by every sister docs site; the canonical copy is in techne
-  (plugins/techne/skills/docs-site/templates/shared/). A site with a footer mark
-  sets `extra.brand_mark` (a path under docs/).
+  (plugins/techne/skills/docs-site/templates/shared/). The footer reads
+  "2026 <brand mark> <copyright>"; stylesheets/shared.css draws the mark, so a site
+  needs no image of its own. The GitHub icon beside it comes from extra.social.
 -#}
 <div class="md-copyright">
   {% if config.copyright %}
     <div class="md-copyright__highlight">
       2026
-      {% if config.extra.brand_mark %}
-        <img src="{{ config.extra.brand_mark | url }}" alt="" aria-hidden="true" class="brand-mark">
-      {% endif %}
+      <span class="footer-brand" aria-hidden="true"></span>
       {{ config.copyright }}
     </div>
   {% endif %}
