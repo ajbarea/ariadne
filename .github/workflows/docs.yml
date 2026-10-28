@@ -8,6 +8,8 @@ on:
       - "docs/**"
       - "overrides/**"
       - "zensical.toml"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/docs.yml"
   # Builds on PRs too, so a docs change or a zensical bump that breaks the site
   # fails before merge. Deploy runs on main only.
@@ -24,9 +26,10 @@ on:
 permissions:
   contents: read
 
+# PR builds get their own group, so one never replaces a queued deploy from main.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('docs-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
