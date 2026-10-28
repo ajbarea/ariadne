@@ -58,7 +58,7 @@ Configs a CI failure traces to:
 - `infra/neo4j/docker-compose.yml` (integration: live Neo4j MCP)
 - `.github/workflows/{ci,docs,pin-check,zizmor,release}.yml`, `zensical.toml` (docs build), `codecov.yml`
 
-Required PR checks (7): `Lint (ruff + ty)`, `Tests (py3.12)`, `Tests (py3.13)`, `Tests (py3.14)`, `Read-only governance gate`, `pin-check`, `zizmor`. `docs.yml` build/deploy is push-only — deliberately NOT required (would block PRs forever).
+Required PR checks (7): `Lint (ruff + ty)`, `Tests (py3.12)`, `Tests (py3.13)`, `Tests (py3.14)`, `Read-only governance gate`, `pin-check`, `zizmor`. `docs.yml` builds on PRs that touch docs, `pyproject.toml` or `uv.lock` and deploys on push to main; deliberately NOT required (its path filter would leave other PRs waiting on a check that never runs).
 
 Tool error markers (extend the default grep set):
 - `pytest`, `ruff`, `ty` (lint/test)
@@ -87,6 +87,6 @@ Subagent scan-area split:
 ## docs_site
 
 - config: `zensical.toml`
-- workflow: `.github/workflows/docs.yml` (build + deploy; push-only, NOT a PR-required check)
+- workflow: `.github/workflows/docs.yml` (build on path-filtered PRs, deploy on push to main; NOT a PR-required check)
 - build_command: `uv sync --locked --only-group docs && uv run --no-sync zensical build --clean --strict` (CI); local preview `make docs` → `zensical serve` (blocks — do-not-run)
 - site_url: `https://ajbarea.github.io/ariadne/`
