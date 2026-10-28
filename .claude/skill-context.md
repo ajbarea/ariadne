@@ -88,5 +88,5 @@ Subagent scan-area split:
 
 - config: `zensical.toml`
 - workflow: `.github/workflows/docs.yml` (build + deploy; push-only, NOT a PR-required check)
-- build_command: `uv sync --frozen --only-group docs && uv run --no-sync zensical build --clean` (CI); local preview `make docs` → `zensical serve` (blocks — do-not-run)
+- build_command: `uv sync --locked --only-group docs && uv run --no-sync zensical build --clean --strict` (CI); local preview `make docs` → `zensical serve` (blocks — do-not-run)
 - site_url: `https://ajbarea.github.io/ariadne/`
