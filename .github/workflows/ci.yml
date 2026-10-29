@@ -15,6 +15,11 @@ concurrency:
 permissions:
   contents: read
 
+# ruff prints lint and format findings as annotations on the PR's changed lines. Set here
+# rather than as a flag, so `make lint` stays the same command locally and in CI.
+env:
+  RUFF_OUTPUT_FORMAT: github
+
 jobs:
   lint:
     name: Lint (ruff + ty)

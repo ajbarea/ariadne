@@ -9,13 +9,16 @@ of free-text query results); ``build_subgraph`` is the pure, testable core.
 
 from __future__ import annotations
 
-import contextlib
 import json
+import logging
+import urllib.parse
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
+
+logger = logging.getLogger(__name__)
 
 
 def build_subgraph(
@@ -81,6 +84,24 @@ def fetch_subgraph(driver: Any, entity: str, *, hops: int = 2, limit: int = 80) 
     return build_subgraph(nodes, edges, target_name=entity)
 
 
+def _host(uri: str) -> str:
+    """host:port of a Neo4j URI, without userinfo or query; "?" when it does not parse."""
+    # Drop everything up to the last "@" first: a "/" inside a password would otherwise end the
+    # netloc early and leave part of the password where the port goes.
+    scheme, sep, rest = uri.partition("://")
+    if not sep:
+        scheme, rest = "", uri
+    try:
+        parts = urllib.parse.urlsplit(f"{scheme or 'bolt'}://{rest.rpartition('@')[2]}")
+        host, port = parts.hostname, parts.port
+    except ValueError:
+        return "?"
+    if not host:
+        return "?"
+    host = f"[{host}]" if ":" in host else host
+    return f"{host}:{port}" if port else host
+
+
 def write_subgraph(out_dir: str | Path, entity: str, env: Mapping[str, str]) -> Path | None:
     """Best-effort: query the entity's neighborhood and persist ``subgraph.json``.
 
@@ -94,10 +115,15 @@ def write_subgraph(out_dir: str | Path, entity: str, env: Mapping[str, str]) -> 
         return None
     uri = env.get("NEO4J_URI", "bolt://localhost:7687")
     auth = (env.get("NEO4J_USERNAME", "neo4j"), env.get("NEO4J_PASSWORD", "password"))
-    sg: dict = {"nodes": [], "edges": []}
-    # graph view is optional; never break a workup over it
-    with contextlib.suppress(Exception), GraphDatabase.driver(uri, auth=auth) as driver:
-        sg = fetch_subgraph(driver, entity)
+    try:
+        with GraphDatabase.driver(uri, auth=auth) as driver:
+            sg = fetch_subgraph(driver, entity)
+    except Exception as exc:  # graph view is optional; never break a workup over it
+        # The type and host only: neo4j repeats the whole URI, userinfo included, in its text.
+        logger.warning(
+            "graph view skipped for %r: %s from %s", entity, type(exc).__name__, _host(uri)
+        )
+        return None
     if not sg["nodes"]:
         return None
     path = Path(out_dir) / "subgraph.json"

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import os
 import sys
 import time
@@ -1324,6 +1325,18 @@ def main(argv: list[str] | None = None) -> int:
     # clobbering already-exported vars. usecwd=True searches up from where the
     # user runs the command (not from this installed module's location).
     load_dotenv(find_dotenv(usecwd=True), override=False)
+    # Diagnostics as plain lines on stderr; results stay on stdout.
+    requested = os.environ.get("ARIADNE_LOG_LEVEL", "WARNING")
+    level = logging.getLevelNamesMapping().get(requested.upper())
+    logging.basicConfig(
+        level=logging.WARNING if level is None else level,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        stream=sys.stderr,
+    )
+    if level is None:
+        logging.getLogger("ariadne").warning(
+            "ARIADNE_LOG_LEVEL=%r is not a level name; using WARNING", requested
+        )
     setup_telemetry()
     discover_and_register(dict(os.environ))  # ADR-0025: register ARIADNE_MAPPINGS user datasets
     args = parse_args(sys.argv[1:] if argv is None else argv)

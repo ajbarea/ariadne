@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import pytest
 from opentelemetry import metrics, trace
 from opentelemetry.sdk.metrics import MeterProvider
@@ -242,3 +244,19 @@ def test_setup_telemetry_is_noop_without_endpoint(monkeypatch) -> None:
 
     monkeypatch.delenv("OTEL_EXPORTER_OTLP_ENDPOINT", raising=False)
     assert observability.setup_telemetry() is False
+
+
+def test_setup_telemetry_warns_when_the_endpoint_is_set_but_the_sdk_is_missing(
+    monkeypatch, caplog
+) -> None:
+    import sys
+
+    from ariadne import observability
+
+    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
+    monkeypatch.setitem(sys.modules, "opentelemetry.exporter.otlp.proto.http.metric_exporter", None)
+    with caplog.at_level(logging.WARNING):
+        assert observability.setup_telemetry() is False
+    [record] = [r for r in caplog.records if r.name == "ariadne.observability"]
+    assert record.levelname == "WARNING"
+    assert "nothing is exported" in record.getMessage()

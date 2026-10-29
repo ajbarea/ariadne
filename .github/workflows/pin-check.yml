@@ -35,7 +35,7 @@ jobs:
             done < "$f"
           done
           if [ "$fail" -ne 0 ]; then
-            echo "Pin actions to full commit SHAs (see techne docs/conventions.md)."
+            echo "::error::Pin actions to full commit SHAs (see techne docs/conventions.md)."
             exit 1
           fi
           echo "All GitHub Actions are SHA-pinned ✓"
