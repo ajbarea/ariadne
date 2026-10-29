@@ -35,6 +35,11 @@ in [`ROADMAP.md`](ROADMAP.md) with a `# research(YYYY-MM):` provenance note.
   and heavy ones `@pytest.mark.slow` so the fast lane stays hermetic.
 - **No secrets or source intelligence data in the repo.** `data/`, `models/`,
   `.env`, and `logs/` are gitignored.
+- **Test credentials use GitGuardian's placeholder words.** A username and a password
+  assigned near each other trip its Username Password detector, even when the password
+  is a variable name. Use a username containing `test`, `dummy` or `sample` and a password
+  of `placeholder` or `redacted` (its documented banlists), or build both at runtime as
+  `_fake_credentials` in `tests/unit/test_subgraph.py` does.
 - **Provenance matters.** This is an analytic tool: every fact the harness
   surfaces should be traceable to its source tool. Favor designs that preserve
   citations end-to-end.

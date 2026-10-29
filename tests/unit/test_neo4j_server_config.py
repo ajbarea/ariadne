@@ -17,14 +17,14 @@ def test_config_reads_connection_from_env() -> None:
     cfg = neo4j_stdio_config(
         env={
             "NEO4J_URI": "bolt://db:7687",
-            "NEO4J_USERNAME": "reader",
-            "NEO4J_PASSWORD": "secret",
+            "NEO4J_USERNAME": "test-reader",
+            "NEO4J_PASSWORD": "placeholder",
             "NEO4J_DATABASE": "intel",
         }
     )
     assert cfg["env"]["NEO4J_URI"] == "bolt://db:7687"
-    assert cfg["env"]["NEO4J_USERNAME"] == "reader"
-    assert cfg["env"]["NEO4J_PASSWORD"] == "secret"
+    assert cfg["env"]["NEO4J_USERNAME"] == "test-reader"
+    assert cfg["env"]["NEO4J_PASSWORD"] == "placeholder"
     assert cfg["env"]["NEO4J_DATABASE"] == "intel"
 
 
