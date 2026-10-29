@@ -11,6 +11,8 @@ resources synchronously.
 
 from __future__ import annotations
 
+import logging
+import math
 import os
 import queue
 import threading
@@ -19,6 +21,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
     from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # A streaming row gap longer than this means the connection stalled (the HF audio
 # stream's CLOSE_WAIT hang), not slow-but-progressing. Generous so a legitimately
@@ -100,7 +104,17 @@ def stall_guarded(
 def stall_timeout_s() -> float:
     """Per-row stall timeout for the live streams, overridable via $ARIADNE_STREAM_STALL_S."""
     raw = os.environ.get("ARIADNE_STREAM_STALL_S")
-    try:
-        return float(raw) if raw else DEFAULT_STALL_TIMEOUT_S
-    except ValueError:
+    if not raw:
         return DEFAULT_STALL_TIMEOUT_S
+    try:
+        value = float(raw)
+    except ValueError:
+        value = math.nan
+    if math.isfinite(value) and value > 0:
+        return value
+    logger.warning(
+        "ARIADNE_STREAM_STALL_S=%r is not a positive number of seconds; using %.0f s",
+        raw,
+        DEFAULT_STALL_TIMEOUT_S,
+    )
+    return DEFAULT_STALL_TIMEOUT_S

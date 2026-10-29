@@ -8,11 +8,17 @@ worldspeech audio stream).
 
 from __future__ import annotations
 
+import logging
 import time
 
 import pytest
 
-from ariadne.datasets.streaming import bounded_stream, stall_guarded
+from ariadne.datasets.streaming import (
+    DEFAULT_STALL_TIMEOUT_S,
+    bounded_stream,
+    stall_guarded,
+    stall_timeout_s,
+)
 
 
 def test_yields_up_to_the_limit() -> None:
@@ -84,3 +90,20 @@ def test_stall_guarded_propagates_the_sources_own_error() -> None:
     assert next(rows) == 1
     with pytest.raises(ValueError, match="upstream failure"):
         next(rows)
+
+
+def test_stall_timeout_reads_the_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ARIADNE_STREAM_STALL_S", "30")
+    assert stall_timeout_s() == 30.0
+
+
+@pytest.mark.parametrize("raw", ["3m", "-5", "0", "inf", "nan"])
+def test_a_bad_stall_timeout_is_named_and_the_default_used(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, raw: str
+) -> None:
+    monkeypatch.setenv("ARIADNE_STREAM_STALL_S", raw)
+    with caplog.at_level(logging.WARNING):
+        assert stall_timeout_s() == DEFAULT_STALL_TIMEOUT_S
+    [record] = caplog.records
+    assert record.levelname == "WARNING"
+    assert f"ARIADNE_STREAM_STALL_S={raw!r} is not a positive number" in record.getMessage()

@@ -21,7 +21,7 @@ torch is loaded it flushes and ``os._exit``s after the command's work, so
 
 from __future__ import annotations
 
-import contextlib
+import logging
 from typing import TYPE_CHECKING, Literal
 
 from ariadne.datasets.base import register
@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from ariadne.evaluation.needle import NeedleFixture
+
+logger = logging.getLogger(__name__)
 
 
 def _org_id(source: str) -> str:
@@ -110,8 +112,15 @@ class WorldSpeechAdapter:
         # Don't decode the raw audio column: we map the provided transcript
         # (ADR-0008, audio-as-text); decoding would require torchcodec we don't
         # need. cast to Audio(decode=False) so iteration skips the decoder.
-        with contextlib.suppress(ValueError, KeyError):
+        try:
             ds = ds.cast_column("audio", datasets.Audio(decode=False))
+        except (ValueError, KeyError) as exc:
+            logger.warning(
+                "%s: audio column not cast to decode=False (%s: %s); rows may fail to decode",
+                _DATASET,
+                type(exc).__name__,
+                exc,
+            )
         return ds
 
     def _rows(self):

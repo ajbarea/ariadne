@@ -11,6 +11,7 @@ compliance — most of which Ariadne already computes. See ADR-0010.
 
 from __future__ import annotations
 
+import logging
 import os
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
     from ariadne.provenance.governance import GovernanceReport
     from ariadne.provenance.ledger import ProvenanceLedger
     from ariadne.provenance.tradecraft import TradecraftReport
+
+logger = logging.getLogger(__name__)
 
 _tracer = trace.get_tracer("ariadne")
 _meter = metrics.get_meter("ariadne")
@@ -184,7 +187,12 @@ def setup_telemetry() -> bool:
         from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    except ImportError:
+    except ImportError as exc:
+        logger.warning(
+            "OTEL_EXPORTER_OTLP_ENDPOINT is set but %s is missing, so nothing is exported; "
+            "install the otel extra (uv sync --extra otel)",
+            exc.name,
+        )
         return False
     resource = Resource.create({"service.name": "ariadne"})
     tp = TracerProvider(resource=resource)

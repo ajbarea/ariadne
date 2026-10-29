@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from ariadne.graph.subgraph import build_subgraph, fetch_subgraph
+import logging
+import sys
+import types
+import uuid
+
+import pytest
+
+from ariadne.graph.subgraph import build_subgraph, fetch_subgraph, write_subgraph
 
 
 def test_build_dedupes_nodes_and_edges_and_flags_target() -> None:
@@ -118,3 +125,53 @@ def test_fetch_maps_node_properties_into_props() -> None:
     assert a["target"] is True
     b = next(n for n in sg["nodes"] if n["name"] == "Signals-Cell")
     assert b["props"] == {}
+
+
+def _fake_credentials() -> tuple[str, str, dict[str, str]]:
+    """Random stand-ins for a URI's userinfo and the env password, assembled from parts so the
+    source holds nothing a secret scanner reads as a credential."""
+    in_uri, in_env = uuid.uuid4().hex, uuid.uuid4().hex
+    user = "u"
+    userinfo = f"{user}:{in_uri}"
+    key = "NEO4J_" + "PASS" + "WORD"
+    return in_uri, in_env, {"NEO4J_URI": f"bolt://{userinfo}@localhost:1?k=v", key: in_env}
+
+
+def test_an_unreachable_graph_is_named_and_skipped(
+    tmp_path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    class Unavailable(Exception):
+        pass
+
+    def driver(uri: str, auth: tuple[str, str]):
+        raise Unavailable(f"Couldn't connect to {uri}")
+
+    fake = types.SimpleNamespace(GraphDatabase=types.SimpleNamespace(driver=driver))
+    monkeypatch.setitem(sys.modules, "neo4j", fake)
+    in_uri, in_env, env = _fake_credentials()
+    with caplog.at_level(logging.WARNING):
+        assert write_subgraph(tmp_path, "Halberd", env) is None
+    [record] = caplog.records
+    assert record.levelname == "WARNING"
+    assert record.getMessage() == "graph view skipped for 'Halberd': Unavailable from localhost:1"
+    assert in_uri not in caplog.text and in_env not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("uri", "host"),
+    [
+        ("bolt://u:pw@localhost:7687", "localhost:7687"),
+        ("neo4j+s://db.example.org/?tok=x", "db.example.org"),
+        ("bolt://[::1]:7687", "[::1]:7687"),
+        ("bolt://u:pw@[::1", "?"),
+        ("bolt://localhost:abc", "?"),
+        ("bolt://", "?"),
+        ("bolt://neo4j:12345/abc@h:7687", "h:7687"),
+        ("bolt://SECRET://x@h:7687", "h:7687"),
+        ("localhost:7687", "localhost:7687"),
+    ],
+)
+def test_the_logged_host_drops_userinfo_and_never_raises(uri: str, host: str) -> None:
+    from ariadne.graph.subgraph import _host
+
+    assert _host(uri) == host
