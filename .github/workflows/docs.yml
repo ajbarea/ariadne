@@ -34,6 +34,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,6 +47,8 @@ jobs:
           version: "0.11.5"
           enable-cache: true
           python-version: "3.12"
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
 
       # Installs only the docs group, at the zensical version pinned in uv.lock.
       - name: Install docs toolchain
@@ -69,6 +72,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write
