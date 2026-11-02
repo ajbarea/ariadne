@@ -21,6 +21,5 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          prune-cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          enable-cache: false  # uvx fetches one wheel; nothing worth caching
       - run: uvx zizmor@1.25.2 .github/workflows/
