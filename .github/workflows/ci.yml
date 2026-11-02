@@ -24,6 +24,7 @@ jobs:
   lint:
     name: Lint (ruff + ty)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,6 +36,8 @@ jobs:
           version: "0.11.5"
           python-version: "3.12"
           enable-cache: true
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: uv sync --locked --group dev
       - name: Lint (ruff format --check + ruff check + ty)
@@ -46,6 +49,7 @@ jobs:
   test:
     name: Tests (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -62,6 +66,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           cache-suffix: py${{ matrix.python-version }}
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: uv sync --locked --group dev
       - name: Run unit + smoke tests (with branch coverage)
@@ -81,6 +87,7 @@ jobs:
   governance:
     name: Read-only governance gate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -92,6 +99,8 @@ jobs:
           version: "0.11.5"
           python-version: "3.12"
           enable-cache: true
+          prune-cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: uv sync --locked --group dev
       - name: Audit the sample workup's read-only contract (expect exit 0)

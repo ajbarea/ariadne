@@ -18,6 +18,7 @@ jobs:
   pypi:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       id-token: write # mint the short-lived OIDC token PyPI trusts; no long-lived secret

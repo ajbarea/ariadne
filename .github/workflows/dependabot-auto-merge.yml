@@ -20,9 +20,14 @@ on: pull_request
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Dependabot's own PRs only; skipped (non-blocking) on every other PR.
     # pull_request.user.login (not the spoofable github.actor) is the robust gate.
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'ajbarea/ariadne'
