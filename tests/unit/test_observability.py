@@ -19,18 +19,18 @@ def _otel_providers():
     trace.set_tracer_provider(tp)
     reader = InMemoryMetricReader()
     metrics.set_meter_provider(MeterProvider(metric_readers=[reader]))
-    pytest._otel_exporter = exporter  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
-    pytest._otel_reader = reader  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter = exporter  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
+    pytest._otel_reader = reader  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     yield
 
 
 def _spans():
-    return pytest._otel_exporter.get_finished_spans()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    return pytest._otel_exporter.get_finished_spans()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
 
 
 def _metric_points(name: str):
     """Data points for the named metric across the in-memory reader's collection."""
-    data = pytest._otel_reader.get_metrics_data()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    data = pytest._otel_reader.get_metrics_data()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     points = []
     for rm in data.resource_metrics:
         for sm in rm.scope_metrics:
@@ -43,7 +43,7 @@ def _metric_points(name: str):
 def test_workup_span_emits_invoke_agent_with_attributes() -> None:
     from ariadne.observability import workup_span
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     with workup_span("Halberd", "synthetic", semantic=True):
         pass
     s = next(s for s in _spans() if s.name == "invoke_agent")
@@ -58,7 +58,7 @@ def test_record_workup_metrics_sets_span_attrs() -> None:
     from ariadne.provenance.ledger import ProvenanceLedger
     from ariadne.provenance.tradecraft import lint_estimative_language
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     led = ProvenanceLedger()
     led.record("mcp__neo4j__read_neo4j_cypher", {"query": "Q"}, "ex")
     report = CitationReport(ok=False, cited=["g1"], dangling=[], unused=[], uncited=["x"])
@@ -85,7 +85,7 @@ def test_record_workup_metrics_records_governance_violations() -> None:
     from ariadne.provenance.governance import audit_read_only
     from ariadne.provenance.ledger import ProvenanceLedger
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     led = ProvenanceLedger()
     led.record("mcp__neo4j__read_neo4j_cypher", {"query": "CREATE (n) RETURN n"}, "ex")
     report = CitationReport(ok=True, cited=[], dangling=[], unused=[])
@@ -111,7 +111,7 @@ def test_record_workup_metrics_records_profile() -> None:
     from ariadne.provenance.citations import CitationReport
     from ariadne.provenance.ledger import ProvenanceLedger
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     led = ProvenanceLedger()
     report = CitationReport(ok=True, cited=[], dangling=[], unused=[])
     profile = Profile(
@@ -154,7 +154,7 @@ def _needle_report(*, with_sf: bool = False):
 def test_eval_span_carries_fixture_and_entity() -> None:
     from ariadne.observability import eval_span
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     with eval_span("Halberd", "halberd"):
         pass
     s = next(s for s in _spans() if s.name == "evaluate")
@@ -165,7 +165,7 @@ def test_eval_span_carries_fixture_and_entity() -> None:
 def test_record_eval_metrics_emits_evaluation_result_events() -> None:
     from ariadne.observability import eval_span, record_eval_metrics
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     with eval_span("Halberd", "halberd"):
         record_eval_metrics(_needle_report(), fixture="halberd")
     s = next(s for s in _spans() if s.name == "evaluate")
@@ -184,7 +184,7 @@ def test_record_eval_metrics_emits_evaluation_result_events() -> None:
 def test_record_eval_metrics_includes_supporting_fact_f1_when_present() -> None:
     from ariadne.observability import eval_span, record_eval_metrics
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     with eval_span("Halberd", "halberd"):
         record_eval_metrics(_needle_report(with_sf=True), fixture="halberd")
     s = next(s for s in _spans() if s.name == "evaluate")
@@ -223,7 +223,7 @@ def _recon_report():
 def test_record_reconciliation_metrics_emits_events_and_scores() -> None:
     from ariadne.observability import eval_span, record_reconciliation_metrics
 
-    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[unresolved-attribute]
+    pytest._otel_exporter.clear()  # type: ignore[attr-defined]  # ty:ignore[missing-attribute]
     with eval_span("Halberd", "synthetic"):
         record_reconciliation_metrics(_recon_report(), fixture="synthetic")
     s = next(s for s in _spans() if s.name == "evaluate")
